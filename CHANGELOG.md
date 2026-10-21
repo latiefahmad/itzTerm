@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-21
+
+### Changes
+
+- fix(release): include AppImage updater signature in artifacts; tolerate missing sigs ([98f9124](https://github.com/latiefahmad/itzTerm/commit/98f9124a00b4a5bafd9c54f0e9f834cdda2ff9ee))
+- chore(ci): disable upstream publish workflows (aur, hb, docker, docs, nightly) ([2a70260](https://github.com/latiefahmad/itzTerm/commit/2a70260591ba93d6e096feb32ddf78538c1251b6))
+- feat(release): tag-driven release pipeline with changelog and updater manifest; bump 1.0.0 ([bcad245](https://github.com/latiefahmad/itzTerm/commit/bcad245a05ddf2d481b41e783069c89d558a26c1))
+- Add Tauri build workflow for Windows, Linux, macOS ([cdd7b07](https://github.com/latiefahmad/itzTerm/commit/cdd7b07cdb623979e9b7e15ce34bc56dc6c3347e))
+- Brand Tauri updater with new itzterm signing pubkey ([8f48ff5](https://github.com/latiefahmad/itzTerm/commit/8f48ff5d5632644078c244144574a600c784094e))
+- Fix renamed artifact-name expectations in tests and docs ([1f52ded](https://github.com/latiefahmad/itzTerm/commit/1f52ded013a3c9d10e817b1612cd45eb6524d827))
+- Rename Termul to itzTerm: identifiers, artifact names, docs, storage keys ([6abfa70](https://github.com/latiefahmad/itzTerm/commit/6abfa700142e9ae4a6b187f8c170c33ede6321a6))
+- Baseline: Termul 0.4.52 snapshot before itzTerm rename ([3fcb59a](https://github.com/latiefahmad/itzTerm/commit/3fcb59a292342c63c3104eb8ef2ecee56283948f))
+
 ### Features
 - **Desktop** — Settings → AI Agents → Close idle chats after sets how long an idle chat stays open. The same menu is in the browser. A running answer or a waiting question keeps the chat open. A server flag or `$ITZTERM_AGENT_IDLE_REAP_SECS` still overrides the menu.
 - **Desktop** — The desktop now keeps its app state in the host store like a browser does, through the same device and shared key scopes over its own Tauri channel connection: the 256 KiB value cap, the per-device byte budget, the revisions, the write-failure toasts and the shared-key watch all apply on the desktop too, and the desktop plugin-store file `itzterm-data.json` is no longer read or written by the app. On the first start after the upgrade, the first desktop window imports that file once into the host store (shared settings and SSH profiles only where the store holds none, everything else into that device's partition, `editor-state/<project>` as `workspace/<project>`); a value over the cap is skipped and keys that do not fit the device budget are dropped, with a warning in the log. The file is then renamed to `itzterm-data.json.imported-<unix time>` and kept as a backup. If the write fails, the file stays and the next request tries again. The what's-new, update channel, backup and rollback files are unchanged.
