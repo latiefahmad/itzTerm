@@ -23,6 +23,7 @@ jobs:
             args: ""
             artifact-paths: |
               src-tauri/target/**/bundle/appimage/*.AppImage
+              src-tauri/target/**/bundle/appimage/*.AppImage.sig
               src-tauri/target/**/bundle/deb/*.deb
               src-tauri/target/**/bundle/rpm/*.rpm
           - platform: macos-latest

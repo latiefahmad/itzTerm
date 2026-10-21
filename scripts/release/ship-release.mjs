@@ -49,7 +49,15 @@ function writeManifest() {
 
   const pick = (suffix) => {
     const name = findFirst(dist, (n) => n.endsWith(suffix))
-    return name && { name, sigName: `${name}.sig` }
+    if (!name) return null
+    const sigName = `${name}.sig`
+    if (!findFirst(dist, (n) => n === sigName)) {
+      console.warn(
+        `latest.json: artifact ${name} has no updater signature (${sigName}); skipping its platform`
+      )
+      return null
+    }
+    return { name, sigName }
   }
   const macos = pick('.app.tar.gz')
   const windows = pick('-setup.exe') ?? pick('.msi')
