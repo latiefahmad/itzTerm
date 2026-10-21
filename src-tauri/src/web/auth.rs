@@ -6,7 +6,7 @@
 //! connection gate), and the HTTP API middleware (`router.rs`):
 //!
 //! - **Engagement rule:** the gate is active ⇔ an explicit token is
-//!   configured (`--web-auth-token` / `$TERMUL_WEB_AUTH_TOKEN`) OR the bind is
+//!   configured (`--web-auth-token` / `$ITZTERM_WEB_AUTH_TOKEN`) OR the bind is
 //!   non-loopback (`--host 0.0.0.0`). Auto-generation fires ONLY on public
 //!   binds, so loopback dev servers never gain a gate and never even read the
 //!   token file (leftover state cannot change loopback behavior).
@@ -126,7 +126,7 @@ impl std::fmt::Debug for WebAuth {
 /// `server_main`; the secret itself is never printed).
 #[derive(Debug)]
 pub enum WebAuthOrigin {
-    /// Operator-supplied (`--web-auth-token` / `$TERMUL_WEB_AUTH_TOKEN`).
+    /// Operator-supplied (`--web-auth-token` / `$ITZTERM_WEB_AUTH_TOKEN`).
     Configured,
     /// Loaded from the persisted token file (path recorded for the log line).
     Loaded(PathBuf),
@@ -215,7 +215,7 @@ pub fn resolve(
                     auth: Arc::new(WebAuth::new(token)),
                     origin: WebAuthOrigin::Generated(path),
                 }),
-                // Lost a first-boot race with another termul-server instance:
+                // Lost a first-boot race with another itzterm-server instance:
                 // adopt the winner's persisted token instead of failing or
                 // clobbering it.
                 Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {

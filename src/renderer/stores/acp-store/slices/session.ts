@@ -63,7 +63,7 @@ import {
   dropPreparedSlots,
   dropQuestionsForSession,
   dropRecordKey,
-  extractTermulPlanFenceJson,
+  extractItzTermPlanFenceJson,
   finalizeStreaming,
   isResumeFailureError,
   lastErrorFromPersistedTurn,
@@ -848,7 +848,7 @@ async function openHistorySessionInner(
   onTranscriptInstalled()
 
   // Rehydrate the sticky plan from the latest assistant message's
-  // `termul-plan` fence (single source of truth). Scans the payload messages
+  // `itzterm-plan` fence (single source of truth). Scans the payload messages
   // (not the trimmed live window) so the fence is found even when the
   // trimming boundary lands on the snapshot carrier. Skip silently when a
   // live `plans[id]` already exists from an in-flight turn — the live plan
@@ -867,13 +867,13 @@ async function openHistorySessionInner(
       const lastAgent = [...installed.messages].reverse().find((m) => m.role === 'agent')
       const hasMalformedFence =
         lastAgent?.blocks.some(
-          (b) => b.type === 'text' && extractTermulPlanFenceJson(b.text) !== null
+          (b) => b.type === 'text' && extractItzTermPlanFenceJson(b.text) !== null
         ) ?? false
       if (hasMalformedFence) {
         void logFrontendError({
           level: 'warn',
           source: 'planRehydrate',
-          message: `Malformed termul-plan fence in history session ${id}; leaving plans empty`
+          message: `Malformed itzterm-plan fence in history session ${id}; leaving plans empty`
         })
       }
     }
@@ -2183,8 +2183,8 @@ export const createSessionSlice: StateCreator<AcpState, [], [], SessionSliceStat
       set((s) => ({ discoveredSessions: { ...s.discoveredSessions, [key]: all } }))
 
       // Discovery no longer promotes external sessions into host persistence:
-      // the Chats tab renders only Termul-created sessions (`discovered !== true`),
-      // and `session/list` results are external chats Termul did not create. The
+      // the Chats tab renders only itzTerm-created sessions (`discovered !== true`),
+      // and `session/list` results are external chats itzTerm did not create. The
       // function is retained so store coverage keeps exercising the `session/list`
       // path; it is no longer auto-triggered from the sidebar.
     } catch (e) {

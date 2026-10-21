@@ -112,7 +112,7 @@ async fn frontend_error(
         if let Err(dropped) = REMOTE_LINE_BUDGET.lock().take(Instant::now()) {
             if dropped.in_window == 1 {
                 tracing::warn!(
-                    target: "termul::web::log_api",
+                    target: "itzterm::web::log_api",
                     peer = %peer,
                     "remote frontend log budget spent; dropping lines until the window resets"
                 );

@@ -275,7 +275,7 @@ beforeEach(() => {
   mockExplorerState.searchScannedFiles = 0
   mockExplorerState.searchFailedFiles = 0
   mockExplorerState.searchLastCompletedQuery = ''
-  delete (window as unknown as { __termulPendingRevealLine?: unknown }).__termulPendingRevealLine
+  delete (window as unknown as { __itztermPendingRevealLine?: unknown }).__itztermPendingRevealLine
 })
 
 describe('FileExplorer', () => {
@@ -598,13 +598,13 @@ describe('FileExplorer', () => {
       expect(
         (
           window as unknown as {
-            __termulPendingRevealLine?: {
+            __itztermPendingRevealLine?: {
               filePath: string
               lineNumber: number
               searchTerm?: string
             }
           }
-        ).__termulPendingRevealLine
+        ).__itztermPendingRevealLine
       ).toEqual({
         filePath: '/project/src/FileExplorer.tsx',
         lineNumber: 27,
@@ -837,7 +837,7 @@ describe('FileExplorer host column', () => {
     const setItem = vi.spyOn(Storage.prototype, 'setItem')
     mockExplorerState.rootPath = '/project'
     render(<FileExplorer />)
-    expect(setItem).not.toHaveBeenCalledWith('termul:file-explorer-width', expect.anything())
+    expect(setItem).not.toHaveBeenCalledWith('itzterm:file-explorer-width', expect.anything())
     setItem.mockRestore()
   })
 })

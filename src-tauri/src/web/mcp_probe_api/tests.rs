@@ -151,7 +151,7 @@ fn unique_marker(label: &str) -> std::path::PathBuf {
         .duration_since(UNIX_EPOCH)
         .expect("clock")
         .as_nanos();
-    std::env::temp_dir().join(format!("termul-probe-canary-{label}-{nanos}"))
+    std::env::temp_dir().join(format!("itzterm-probe-canary-{label}-{nanos}"))
 }
 
 /// D8-F1: a non-loopback peer without `--allow-remote-writes`, and ANY peer in

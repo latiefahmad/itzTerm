@@ -26,7 +26,7 @@ function holdHue(sourceHex: string, lightness: number): string {
   return oklchToHex({ l: lightness, c: source.c, h: source.h })
 }
 
-function termulDarkChrome(): ThemeChrome {
+function itztermDarkChrome(): ThemeChrome {
   const obsidianL = hexToOklch(OBSIDIAN).l
   const graphiteL = hexToOklch(GRAPHITE).l
   return {
@@ -41,8 +41,8 @@ function termulDarkChrome(): ThemeChrome {
   }
 }
 
-/** Neutral ramp for the default Termul dark theme. */
-export const TERMUL_DARK_CHROME: ThemeChrome = termulDarkChrome()
+/** Neutral ramp for the default itzTerm dark theme. */
+export const ITZTERM_DARK_CHROME: ThemeChrome = itztermDarkChrome()
 
 /** Map the explicit ramp onto the shared surface slots. */
 export function surfacesFromChrome(chrome: ThemeChrome): DerivedSurfaces {

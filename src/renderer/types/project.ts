@@ -68,10 +68,10 @@ export interface Project {
   icon?: ProjectIcon
 }
 
-export function isWorktreeTermulManaged(worktree: Worktree): boolean {
+export function isWorktreeItzTermManaged(worktree: Worktree): boolean {
   // Normalize path separators for cross-platform detection
   const normalizedPath = worktree.path.replace(/\\/g, '/')
-  return normalizedPath.includes('.termul/worktrees/')
+  return normalizedPath.includes('.itzterm/worktrees/')
 }
 
 export type TerminalHealthStatus = 'running' | 'crashed' | 'hibernated' | 'disconnected'

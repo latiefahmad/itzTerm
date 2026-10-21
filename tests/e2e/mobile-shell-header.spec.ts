@@ -13,7 +13,7 @@ import {
 import { E2E_BASE_URL, E2E_TOKEN, storeKey, wsRequest } from './helpers'
 
 /**
- * Mobile shell header E2E on termul-server, on a phone-sized touch viewport.
+ * Mobile shell header E2E on itzterm-server, on a phone-sized touch viewport.
  *
  * Covers spec-mobile-shell-header: the header is three 44px icon slots (☰, ✎,
  * ⋯) around a title block (the `h1` over the project · branch · Local/Worktree
@@ -68,9 +68,9 @@ test.setTimeout(120_000)
 /** The drawer's ☰ and pill both point `aria-controls` here. */
 const DRAWER_ID = 'mobile-shell-drawer'
 
-/** The drawer is the full-screen left sheet named "Termul". */
+/** The drawer is the full-screen left sheet named "itzTerm". */
 function drawerOf(page: Page): Locator {
-  return page.getByRole('dialog', { name: 'Termul', exact: true })
+  return page.getByRole('dialog', { name: 'itzTerm', exact: true })
 }
 
 /**
@@ -143,7 +143,7 @@ async function createProject(
       'git',
       [
         '-c',
-        'user.email=e2e@termul',
+        'user.email=e2e@itzterm',
         '-c',
         'user.name=e2e',
         'commit',
@@ -205,7 +205,7 @@ async function openMobileWorkspace(page: Page, projectName: string): Promise<voi
   })
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN,
     { timeout: 60_000 }
   )
@@ -434,7 +434,7 @@ test('header is three 44px icon slots plus the title block, with no sideways scr
   await openMobileWorkspace(page, 'shdr-plain')
 
   const bar = header(page)
-  await expect(title(page)).toHaveText('Termul')
+  await expect(title(page)).toHaveText('itzTerm')
   await expect(title(page)).toHaveId('mobile-shell-title')
   // A non-git project shows its name only, and the button names the project.
   await expect(subtitle(page)).toHaveText('shdr-plain')
@@ -681,7 +681,7 @@ test('an editor tab is titled by its file, keeps the project subtitle and has no
   // Open the file from the Files sheet (header ⋯ → Files → the file row).
   await headerButton(page, 'More').tap()
   await page
-    .getByRole('dialog', { name: 'Termul' })
+    .getByRole('dialog', { name: 'itzTerm' })
     .getByRole('button', { name: 'Files', exact: true })
     .tap()
   const files = page.getByRole('dialog', { name: 'shdr-edit' })
@@ -830,7 +830,7 @@ test('header ⋯ items open their destination, close the sheet, and Close chat e
   await expect(closeChat).toHaveClass(/text-destructive/)
   await closeChat.tap()
   await expect(sheet).toBeHidden()
-  await expect(title(page)).toHaveText('Termul')
+  await expect(title(page)).toHaveText('itzTerm')
   await expect(more).not.toBeFocused()
 })
 
@@ -849,7 +849,7 @@ test('terminal context swaps ✎ to New terminal and ⋯ to the terminal actions
   // New terminal from the header ⋯ sheet (no tab open: the sheet still offers it).
   await headerButton(page, 'More').tap()
   await page
-    .getByRole('dialog', { name: 'Termul' })
+    .getByRole('dialog', { name: 'itzTerm' })
     .getByRole('button', { name: 'New terminal', exact: true })
     .tap()
   await expect(title(page)).toHaveText(/^Terminal \d+$/)
@@ -932,7 +932,7 @@ test('terminal rename trims on Enter, drops on Escape, ignores blank, and the ot
   await openMobileWorkspace(page, 'shdr-name')
   await headerButton(page, 'More').tap()
   await page
-    .getByRole('dialog', { name: 'Termul' })
+    .getByRole('dialog', { name: 'itzTerm' })
     .getByRole('button', { name: 'New terminal', exact: true })
     .tap()
   await expect(title(page)).toHaveText(/^Terminal \d+$/)
@@ -1020,7 +1020,7 @@ test('terminal rename trims on Enter, drops on Escape, ignores blank, and the ot
   await expect(sheet).toBeHidden()
   await expect(confirm).toBeVisible()
   await page.getByRole('button', { name: 'Close', exact: true }).tap()
-  await expect(title(page)).toHaveText('Termul')
+  await expect(title(page)).toHaveText('itzTerm')
 })
 
 // ---------------------------------------------------------------------------

@@ -38,7 +38,7 @@ const ALL_APP_PREF_CATEGORIES: SettingsCategory[] = [
     id: 'notifications',
     group: 'General',
     label: 'Notifications',
-    description: 'Choose when Termul sends you a system notification.',
+    description: 'Choose when itzTerm sends you a system notification.',
     icon: <Bell size={16} />
   },
   {
@@ -74,7 +74,7 @@ const ALL_APP_PREF_CATEGORIES: SettingsCategory[] = [
     id: 'ai-agents',
     group: 'Agents',
     label: 'Agent chats',
-    description: 'Time limits for agent chats, and the agents Termul can start.',
+    description: 'Time limits for agent chats, and the agents itzTerm can start.',
     icon: <Bot size={16} />
   },
   {
@@ -104,14 +104,15 @@ const ALL_APP_PREF_CATEGORIES: SettingsCategory[] = [
     id: 'shortcuts',
     group: 'App',
     label: 'Keyboard shortcuts',
-    description: 'Change the keys for Termul commands. Select a shortcut, then press the new keys.',
+    description:
+      'Change the keys for itzTerm commands. Select a shortcut, then press the new keys.',
     icon: <Keyboard size={16} />
   },
   {
     id: 'updates',
     group: 'App',
     label: 'Updates',
-    description: 'Termul version, release channel and automatic checks.',
+    description: 'itzTerm version, release channel and automatic checks.',
     icon: <Download size={16} />
   },
   {
@@ -354,7 +355,7 @@ export function appPrefSearchIndex(): SettingsSearchEntry[] {
         {
           categoryId: 'diagnostics',
           label: 'Server version',
-          description: 'The web client updates together with the termul-server.',
+          description: 'The web client updates together with the itzterm-server.',
           keywords: ['version', 'upgrade', 'server'],
           anchorId: rowId('server-version')
         }

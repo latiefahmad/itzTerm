@@ -45,7 +45,7 @@ function makeProject(overrides: Partial<Project> = {}): Project {
   } as Project
 }
 
-const WT_PATH = '/projects/main/.termul/worktrees/abc'
+const WT_PATH = '/projects/main/.itzterm/worktrees/abc'
 const WORKTREE = {
   id: 'wt-1',
   name: 'chat/abc',
@@ -159,7 +159,7 @@ describe('worktree-context', () => {
 
     it('sees the project folder for a pruned pick', () => {
       setState([makeProject({ worktrees: [WORKTREE] })])
-      setPick('/projects/main/.termul/worktrees/gone')
+      setPick('/projects/main/.itzterm/worktrees/gone')
       expect(getActiveWorktreeForProject('p1')).toBeUndefined()
     })
 

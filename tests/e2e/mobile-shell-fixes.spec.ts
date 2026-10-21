@@ -44,7 +44,7 @@ test.use({
 test.setTimeout(120_000)
 
 /**
- * The browser's device id (`termul.deviceId` in localStorage, see
+ * The browser's device id (`itzterm.deviceId` in localStorage, see
  * `web-client-identity.ts`), fixed so a test can seed what that device reads:
  * a device key is `device/<deviceId>/<key>` and only its own device may touch it.
  */
@@ -53,7 +53,7 @@ const E2E_DEVICE: WsIdentity = { deviceId: E2E_DEVICE_ID, clientInstanceId: 'e2e
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(
-    (deviceId) => localStorage.setItem('termul.deviceId', deviceId),
+    (deviceId) => localStorage.setItem('itzterm.deviceId', deviceId),
     E2E_DEVICE_ID
   )
 })
@@ -212,7 +212,7 @@ async function openShell(
   const warmedUp = watchAgentWarmup(page)
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)

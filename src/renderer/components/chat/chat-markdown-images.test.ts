@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { remarkTermulImages, resolveLocalImagePath, termulImageTag } from './chat-markdown-images'
+import { itztermImageTag, remarkItzTermImages, resolveLocalImagePath } from './chat-markdown-images'
 
 describe('chat markdown images', () => {
-  it('rewrites non-https image nodes into termul-image raw HTML', () => {
+  it('rewrites non-https image nodes into itzterm-image raw HTML', () => {
     const tree = {
       type: 'root',
       children: [
@@ -17,21 +17,21 @@ describe('chat markdown images', () => {
       ]
     }
 
-    remarkTermulImages()(tree)
+    remarkItzTermImages()(tree)
 
     const children = tree.children[0].children as Array<{ type: string; value?: string }>
     expect(children).toHaveLength(3)
     expect(children[0]).toEqual({
       type: 'html',
-      value: '<termul-image data-url="data:image/png;base64,QUJD" data-alt="tiny"></termul-image>'
+      value: '<itzterm-image data-url="data:image/png;base64,QUJD" data-alt="tiny"></itzterm-image>'
     })
     expect(children[1]).toEqual({
       type: 'html',
-      value: '<termul-image data-url="file:///E:/proj/chart.png" data-alt="chart"></termul-image>'
+      value: '<itzterm-image data-url="file:///E:/proj/chart.png" data-alt="chart"></itzterm-image>'
     })
     expect(children[2]).toEqual({
       type: 'html',
-      value: '<termul-image data-url="output/chart.png" data-alt="rel"></termul-image>'
+      value: '<itzterm-image data-url="output/chart.png" data-alt="rel"></itzterm-image>'
     })
   })
 
@@ -49,7 +49,7 @@ describe('chat markdown images', () => {
       ]
     }
 
-    remarkTermulImages()(tree)
+    remarkItzTermImages()(tree)
 
     const children = tree.children[0].children as Array<{ type: string; url?: string }>
     expect(children).toHaveLength(2)
@@ -71,23 +71,23 @@ describe('chat markdown images', () => {
       ]
     }
 
-    remarkTermulImages()(tree)
+    remarkItzTermImages()(tree)
 
     const children = tree.children[0].children as Array<{ type: string; value?: string }>
     expect(children).toHaveLength(2)
     expect(children[0]).toEqual({
       type: 'html',
-      value: '<termul-image data-url="" data-alt=""></termul-image>'
+      value: '<itzterm-image data-url="" data-alt=""></itzterm-image>'
     })
     expect(children[1]).toEqual({
       type: 'html',
-      value: '<termul-image data-url="   " data-alt="blankish"></termul-image>'
+      value: '<itzterm-image data-url="   " data-alt="blankish"></itzterm-image>'
     })
   })
 
   it('escapes url and alt in the emitted tag', () => {
-    expect(termulImageTag('a&b<c>.png', 'alt "&" text')).toBe(
-      '<termul-image data-url="a&amp;b&lt;c&gt;.png" data-alt="alt &quot;&amp;&quot; text"></termul-image>'
+    expect(itztermImageTag('a&b<c>.png', 'alt "&" text')).toBe(
+      '<itzterm-image data-url="a&amp;b&lt;c&gt;.png" data-alt="alt &quot;&amp;&quot; text"></itzterm-image>'
     )
   })
 
@@ -115,7 +115,7 @@ describe('chat markdown images', () => {
       ]
     }
 
-    remarkTermulImages()(tree)
+    remarkItzTermImages()(tree)
 
     const listItem = tree.children[0]
     const paragraph = listItem.children[0]
@@ -123,11 +123,11 @@ describe('chat markdown images', () => {
     expect(paragraph.children[0]).toEqual({ type: 'text', value: 'see ' })
     expect(link.children[0]).toEqual({
       type: 'html',
-      value: '<termul-image data-url="blob:https://x/1" data-alt="linked"></termul-image>'
+      value: '<itzterm-image data-url="blob:https://x/1" data-alt="linked"></itzterm-image>'
     })
     expect(listItem.children[1]).toEqual({
       type: 'html',
-      value: '<termul-image data-url="data:image/gif;base64,QQ" data-alt=""></termul-image>'
+      value: '<itzterm-image data-url="data:image/gif;base64,QQ" data-alt=""></itzterm-image>'
     })
   })
 

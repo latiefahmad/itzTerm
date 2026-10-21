@@ -74,7 +74,7 @@ export function ChatDeleteConfirmDialog({
   )
 }
 
-/** Sidebar tab listing persisted Termul-created chat sessions, grouped by recency; filtered by `query`. */
+/** Sidebar tab listing persisted itzTerm-created chat sessions, grouped by recency; filtered by `query`. */
 export function ChatHistoryTab({
   onSessionOpened,
   query = '',

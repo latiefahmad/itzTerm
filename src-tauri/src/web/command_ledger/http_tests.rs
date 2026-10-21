@@ -35,7 +35,7 @@ impl TempDir {
             .duration_since(std::time::UNIX_EPOCH)
             .expect("clock")
             .as_nanos();
-        let path = std::env::temp_dir().join(format!("termul-http-ledger-{label}-{nanos}"));
+        let path = std::env::temp_dir().join(format!("itzterm-http-ledger-{label}-{nanos}"));
         std::fs::create_dir_all(&path).expect("temp dir");
         Self(path.canonicalize().expect("canonical temp dir"))
     }
@@ -598,7 +598,7 @@ async fn a_commit_resend_never_commits_twice_and_a_stale_head_commits_nothing() 
     let resend = send(&host_one, "POST", "/git/commit", commit.clone(), Some("commit-1")).await;
     assert!(ok(&resend), "{}", resend.text);
     assert_eq!(commit_count(&repo), 2, "the resend must not commit again");
-    assert!(git(&repo, &["log", "-1", "--format=%B"]).contains("Termul-Command-Id: commit-1"));
+    assert!(git(&repo, &["log", "-1", "--format=%B"]).contains("itzTerm-Command-Id: commit-1"));
 
     // Host restart: nothing is staged any more (a second commit would fail),
     // and `expectedHead` is behind. The trailer finds the commit already made.
@@ -805,7 +805,7 @@ async fn a_worktree_remove_resend_answers_ok_when_it_is_already_gone() {
 async fn removing_a_path_git_does_not_list_but_that_exists_keeps_the_original_error() {
     let dir = TempDir::new("wtremove-existing");
     let repo = repo(&dir);
-    let plain = repo.join(".termul/worktrees/plain");
+    let plain = repo.join(".itzterm/worktrees/plain");
     std::fs::create_dir_all(&plain).unwrap();
     std::fs::write(plain.join("keep.txt"), "x").unwrap();
     let app = app(host(&repo));

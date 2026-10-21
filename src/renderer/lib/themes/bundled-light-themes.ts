@@ -1,19 +1,19 @@
-import { TERMUL_LIGHT_CHROME } from './termul-light-chrome'
-import { TERMUL_LIGHT_SYNTAX } from './termul-syntax'
+import { ITZTERM_LIGHT_CHROME } from './itzterm-light-chrome'
+import { ITZTERM_LIGHT_SYNTAX } from './itzterm-syntax'
 import type { ColorThemeDefinition } from './types'
 
 /** Light appearance twins (`{family}-light`). Syntax: opencode light + vscode fallback. */
 export const BUNDLED_LIGHT_COLOR_THEMES: Record<string, ColorThemeDefinition> = {
-  // syntax: bright Termul palette (see termul-syntax.ts)
-  'termul-light': {
-    id: 'termul-light',
-    name: 'Termul Light',
+  // syntax: bright itzTerm palette (see itzterm-syntax.ts)
+  'itzterm-light': {
+    id: 'itzterm-light',
+    name: 'itzTerm Light',
     appearance: 'light',
-    familyId: 'termul',
+    familyId: 'itzterm',
     dark: {
       palette: {
-        neutral: TERMUL_LIGHT_CHROME.background,
-        ink: TERMUL_LIGHT_CHROME.foreground,
+        neutral: ITZTERM_LIGHT_CHROME.background,
+        ink: ITZTERM_LIGHT_CHROME.foreground,
         primary: '#3b82f6',
         accent: '#811f3f',
         success: '#098658',
@@ -21,8 +21,8 @@ export const BUNDLED_LIGHT_COLOR_THEMES: Record<string, ColorThemeDefinition> = 
         error: '#cd3131',
         info: '#0598bc'
       },
-      overrides: TERMUL_LIGHT_SYNTAX,
-      chrome: TERMUL_LIGHT_CHROME
+      overrides: ITZTERM_LIGHT_SYNTAX,
+      chrome: ITZTERM_LIGHT_CHROME
     }
   },
   // syntax: opencode cursor light

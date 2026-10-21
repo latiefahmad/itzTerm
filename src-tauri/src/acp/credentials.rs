@@ -6,8 +6,8 @@
 
 use keyring::Entry;
 
-/// One keyring service for all Termul agent credentials.
-pub(crate) const KEYRING_SERVICE: &str = "com.termul.manager";
+/// One keyring service for all itzTerm agent credentials.
+pub(crate) const KEYRING_SERVICE: &str = "com.itzterm.manager";
 
 /// Open a keyring entry for `account`, rejecting keyring's mock fallback
 /// backend (it accepts writes but never persists them — success would be a

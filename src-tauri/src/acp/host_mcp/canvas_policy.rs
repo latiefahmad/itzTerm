@@ -2,11 +2,11 @@
 //! canvas call before it reaches a renderer.
 //!
 //! The editor never touches the file system for an agent. `file.save` is
-//! Termul's own save, whatever path it names. An export with a `path` runs
-//! without it, so the bytes come back inline, and Termul writes them to that
+//! itzTerm's own save, whatever path it names. An export with a `path` runs
+//! without it, so the bytes come back inline, and itzTerm writes them to that
 //! path only when it lies inside the project. The editor picks an export's
 //! format from the path's extension when none is given, so without the path
-//! Termul names the format itself. Every other command or method that reads
+//! itzTerm names the format itself. Every other command or method that reads
 //! or writes a path is refused with `UNSUPPORTED_IN_KIOSK`.
 
 use std::path::{Component, Path, PathBuf};
@@ -22,7 +22,7 @@ pub enum CanvasRoute {
     Forward,
     /// `host.save` on the renderer instead of the editor's own save.
     HostSave,
-    /// `execute` (the export without its `path`) to the editor, then Termul
+    /// `execute` (the export without its `path`) to the editor, then itzTerm
     /// writes the returned bytes to `path`.
     ExportTo {
         path: String,
@@ -138,7 +138,7 @@ fn route_execute(execute: &Value) -> CanvasRoute {
     }
 }
 
-/// A batch runs as one undo step inside the editor, so a step Termul would
+/// A batch runs as one undo step inside the editor, so a step itzTerm would
 /// have to handle itself refuses the whole batch.
 fn route_batch(params: &Value) -> CanvasRoute {
     let steps = params
@@ -203,7 +203,7 @@ fn unsupported(name: &str) -> CanvasError {
     CanvasError::new(
         CanvasErrorCode::UnsupportedInKiosk,
         format!(
-            "`{name}` reads or writes files, which the Termul canvas does not allow: save_file \
+            "`{name}` reads or writes files, which the itzTerm canvas does not allow: save_file \
              saves the project's document, and export returns bytes or writes inside the project"
         ),
     )

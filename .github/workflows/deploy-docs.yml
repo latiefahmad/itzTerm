@@ -63,4 +63,4 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Passed through the environment so a branch name is never parsed as shell code.
           DEPLOY_BRANCH: ${{ github.ref_name == 'main' && 'main' || github.head_ref || github.ref_name }}
-        run: bunx wrangler@4.95.0 pages deploy build/client --project-name=termul-docs --branch="$DEPLOY_BRANCH" --commit-dirty=true
+        run: bunx wrangler@4.95.0 pages deploy build/client --project-name=itzterm-docs --branch="$DEPLOY_BRANCH" --commit-dirty=true

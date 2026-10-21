@@ -159,7 +159,7 @@ impl WorktreeManager {
         let mut matched = vec![false; compiled.len()];
 
         // Directories pruned at descent time (never recursed into).
-        const PRUNE_DIRS: &[&str] = &[".git", ".termul", "node_modules", "target", "dist"];
+        const PRUNE_DIRS: &[&str] = &[".git", ".itzterm", "node_modules", "target", "dist"];
 
         // Single recursive walk: each file is tested against every compiled
         // pattern (the first match copies it once; later matches only mark the

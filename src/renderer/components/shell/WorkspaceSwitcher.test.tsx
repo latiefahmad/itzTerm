@@ -51,7 +51,7 @@ const wt = (id: string, branch: string, extra: Partial<Worktree> = {}): Worktree
   id,
   name: id,
   branch,
-  path: `E:\\proj\\.termul\\worktrees\\${id}`,
+  path: `E:\\proj\\.itzterm\\worktrees\\${id}`,
   createdAt: '2026-01-01T00:00:00.000Z',
   ...extra
 })
@@ -136,13 +136,17 @@ describe('WorkspaceSwitcher', () => {
       renderSwitcher()
       expect(screen.getByRole('button', { name: /Workspace/ })).toBeInTheDocument()
       cleanup()
-      useShellLayoutStore.setState({ worktreePickByProject: { p1: 'e:/proj/.termul/worktrees/a' } })
+      useShellLayoutStore.setState({
+        worktreePickByProject: { p1: 'e:/proj/.itzterm/worktrees/a' }
+      })
       renderSwitcher()
       expect(screen.getByRole('button', { name: /feat\/a/ })).toBeInTheDocument()
     })
 
     it('shows the branch in its own case, not as an uppercase section label', () => {
-      useShellLayoutStore.setState({ worktreePickByProject: { p1: 'e:/proj/.termul/worktrees/a' } })
+      useShellLayoutStore.setState({
+        worktreePickByProject: { p1: 'e:/proj/.itzterm/worktrees/a' }
+      })
       renderSwitcher()
       const label = screen.getByText('feat/a')
       expect(label).not.toHaveClass('label-panel')
@@ -151,7 +155,7 @@ describe('WorkspaceSwitcher', () => {
 
     it('reads Workspace for a pruned or outside-root pick', () => {
       useShellLayoutStore.setState({
-        worktreePickByProject: { p1: 'e:/proj/.termul/worktrees/gone' }
+        worktreePickByProject: { p1: 'e:/proj/.itzterm/worktrees/gone' }
       })
       renderSwitcher()
       expect(screen.getByRole('button', { name: /Workspace/ })).toBeInTheDocument()
@@ -179,7 +183,7 @@ describe('WorkspaceSwitcher', () => {
       expect(options().map((o) => o.textContent?.replace(OUTSIDE_PROJECT_ROOT_REASON, ''))).toEqual(
         ['main', 'feat/a', 'fix/b', 'ext/branch']
       )
-      expect(options()[1]).toHaveAttribute('title', 'E:\\proj\\.termul\\worktrees\\a')
+      expect(options()[1]).toHaveAttribute('title', 'E:\\proj\\.itzterm\\worktrees\\a')
     })
 
     it('marks the Workspace row when nothing is picked, else the picked worktree', async () => {
@@ -192,7 +196,9 @@ describe('WorkspaceSwitcher', () => {
         'false'
       ])
       cleanup()
-      useShellLayoutStore.setState({ worktreePickByProject: { p1: 'e:/proj/.termul/worktrees/b' } })
+      useShellLayoutStore.setState({
+        worktreePickByProject: { p1: 'e:/proj/.itzterm/worktrees/b' }
+      })
       renderSwitcher()
       await openSwitcher()
       expect(options().map((o) => o.getAttribute('aria-selected'))).toEqual([
@@ -238,7 +244,7 @@ describe('WorkspaceSwitcher', () => {
           s1: mockAcpSession({
             id: 's1',
             projectId: 'p1',
-            cwd: 'e:\\proj\\.termul\\worktrees\\a\\src',
+            cwd: 'e:\\proj\\.itzterm\\worktrees\\a\\src',
             activeTurn: true
           }),
           s2: mockAcpSession({ id: 's2', projectId: 'p1', cwd: 'E:/proj' })
@@ -249,11 +255,11 @@ describe('WorkspaceSwitcher', () => {
           mockTerminal({
             id: 't1',
             projectId: 'p1',
-            cwd: 'E:/proj/.termul/worktrees/a',
+            cwd: 'E:/proj/.itzterm/worktrees/a',
             healthStatus: 'running',
             hasActivity: false
           }),
-          mockTerminal({ id: 't2', projectId: 'p1', cwd: 'E:/proj/.termul/worktrees/b' })
+          mockTerminal({ id: 't2', projectId: 'p1', cwd: 'E:/proj/.itzterm/worktrees/b' })
         ]
       })
       renderSwitcher()
@@ -272,7 +278,7 @@ describe('WorkspaceSwitcher', () => {
           mockTerminal({
             id: 't1',
             projectId: 'p1',
-            cwd: 'E:/proj/.termul/worktrees/b',
+            cwd: 'E:/proj/.itzterm/worktrees/b',
             healthStatus: 'running',
             hasActivity: true
           })
@@ -289,13 +295,15 @@ describe('WorkspaceSwitcher', () => {
       renderSwitcher()
       await openSwitcher()
       fireEvent.click(options()[1])
-      expect(pickOf()).toBe('e:/proj/.termul/worktrees/a')
+      expect(pickOf()).toBe('e:/proj/.itzterm/worktrees/a')
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
       expect(screen.getByRole('button', { name: /feat\/a/ })).toBeInTheDocument()
     })
 
     it('clears the pick from the Workspace row', async () => {
-      useShellLayoutStore.setState({ worktreePickByProject: { p1: 'e:/proj/.termul/worktrees/a' } })
+      useShellLayoutStore.setState({
+        worktreePickByProject: { p1: 'e:/proj/.itzterm/worktrees/a' }
+      })
       renderSwitcher()
       await openSwitcher()
       fireEvent.click(options()[0])
@@ -318,7 +326,7 @@ describe('WorkspaceSwitcher', () => {
       fireEvent.keyDown(search(), { key: 'ArrowUp' })
       fireEvent.keyDown(search(), { key: 'Enter' })
       // Folder -> a -> b -> a.
-      expect(pickOf()).toBe('e:/proj/.termul/worktrees/a')
+      expect(pickOf()).toBe('e:/proj/.itzterm/worktrees/a')
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     })
 
@@ -347,20 +355,22 @@ describe('WorkspaceSwitcher', () => {
 
   describe('terminal action', () => {
     it('opens a terminal at the row path without touching the pick, then closes', async () => {
-      useShellLayoutStore.setState({ worktreePickByProject: { p1: 'e:/proj/.termul/worktrees/b' } })
+      useShellLayoutStore.setState({
+        worktreePickByProject: { p1: 'e:/proj/.itzterm/worktrees/b' }
+      })
       renderSwitcher()
       await openSwitcher()
       const button = screen.getByRole('button', { name: 'Open terminal in feat/a' })
-      expect(button).toHaveAttribute('title', 'Open terminal at E:\\proj\\.termul\\worktrees\\a')
+      expect(button).toHaveAttribute('title', 'Open terminal at E:\\proj\\.itzterm\\worktrees\\a')
       expect(button).not.toHaveAttribute('tabindex', '-1')
       fireEvent.click(button)
       await waitFor(() =>
-        expect(mocks.openTerminal).toHaveBeenCalledWith('p1', 'E:\\proj\\.termul\\worktrees\\a')
+        expect(mocks.openTerminal).toHaveBeenCalledWith('p1', 'E:\\proj\\.itzterm\\worktrees\\a')
       )
-      expect(pickOf()).toBe('e:/proj/.termul/worktrees/b')
+      expect(pickOf()).toBe('e:/proj/.itzterm/worktrees/b')
       await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
       expect(mocks.toastSuccess).toHaveBeenCalledWith('Terminal opened', {
-        description: 'Opened at E:\\proj\\.termul\\worktrees\\a'
+        description: 'Opened at E:\\proj\\.itzterm\\worktrees\\a'
       })
     })
 
@@ -377,7 +387,7 @@ describe('WorkspaceSwitcher', () => {
       fireEvent.contextMenu(options()[2])
       fireEvent.click(await screen.findByRole('menuitem', { name: /Open Terminal Here/ }))
       await waitFor(() =>
-        expect(mocks.openTerminal).toHaveBeenCalledWith('p1', 'E:\\proj\\.termul\\worktrees\\b')
+        expect(mocks.openTerminal).toHaveBeenCalledWith('p1', 'E:\\proj\\.itzterm\\worktrees\\b')
       )
       expect(pickOf()).toBeUndefined()
     })
@@ -429,7 +439,7 @@ describe('WorkspaceSwitcher', () => {
     })
 
     it('creates, reconciles, then picks the new worktree and closes', async () => {
-      const created = 'E:/proj/.termul/worktrees/fix-login'
+      const created = 'E:/proj/.itzterm/worktrees/fix-login'
       mocks.create.mockResolvedValue({
         success: true,
         data: { name: 'fix-login', branch: 'fix-login', path: created, headCommit: '' }
@@ -449,7 +459,7 @@ describe('WorkspaceSwitcher', () => {
       await typeNoMatch('fix login')
       fireEvent.click(screen.getByRole('button', { name: /Create worktree fix-login/ }))
 
-      await waitFor(() => expect(pickOf()).toBe('e:/proj/.termul/worktrees/fix-login'))
+      await waitFor(() => expect(pickOf()).toBe('e:/proj/.itzterm/worktrees/fix-login'))
       expect(mocks.create).toHaveBeenCalledWith(
         expect.objectContaining({
           projectPath: 'E:/proj',

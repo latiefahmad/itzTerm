@@ -3,9 +3,9 @@
  *
  * The session lives in the persistence facade (the host store on web). The only
  * thing that still differs between the branches is the legacy file a leftover
- * entry is moved from: on desktop it is the `termul-sessions.json` plugin-store
+ * entry is moved from: on desktop it is the `itzterm-sessions.json` plugin-store
  * file, on web a localStorage shim of it with flat composite keys
- * (`${STORE_FILE}::${key}`, e.g. `termul-sessions.json::sessions/auto-save`).
+ * (`${STORE_FILE}::${key}`, e.g. `itzterm-sessions.json::sessions/auto-save`).
  *
  * This file asserts that:
  * - the WEB branch reads (and deletes) the localStorage legacy entry and does
@@ -45,7 +45,7 @@ vi.mock('../tauri-runtime', () => ({
 import { jsonBytes, STORE_VALUE_MAX_BYTES } from '../persistence-trim'
 import { _resetStoreInstanceForTesting, tauriSessionApi } from '../tauri-session-api'
 
-const STORE_FILE = 'termul-sessions.json'
+const STORE_FILE = 'itzterm-sessions.json'
 const SESSION_KEY = 'sessions/auto-save'
 const LEGACY_LOCAL_KEY = `${STORE_FILE}::${SESSION_KEY}`
 

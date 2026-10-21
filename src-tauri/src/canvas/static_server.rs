@@ -3,7 +3,7 @@
 //! One gate, one serving function, two listeners:
 //! - the desktop binds [`StaticServer`] on `127.0.0.1:0` (OS-assigned port,
 //!   rebuilt when the listener dies) and the renderer iframes it;
-//! - `termul-server` (and the desktop's shared-live server) mount the same
+//! - `itzterm-server` (and the desktop's shared-live server) mount the same
 //!   [`serve_bundle`] under `web::canvas_api` and the iframe is same-origin.
 //!
 //! Authorization is per canvas: the canvas token is the path segment after
@@ -312,7 +312,7 @@ pub async fn close_all_canvases_bounded() {
     }
 }
 
-/// App exit (desktop quit, termul-server shutdown): save and unmount every
+/// App exit (desktop quit, itzterm-server shutdown): save and unmount every
 /// canvas, each through the AD-31 sequence. Nobody is left to ask at this
 /// point, so a failed save is logged by project; the renderer's quit flow
 /// asks the user before it gets here.
@@ -418,7 +418,7 @@ fn log_bundle_missing_once() {
     }
 }
 
-/// Startup diagnostic shared by the desktop and `termul-server`.
+/// Startup diagnostic shared by the desktop and `itzterm-server`.
 pub fn log_bundle_status() {
     if assets::canvas_bundle_available() {
         log::info!(

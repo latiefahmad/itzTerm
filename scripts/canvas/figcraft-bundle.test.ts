@@ -82,9 +82,9 @@ describe('figcraft-mcp pin check', () => {
     expect(cargoFigcraftMcpRef('[dependencies]\nserde = "1"\n')).toBeNull()
     expect(
       cargoFigcraftMcpRef(
-        'figcraft-mcp = { git = "https://github.com/gnoviawan/figcraft", tag = "termul-0.6.0" }\n'
+        'figcraft-mcp = { git = "https://github.com/gnoviawan/figcraft", tag = "itzterm-0.6.0" }\n'
       )
-    ).toEqual({ kind: 'tag', value: 'termul-0.6.0' })
+    ).toEqual({ kind: 'tag', value: 'itzterm-0.6.0' })
     expect(
       cargoFigcraftMcpRef('figcraft-mcp = { git = "https://x.test/f", rev = "d9256cc" }\n')
     ).toEqual({ kind: 'rev', value: 'd9256cc' })
@@ -98,7 +98,7 @@ describe('figcraft-mcp pin check', () => {
   })
 
   test('the check script fails when the Cargo tag differs from the pin', () => {
-    const run = checkWith('figcraft-mcp = { git = "https://x.test/f", tag = "termul-9.9.9" }')
+    const run = checkWith('figcraft-mcp = { git = "https://x.test/f", tag = "itzterm-9.9.9" }')
     expect(run.status).toBe(1)
     expect(run.stderr).toMatch(/pin mismatch/)
   })
@@ -133,21 +133,21 @@ describe('bundle fetch', () => {
     expect(() => verifyChecksum(bytes, SHA)).toThrow(/sha256 mismatch/)
   })
 
-  test('downloads only a figcraft-web release asset of the Termul fork', () => {
+  test('downloads only a figcraft-web release asset of the itzTerm fork', () => {
     const pinned =
-      'https://github.com/gnoviawan/figcraft/releases/download/termul-v0.2.0/figcraft-web-termul-v0.2.0.zip'
+      'https://github.com/gnoviawan/figcraft/releases/download/itzterm-v0.2.0/figcraft-web-itzterm-v0.2.0.zip'
     expect(pinnedBundleUrl(pinned)).toBe(pinned)
     const committed = readPin(join(__dirname, '..', '..', 'canvas', 'figcraft.pin')).url
     expect(pinnedBundleUrl(committed)).toBe(committed)
     for (const url of [
-      'http://github.com/gnoviawan/figcraft/releases/download/termul-v1/figcraft-web-termul-v1.zip',
-      'https://github.com.evil.test/gnoviawan/figcraft/releases/download/termul-v1/figcraft-web-termul-v1.zip',
-      'https://github.com/storytold/figcraft/releases/download/termul-v1/figcraft-web-termul-v1.zip',
-      'https://github.com/gnoviawan/figcraft/releases/download/v1/figcraft-web-termul-v1.zip',
-      'https://github.com/gnoviawan/figcraft/releases/download/termul-v1/other.zip',
-      'https://github.com/gnoviawan/figcraft/releases/download/termul-v1/figcraft-web-termul-v1.zip?x=1',
-      'https://github.com/gnoviawan/figcraft/releases/download/termul-v1/../../figcraft-web-termul-v1.zip',
-      'https://user@github.com/gnoviawan/figcraft/releases/download/termul-v1/figcraft-web-termul-v1.zip',
+      'http://github.com/gnoviawan/figcraft/releases/download/itzterm-v1/figcraft-web-itzterm-v1.zip',
+      'https://github.com.evil.test/gnoviawan/figcraft/releases/download/itzterm-v1/figcraft-web-itzterm-v1.zip',
+      'https://github.com/storytold/figcraft/releases/download/itzterm-v1/figcraft-web-itzterm-v1.zip',
+      'https://github.com/gnoviawan/figcraft/releases/download/v1/figcraft-web-itzterm-v1.zip',
+      'https://github.com/gnoviawan/figcraft/releases/download/itzterm-v1/other.zip',
+      'https://github.com/gnoviawan/figcraft/releases/download/itzterm-v1/figcraft-web-itzterm-v1.zip?x=1',
+      'https://github.com/gnoviawan/figcraft/releases/download/itzterm-v1/../../figcraft-web-itzterm-v1.zip',
+      'https://user@github.com/gnoviawan/figcraft/releases/download/itzterm-v1/figcraft-web-itzterm-v1.zip',
       'https://x.test/b.zip'
     ]) {
       expect(() => pinnedBundleUrl(url), url).toThrow(/figcraft-web release asset/)

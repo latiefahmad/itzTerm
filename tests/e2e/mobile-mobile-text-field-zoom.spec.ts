@@ -103,7 +103,15 @@ async function registerActiveProject(): Promise<string> {
   const git = (...args: string[]): Promise<unknown> =>
     execFileAsync(
       'git',
-      ['-c', 'user.email=e2e@termul', '-c', 'user.name=e2e', '-c', 'commit.gpgsign=false', ...args],
+      [
+        '-c',
+        'user.email=e2e@itzterm',
+        '-c',
+        'user.name=e2e',
+        '-c',
+        'commit.gpgsign=false',
+        ...args
+      ],
       { cwd: path }
     )
   await git('init', '-q', '-b', 'main')
@@ -134,7 +142,7 @@ async function registerActiveProject(): Promise<string> {
 async function bootShell(page: Page, projectName: string): Promise<void> {
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN,
     { timeout: 60_000 }
   )

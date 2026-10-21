@@ -19,8 +19,8 @@ function worktree(id: string, path: string) {
 const project: ProjectPaths = {
   path: 'E:/p',
   worktrees: [
-    worktree('a', 'E:/p/.termul/worktrees/a'),
-    worktree('b', 'E:/p/.termul/worktrees/b'),
+    worktree('a', 'E:/p/.itzterm/worktrees/a'),
+    worktree('b', 'E:/p/.itzterm/worktrees/b'),
     worktree('ext', 'D:/elsewhere/wt')
   ]
 }
@@ -71,12 +71,12 @@ describe('normalizePath', () => {
 
 describe('workingCopyOf', () => {
   it('resolves a path inside a listed worktree in any form', () => {
-    const wc = workingCopyOf('\\\\?\\E:\\p\\.termul\\worktrees\\a\\src', project)
+    const wc = workingCopyOf('\\\\?\\E:\\p\\.itzterm\\worktrees\\a\\src', project)
     expect(wc).toEqual({
       state: 'resolved',
       kind: 'worktree',
-      key: 'e:/p/.termul/worktrees/a',
-      path: 'E:/p/.termul/worktrees/a',
+      key: 'e:/p/.itzterm/worktrees/a',
+      path: 'E:/p/.itzterm/worktrees/a',
       worktreeId: 'a'
     })
   })
@@ -93,11 +93,11 @@ describe('workingCopyOf', () => {
 
   it('treats an equal path as contained', () => {
     expect(workingCopyOf('E:/p/', project)).toMatchObject({ kind: 'project' })
-    expect(workingCopyOf('E:/p/.termul/worktrees/b', project)).toMatchObject({ worktreeId: 'b' })
+    expect(workingCopyOf('E:/p/.itzterm/worktrees/b', project)).toMatchObject({ worktreeId: 'b' })
   })
 
   it('prefers the deeper working copy (worktree nested in project)', () => {
-    expect(workingCopyOf('E:/p/.termul/worktrees/a/x/y', project)).toMatchObject({
+    expect(workingCopyOf('E:/p/.itzterm/worktrees/a/x/y', project)).toMatchObject({
       kind: 'worktree',
       worktreeId: 'a'
     })
@@ -117,29 +117,29 @@ describe('workingCopyOf', () => {
   })
 
   it('returns unresolved for an unlisted managed worktree, never the project', () => {
-    const wc = workingCopyOf('E:/p/.termul/worktrees/gone/x', project)
+    const wc = workingCopyOf('E:/p/.itzterm/worktrees/gone/x', project)
     expect(wc).toEqual({
       state: 'unresolved',
-      key: 'e:/p/.termul/worktrees/gone',
-      path: 'E:/p/.termul/worktrees/gone'
+      key: 'e:/p/.itzterm/worktrees/gone',
+      path: 'E:/p/.itzterm/worktrees/gone'
     })
-    expect(workingCopyOf('\\\\?\\E:\\P\\.termul\\worktrees\\Gone', project)).toMatchObject({
+    expect(workingCopyOf('\\\\?\\E:\\P\\.itzterm\\worktrees\\Gone', project)).toMatchObject({
       state: 'unresolved',
-      key: 'e:/p/.termul/worktrees/gone',
-      path: 'E:/P/.termul/worktrees/Gone'
+      key: 'e:/p/.itzterm/worktrees/gone',
+      path: 'E:/P/.itzterm/worktrees/Gone'
     })
   })
 
   it('keeps the managed directory itself on the project folder', () => {
-    expect(workingCopyOf('E:/p/.termul/worktrees', project)).toMatchObject({
+    expect(workingCopyOf('E:/p/.itzterm/worktrees', project)).toMatchObject({
       state: 'resolved',
       kind: 'project'
     })
-    expect(workingCopyOf('E:/p/.termul/other/x', project)).toMatchObject({ kind: 'project' })
+    expect(workingCopyOf('E:/p/.itzterm/other/x', project)).toMatchObject({ kind: 'project' })
   })
 
   it('returns unresolved when the project has no listed worktrees at all', () => {
-    expect(workingCopyOf('E:/p/.termul/worktrees/a/x', { path: 'E:/p' })).toMatchObject({
+    expect(workingCopyOf('E:/p/.itzterm/worktrees/a/x', { path: 'E:/p' })).toMatchObject({
       state: 'unresolved'
     })
   })
@@ -159,9 +159,9 @@ describe('workingCopyOf', () => {
   it('works for a project folder at a drive root', () => {
     const root: ProjectPaths = { path: 'C:\\' }
     expect(workingCopyOf('C:/x/y', root)).toMatchObject({ kind: 'project', key: 'c:/' })
-    expect(workingCopyOf('c:/.termul/worktrees/g/x', root)).toMatchObject({
+    expect(workingCopyOf('c:/.itzterm/worktrees/g/x', root)).toMatchObject({
       state: 'unresolved',
-      key: 'c:/.termul/worktrees/g'
+      key: 'c:/.itzterm/worktrees/g'
     })
   })
 
@@ -203,13 +203,13 @@ describe('workingCopyOf', () => {
 
 describe('tabPath', () => {
   const sources: TabPathSources = {
-    sessionCwd: (id) => ({ s1: 'E:/p/.termul/worktrees/a', empty: '' })[id],
+    sessionCwd: (id) => ({ s1: 'E:/p/.itzterm/worktrees/a', empty: '' })[id],
     terminalCwd: (id) => ({ t1: 'E:/p/src' })[id]
   }
 
   it('maps path-bearing tabs', () => {
     expect(tabPath({ type: 'agent-chat', id: 'x', sessionId: 's1' }, sources)).toBe(
-      'E:/p/.termul/worktrees/a'
+      'E:/p/.itzterm/worktrees/a'
     )
     expect(tabPath({ type: 'terminal', id: 'x', terminalId: 't1' }, sources)).toBe('E:/p/src')
     expect(tabPath({ type: 'editor', id: 'x', filePath: 'E:/p/a.ts' }, sources)).toBe('E:/p/a.ts')
@@ -249,7 +249,7 @@ describe('tabPath', () => {
 
 describe('pickedWorkingCopy', () => {
   it('returns the listed worktree the pick names, in any path form', () => {
-    expect(pickedWorkingCopy(project, '\\\\?\\E:\\P\\.termul\\worktrees\\b\\')).toMatchObject({
+    expect(pickedWorkingCopy(project, '\\\\?\\E:\\P\\.itzterm\\worktrees\\b\\')).toMatchObject({
       state: 'resolved',
       kind: 'worktree',
       worktreeId: 'b'
@@ -257,7 +257,7 @@ describe('pickedWorkingCopy', () => {
   })
 
   it('falls back to the project folder for pruned, unlisted, empty or missing picks', () => {
-    for (const pick of ['E:/p/.termul/worktrees/gone', 'D:/nowhere', '', null, undefined]) {
+    for (const pick of ['E:/p/.itzterm/worktrees/gone', 'D:/nowhere', '', null, undefined]) {
       expect(pickedWorkingCopy(project, pick)).toEqual({
         state: 'resolved',
         kind: 'project',
@@ -276,7 +276,7 @@ describe('pickedWorkingCopy', () => {
     const withDisabled: ProjectPaths = {
       path: 'E:/p',
       worktrees: [
-        worktree('a', 'E:/p/.termul/worktrees/a'),
+        worktree('a', 'E:/p/.itzterm/worktrees/a'),
         { ...worktree('ext', 'D:/elsewhere/wt'), outsideProjectRoot: true }
       ]
     }
@@ -286,7 +286,7 @@ describe('pickedWorkingCopy', () => {
       path: 'E:/p',
       worktreeId: null
     })
-    expect(pickedWorkingCopy(withDisabled, 'E:/p/.termul/worktrees/a')).toMatchObject({
+    expect(pickedWorkingCopy(withDisabled, 'E:/p/.itzterm/worktrees/a')).toMatchObject({
       kind: 'worktree',
       worktreeId: 'a'
     })
@@ -321,19 +321,19 @@ describe('resolveActiveWorkingCopy', () => {
   const sources: TabPathSources = {
     sessionCwd: (id) =>
       ({
-        inA: '\\\\?\\E:\\p\\.termul\\worktrees\\a\\src',
-        gone: 'E:/p/.termul/worktrees/gone/x',
+        inA: '\\\\?\\E:\\p\\.itzterm\\worktrees\\a\\src',
+        gone: 'E:/p/.itzterm/worktrees/gone/x',
         outside: 'D:/nowhere/x'
       })[id],
-    terminalCwd: (id) => ({ term: 'E:/p/.termul/worktrees/a' })[id]
+    terminalCwd: (id) => ({ term: 'E:/p/.itzterm/worktrees/a' })[id]
   }
-  const pick = 'E:/p/.termul/worktrees/b'
+  const pick = 'E:/p/.itzterm/worktrees/b'
 
   it('uses the tab path over the pick (chat, terminal, editor)', () => {
     const tabs: WorkspaceTab[] = [
       { type: 'agent-chat', id: 'x', sessionId: 'inA' },
       { type: 'terminal', id: 'x', terminalId: 'term' },
-      { type: 'editor', id: 'x', filePath: 'E:/p/.termul/worktrees/a/f.ts' }
+      { type: 'editor', id: 'x', filePath: 'E:/p/.itzterm/worktrees/a/f.ts' }
     ]
     for (const activeTab of tabs) {
       expect(
@@ -346,8 +346,8 @@ describe('resolveActiveWorkingCopy', () => {
     const tabs: Array<WorkspaceTab | null> = [
       { type: 'browser', id: 'x', browserTabId: 'b' },
       { type: 'canvas', id: 'x', projectId: 'p', docPath: 'E:/p/d.figcraft' },
-      { type: 'git', id: 'x', cwd: 'E:/p/.termul/worktrees/a' },
-      { type: 'git-history', id: 'x', cwd: 'E:/p/.termul/worktrees/a' },
+      { type: 'git', id: 'x', cwd: 'E:/p/.itzterm/worktrees/a' },
+      { type: 'git-history', id: 'x', cwd: 'E:/p/.itzterm/worktrees/a' },
       null
     ]
     for (const activeTab of tabs) {
@@ -384,8 +384,8 @@ describe('resolveActiveWorkingCopy', () => {
       })
     ).toEqual({
       state: 'unresolved',
-      key: 'e:/p/.termul/worktrees/gone',
-      path: 'E:/p/.termul/worktrees/gone'
+      key: 'e:/p/.itzterm/worktrees/gone',
+      path: 'E:/p/.itzterm/worktrees/gone'
     })
   })
 

@@ -5,7 +5,7 @@
  * When the renderer is NOT running inside a Tauri webview (`!isTauriContext()`),
  * the facades (`tauri-filesystem-api`, `git-api`, `shell-api`,
  * `tauri-dialog-api`) resolve to these server-backed implementations. They hit
- * the same-origin `termul-server` HTTP routes registered in
+ * the same-origin `itzterm-server` HTTP routes registered in
  * `src-tauri/src/web/router.rs` and return the SAME `IpcResult<T>` contract
  * the Tauri commands return — so callers (`NewProjectModal`,
  * `scaffoldProject`) are unchanged.
@@ -161,7 +161,7 @@ async function boundedFsRequest<T>(
 }
 
 /**
- * Filesystem ops routed to `termul-server` (`/fs/*`). The methods project
+ * Filesystem ops routed to `itzterm-server` (`/fs/*`). The methods project
  * creation, file editing, and file inspection touch are implemented. Streaming
  * search (`/search/ws`) and directory watching (server-side `notify` + event
  * channel) are not yet implemented on the server; the renderer facade returns
@@ -240,7 +240,7 @@ export const webServerFilesystem = {
 }
 
 /**
- * Directory picker browse op routed to `termul-server` (`/fs/browse`). Returns
+ * Directory picker browse op routed to `itzterm-server` (`/fs/browse`). Returns
  * one level of children so `DirectoryPicker` can navigate host directories.
  */
 export const webServerDialog = {
@@ -251,7 +251,7 @@ export const webServerDialog = {
 }
 
 /**
- * Git ops routed to `termul-server` (`/git/*`). CAP-1 parity: each method
+ * Git ops routed to `itzterm-server` (`/git/*`). CAP-1 parity: each method
  * mirrors a desktop `#[tauri::command] git_*` handler and returns unwrapped
  * data, throwing on `!res.success` (matching the existing `init` template) so
  * the renderer facade (`git-api.ts`) can branch `isTauriContext()` between
@@ -443,7 +443,7 @@ export const webServerGit = {
   }
 }
 
-/** Shell detection routed to `termul-server` (`/shells`). */
+/** Shell detection routed to `itzterm-server` (`/shells`). */
 export const webServerShell = {
   async getAvailableShells(): Promise<IpcResult<DetectedShells>> {
     return getJson<DetectedShells>('/shells')
@@ -452,7 +452,7 @@ export const webServerShell = {
 
 /**
  * MCP registry persistence shared by standalone and desktop-hosted web clients.
- * The host keeps one `.termul/mcp-servers.json` per project, so every call names
+ * The host keeps one `.itzterm/mcp-servers.json` per project, so every call names
  * the `projectId` (an unknown or archived project is refused `NOT_FOUND`).
  */
 export const webServerMcpServers = {
@@ -466,7 +466,7 @@ export const webServerMcpServers = {
 }
 
 /**
- * Agent skills routed to `termul-server` (`/skills`). CAP-2 parity: each method
+ * Agent skills routed to `itzterm-server` (`/skills`). CAP-2 parity: each method
  * mirrors a desktop `#[tauri::command]` skills handler and returns unwrapped
  * data, throwing on `!res.success` so the renderer facade (`skills-api.ts`)
  * can branch `isTauriContext()` between `invoke(...)` and these HTTP impls.
@@ -505,7 +505,7 @@ function capLogField(value: string): string {
 }
 
 /**
- * Frontend error forwarding routed to `termul-server` (`POST /log/frontend-error`).
+ * Frontend error forwarding routed to `itzterm-server` (`POST /log/frontend-error`).
  * CAP-2 parity: mirrors the desktop `log_frontend_error` Tauri command. Returns
  * unwrapped; throws are swallowed by the caller (`log-api.ts`).
  */
@@ -530,7 +530,7 @@ export const webServerLog = {
 }
 
 /**
- * Content search routed to `termul-server` (`/search/*`). CAP-2 parity: each
+ * Content search routed to `itzterm-server` (`/search/*`). CAP-2 parity: each
  * method mirrors a desktop `#[tauri::command] search_*` handler and returns
  * unwrapped data, throwing on `!res.success`.
  */
@@ -604,7 +604,7 @@ export const webServerSearch = {
 
 /**
  * On-demand MCP client probe (web parity). `POST /mcp-servers/probe` runs the
- * rmcp client probe on the termul-server host (where stdio commands execute).
+ * rmcp client probe on the itzterm-server host (where stdio commands execute).
  * Returns the same `IpcResult<ProbeResult>` shape the desktop Tauri command
  * yields — the renderer facade unwraps it. The probe itself never fails: a
  * reachable-but-disconnected server still returns `success:true` with
@@ -631,7 +631,7 @@ export const webServerMcpProbe = {
 }
 
 /**
- * Worktree ops routed to `termul-server` (`/worktree/*`). CAP — Web worktree
+ * Worktree ops routed to `itzterm-server` (`/worktree/*`). CAP — Web worktree
  * parity: each method mirrors a desktop `#[tauri::command] worktree_*` handler
  * and returns the SAME `IpcResult<T>` contract (the renderer facade
  * `worktree-api.ts` branches `isTauriContext()` between `invoke(...)` and these

@@ -6,7 +6,7 @@
  * - Desktop: the `collect_bug_report_context` / `submit_bug_report` Tauri
  *   commands (commands module + `invoke_handler`), each returning the shared
  *   `IpcResult<T>` contract — hence `invokeIpc`, not `invokeIpcWrapped`.
- * - Web/remote + `termul-server`: `POST /log/diagnostics` (empty body) and
+ * - Web/remote + `itzterm-server`: `POST /log/diagnostics` (empty body) and
  *   `POST /log/report-bug` (`BugReportSubmitRequest`), replying `IpcBody<T>`
  *   — the `IpcResult<T>` byte-shape `postJson` already parses (the `/log/`
  *   prefix inherits the server's `GATED_PREFIXES` bearer auth, so an
@@ -107,7 +107,7 @@ export const bugReportApi = {
 }
 
 /** Repo the report files against (host `gh` uses the same `-R` target). */
-const ISSUE_REPO = 'gnoviawan/termul'
+const ISSUE_REPO = 'latiefahmad/itzTerm'
 const ISSUE_NEW_URL = `https://github.com/${ISSUE_REPO}/issues/new`
 
 /**
@@ -139,7 +139,7 @@ export function buildIssueMarkdown(
   lines.push('')
   lines.push('### Environment')
   lines.push('')
-  lines.push(`- **Termul:** ${context.appVersion} (${context.channel})`)
+  lines.push(`- **itzTerm:** ${context.appVersion} (${context.channel})`)
   lines.push(`- **OS:** ${context.os} (${context.arch})`)
   lines.push(`- **Run ID:** ${context.runId}`)
   lines.push(`- **Collected:** ${context.collectedAt}`)
@@ -158,8 +158,8 @@ export function buildIssueMarkdown(
     }
     const fence = '`'.repeat(Math.max(3, longestBacktickRun + 1))
     const summary = context.logTruncated
-      ? 'termul.log tail (truncated to its byte bound)'
-      : 'termul.log tail'
+      ? 'itzterm.log tail (truncated to its byte bound)'
+      : 'itzterm.log tail'
     lines.push('<details>')
     lines.push(`<summary>${summary}</summary>`)
     lines.push('')
@@ -170,7 +170,7 @@ export function buildIssueMarkdown(
     lines.push('</details>')
   } else {
     // A missing/unreadable host log is a note, not an error (spec matrix).
-    lines.push('_The host log (termul.log) was unavailable, so no log tail is attached._')
+    lines.push('_The host log (itzterm.log) was unavailable, so no log tail is attached._')
   }
 
   if (screenshotCount > 0) {
@@ -207,7 +207,7 @@ function shortIssueBody(context: BugReportContext, copied: boolean): string {
     '',
     '### Environment',
     '',
-    `- **Termul:** ${context.appVersion} (${context.channel})`,
+    `- **itzTerm:** ${context.appVersion} (${context.channel})`,
     `- **OS:** ${context.os} (${context.arch})`,
     `- **Run ID:** ${context.runId}`,
     `- **Collected:** ${context.collectedAt}`

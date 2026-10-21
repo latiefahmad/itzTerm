@@ -62,7 +62,7 @@ describe('DormantRing', () => {
     expect(chunks.length).toBe(2) // overflow notice + merged data
     // First chunk is the overflow notice
     const noticeText = new TextDecoder().decode(chunks[0])
-    expect(noticeText).toContain('[termul: dropped output')
+    expect(noticeText).toContain('[itzterm: dropped output')
   })
 
   it('should merge single chunk directly on drain', () => {

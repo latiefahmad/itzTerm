@@ -209,12 +209,12 @@ fn files_that_are_not_readable_manifests_are_skipped_and_left_in_place() {
     )
     .unwrap();
     std::fs::write(dir.join("shape.json"), br#"{"schemaVersion":1,"manifest":[]}"#).unwrap();
-    std::fs::write(dir.join(".termul.lock"), b"123").unwrap();
+    std::fs::write(dir.join(".itzterm.lock"), b"123").unwrap();
     std::fs::write(dir.join("good.json.corrupt-1.bak"), b"old").unwrap();
 
     let all = read_workspaces(&dir);
     assert_eq!(all.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["good"]);
-    for kept in ["broken.json", "newer.json", "shape.json", ".termul.lock"] {
+    for kept in ["broken.json", "newer.json", "shape.json", ".itzterm.lock"] {
         assert!(dir.join(kept).exists(), "{kept} is not touched");
     }
     assert_eq!(std::fs::read(dir.join("broken.json")).unwrap(), b"{ not json");
@@ -387,7 +387,7 @@ fn without_a_manifest_directory_nothing_is_adopted_or_written() {
 fn an_empty_manifest_directory_is_retired_without_a_write() {
     let fx = Fixture::new("empty-dir");
     std::fs::create_dir_all(&fx.manifests).unwrap();
-    std::fs::write(fx.manifests.join(".termul.lock"), b"1").unwrap();
+    std::fs::write(fx.manifests.join(".itzterm.lock"), b"1").unwrap();
     let store = fx.store();
     let device = who("dev", "t");
     store.read("device/dev/workspace/p1", &device, 7_000).unwrap();

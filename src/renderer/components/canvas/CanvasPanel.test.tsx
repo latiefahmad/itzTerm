@@ -29,7 +29,7 @@ const INFO: CanvasOpenInfo = {
   canvasId: 'cv0123456789abcdef',
   baseUrl: 'http://127.0.0.1:5199',
   canvasToken: 'cafe',
-  pinTag: 'termul-v1',
+  pinTag: 'itzterm-v1',
   docKey: DOC,
   mountSeq: 4,
   evicted: [],

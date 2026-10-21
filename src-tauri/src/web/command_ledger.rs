@@ -387,7 +387,7 @@ impl Drop for CommandGuard {
     fn drop(&mut self) {
         if !self.settled {
             warn!(
-                target: "termul::web::command_ledger",
+                target: "itzterm::web::command_ledger",
                 "command guard dropped without an outcome; recording unknown"
             );
             self.ledger.settle(&self.id, State::Unknown);

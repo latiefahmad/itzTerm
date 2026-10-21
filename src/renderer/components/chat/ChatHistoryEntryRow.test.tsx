@@ -65,7 +65,7 @@ function entry(overrides: Partial<ChatHistorySidebarEntry> = {}): ChatHistorySid
 
 function glyphSpans(): HTMLElement[] {
   // AgentGlyph renders a sanitized catalog/custom SVG as a span
-  // (dangerouslySetInnerHTML); the Bot fallback is an svg[data-termul-icon].
+  // (dangerouslySetInnerHTML); the Bot fallback is an svg[data-itzterm-icon].
   return Array.from(document.querySelectorAll<HTMLElement>('button span[aria-hidden="true"]'))
 }
 
@@ -264,7 +264,7 @@ describe('ChatHistoryEntryRow agent sequence', () => {
     const sequence = screen.getByLabelText('Conversation agents, 2 total')
     // Known id → bundled glyph span; unknown id → Bot fallback svg.
     expect(sequence.querySelectorAll('span[aria-hidden="true"]')).toHaveLength(1)
-    const bot = sequence.querySelector('svg[data-termul-icon="Bot"]')
+    const bot = sequence.querySelector('svg[data-itzterm-icon="Bot"]')
     expect(bot).toBeInTheDocument()
     expect(bot).toHaveAttribute('aria-hidden', 'true')
   })

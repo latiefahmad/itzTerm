@@ -99,15 +99,15 @@ describe('projectRelativePath', () => {
 })
 
 describe('canvasDocFile', () => {
-  const project = { name: 'termul', path: 'D:/git/termul' }
+  const project = { name: 'itzterm', path: 'D:/git/itzterm' }
 
   it('names the file by its stem and reports the path save_file reports', () => {
-    expect(canvasDocFile(String.raw`\?\D:\git\termul\design.figcraft`, project)).toEqual({
+    expect(canvasDocFile(String.raw`\?\D:\git\itzterm\design.figcraft`, project)).toEqual({
       name: 'design',
       path: 'design.figcraft',
-      location: 'termul'
+      location: 'itzterm'
     })
-    expect(canvasDocFile('D:/git/termul/ui/Poster.FIGCRAFT', project)).toMatchObject({
+    expect(canvasDocFile('D:/git/itzterm/ui/Poster.FIGCRAFT', project)).toMatchObject({
       name: 'Poster',
       path: 'ui/Poster.FIGCRAFT'
     })

@@ -42,8 +42,8 @@ is_release_prerelease() {
 resolve_dmg_checksums() {
   local checksum_file="$1"
   local version="$2"
-  local arm_dmg="Termul.Manager_${version}_aarch64.dmg"
-  local intel_dmg="Termul.Manager_${version}_x64.dmg"
+  local arm_dmg="itzTerm.Manager_${version}_aarch64.dmg"
+  local intel_dmg="itzTerm.Manager_${version}_x64.dmg"
   local arm_sha256 intel_sha256
 
   arm_sha256="$(awk -v file="$arm_dmg" '$2 == file || $2 == "*" file { print $1 }' "$checksum_file")"
@@ -66,7 +66,7 @@ resolve_dmg_checksums() {
 # every checksummed filename exactly matches a published release asset
 # name. `scripts/install.sh` resolves checksums by exact asset name, so a
 # silent name mismatch (e.g. a file named with the product display name
-# "Termul Manager" while the release asset is "Termul.Manager") makes the
+# "itzTerm" while the release asset is "itzTerm.Manager") makes the
 # install fail with "checksum not found" even though the asset itself
 # downloaded fine (#546).
 #
@@ -136,21 +136,21 @@ write_homebrew_cask() {
 
   mkdir -p "$(dirname "$output_file")"
   cat >"$output_file" <<EOF
-cask "termul" do
+cask "itzterm" do
   arch arm: "aarch64", intel: "x64"
 
   version "$version"
   sha256 arm:   "$arm_sha256",
          intel: "$intel_sha256"
 
-  url "https://github.com/gnoviawan/termul/releases/download/v#{version}/Termul.Manager_#{version}_#{arch}.dmg"
-  name "Termul Manager"
+  url "https://github.com/latiefahmad/itzTerm/releases/download/v#{version}/itzTerm.Manager_#{version}_#{arch}.dmg"
+  name "itzTerm"
   desc "Terminal-native workspace and CLI agent manager"
-  homepage "https://github.com/gnoviawan/termul"
+  homepage "https://github.com/latiefahmad/itzTerm"
 
   auto_updates true
 
-  app "Termul Manager.app"
+  app "itzTerm.app"
 EOF
 
   if [[ "$version" == "0.4.8" ]]; then
@@ -160,7 +160,7 @@ EOF
   # narrowly scoped compatibility exception to later casks.
   postflight do
     system_command "/usr/bin/xattr",
-                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Termul Manager.app"]
+                   args: ["-dr", "com.apple.quarantine", "#{appdir}/itzTerm.app"]
   end
 EOF
   fi
@@ -168,13 +168,13 @@ EOF
   cat >>"$output_file" <<'EOF'
 
   zap trash: [
-    "~/Library/Application Support/com.termul-manager.app",
-    "~/Library/Caches/com.termul-manager.app",
-    "~/Library/HTTPStorages/com.termul-manager.app",
-    "~/Library/Logs/com.termul-manager.app",
-    "~/Library/Preferences/com.termul-manager.app.plist",
-    "~/Library/Saved Application State/com.termul-manager.app.savedState",
-    "~/Library/WebKit/com.termul-manager.app",
+    "~/Library/Application Support/com.itzterm.app",
+    "~/Library/Caches/com.itzterm.app",
+    "~/Library/HTTPStorages/com.itzterm.app",
+    "~/Library/Logs/com.itzterm.app",
+    "~/Library/Preferences/com.itzterm.app.plist",
+    "~/Library/Saved Application State/com.itzterm.app.savedState",
+    "~/Library/WebKit/com.itzterm.app",
   ]
 end
 EOF

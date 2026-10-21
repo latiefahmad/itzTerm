@@ -91,13 +91,13 @@ describe('overlay-stack-store mobile shell (managed history sentinels)', () => {
     it('reads the sentinel depth and treats everything else as 0', () => {
       expect(readOverlaySentinelDepth(null)).toBe(0)
       expect(readOverlaySentinelDepth(undefined)).toBe(0)
-      expect(readOverlaySentinelDepth('termulOverlay')).toBe(0)
+      expect(readOverlaySentinelDepth('itztermOverlay')).toBe(0)
       expect(readOverlaySentinelDepth({ idx: 2 })).toBe(0)
-      expect(readOverlaySentinelDepth({ termulOverlay: 'yes' })).toBe(0)
-      expect(readOverlaySentinelDepth({ termulOverlay: true })).toBe(1)
-      expect(readOverlaySentinelDepth({ termulOverlay: true, termulOverlayDepth: 3 })).toBe(3)
+      expect(readOverlaySentinelDepth({ itztermOverlay: 'yes' })).toBe(0)
+      expect(readOverlaySentinelDepth({ itztermOverlay: true })).toBe(1)
+      expect(readOverlaySentinelDepth({ itztermOverlay: true, itztermOverlayDepth: 3 })).toBe(3)
       for (const bad of [0, -1, 1.5, '2', null]) {
-        expect(readOverlaySentinelDepth({ termulOverlay: true, termulOverlayDepth: bad })).toBe(1)
+        expect(readOverlaySentinelDepth({ itztermOverlay: true, itztermOverlayDepth: bad })).toBe(1)
       }
     })
   })
@@ -116,8 +116,8 @@ describe('overlay-stack-store mobile shell (managed history sentinels)', () => {
         usr: 'x',
         key: 'k1',
         idx: 3,
-        termulOverlay: true,
-        termulOverlayDepth: 2
+        itztermOverlay: true,
+        itztermOverlayDepth: 2
       })
       expect(location.hash).toBe('#/base')
     })
@@ -354,7 +354,7 @@ describe('overlay-stack-store mobile shell (managed history sentinels)', () => {
 
     it('clears a sentinel left over from a reload when the mobile shell turns on', async () => {
       useOverlayStackStore.getState().setMobileShell(false)
-      history.pushState({ termulOverlay: true }, '')
+      history.pushState({ itztermOverlay: true }, '')
       expect(readOverlaySentinelDepth(history.state)).toBe(1)
       const backSpy = vi.spyOn(history, 'back')
 
@@ -375,7 +375,7 @@ describe('overlay-stack-store mobile shell (managed history sentinels)', () => {
       // the subscription's flip branch never runs, only the install-time one.
       cleanup?.()
       queued = []
-      history.pushState({ termulOverlay: true, termulOverlayDepth: 1 }, '')
+      history.pushState({ itztermOverlay: true, itztermOverlayDepth: 1 }, '')
       useOverlayStackStore.setState({ stack: [], mobileShell: true })
       const backSpy = vi.spyOn(history, 'back')
 
@@ -631,7 +631,7 @@ describe('overlay-stack-store mobile shell (managed history sentinels)', () => {
 
       expect(closeTop).toHaveBeenCalledTimes(1)
       // Legacy re-arm shape, not the managed sentinel.
-      expect(pushSpy).toHaveBeenCalledWith({ termulOverlay: true }, '')
+      expect(pushSpy).toHaveBeenCalledWith({ itztermOverlay: true }, '')
     })
   })
 

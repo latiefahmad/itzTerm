@@ -66,10 +66,10 @@ describe('MessageActions', () => {
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Copied' })).toBeInTheDocument()
     })
-    const check = document.querySelector('svg[data-termul-icon="Check"]')
+    const check = document.querySelector('svg[data-itzterm-icon="Check"]')
     expect(check).toBeTruthy()
     expect(check?.classList.contains('text-success')).toBe(true)
-    expect(document.querySelector('svg[data-termul-icon="Copy"]')).toBeNull()
+    expect(document.querySelector('svg[data-itzterm-icon="Copy"]')).toBeNull()
   })
 })
 

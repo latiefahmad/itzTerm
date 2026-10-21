@@ -11,7 +11,7 @@ import {
 
 const baseRow: TestimonialRow = {
   id: 'testimonial-1',
-  quote: 'Termul keeps my project terminals exactly where I need them.',
+  quote: 'itzTerm keeps my project terminals exactly where I need them.',
   name: 'Alex Chen',
   role: 'Staff Engineer',
   status: 'pending',
@@ -26,7 +26,7 @@ function submissionForm(overrides: Record<string, FormDataEntryValue> = {}) {
   const formData = new FormData();
   formData.set(
     'quote',
-    'Termul keeps my project terminals exactly where I need them.',
+    'itzTerm keeps my project terminals exactly where I need them.',
   );
   formData.set('name', 'Alex Chen');
   formData.set('role', 'Staff Engineer');
@@ -49,7 +49,7 @@ describe('testimonial API helpers', () => {
   test('maps public testimonials without landing-only fields', () => {
     expect(toPublicTestimonial(baseRow)).toEqual({
       id: 'testimonial-1',
-      quote: 'Termul keeps my project terminals exactly where I need them.',
+      quote: 'itzTerm keeps my project terminals exactly where I need them.',
       name: 'Alex Chen',
       role: 'Staff Engineer',
       avatarUrl: 'https://example.com/avatar.png',
@@ -85,7 +85,7 @@ describe('testimonial API helpers', () => {
 
   test('parses a valid submission', () => {
     expect(parseSubmission(submissionForm())).toMatchObject({
-      quote: 'Termul keeps my project terminals exactly where I need them.',
+      quote: 'itzTerm keeps my project terminals exactly where I need them.',
       name: 'Alex Chen',
       role: 'Staff Engineer',
       avatarUrl: 'https://example.com/avatar.png',
@@ -145,7 +145,7 @@ describe('testimonial API helpers', () => {
   });
 
   test('uses the first forwarded IP when CF-Connecting-IP is absent', () => {
-    const request = new Request('https://termul.dev/api/testimonials', {
+    const request = new Request('https://itzterm.dev/api/testimonials', {
       headers: {
         'X-Forwarded-For': '1.2.3.4, 5.6.7.8',
       },
@@ -155,7 +155,7 @@ describe('testimonial API helpers', () => {
   });
 
   test('prefers CF-Connecting-IP over X-Forwarded-For', () => {
-    const request = new Request('https://termul.dev/api/testimonials', {
+    const request = new Request('https://itzterm.dev/api/testimonials', {
       headers: {
         'CF-Connecting-IP': '9.9.9.9',
         'X-Forwarded-For': '1.2.3.4, 5.6.7.8',

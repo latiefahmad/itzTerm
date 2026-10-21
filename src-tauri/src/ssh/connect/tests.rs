@@ -201,9 +201,9 @@ async fn cancel_aborts_a_silent_server() {
 }
 
 /// Authentication against a real sshd. Run with:
-/// `TERMUL_SSH_TEST_HOST=127.0.0.1 TERMUL_SSH_TEST_PORT=2222 TERMUL_SSH_TEST_USER=u
-///  TERMUL_SSH_TEST_PASSWORD=p TERMUL_SSH_TEST_KEYS=<dir> TERMUL_SSH_TEST_KEY_PASSPHRASE=k
-///  TERMUL_SSH_TEST_KBD_USER=u2 TERMUL_SSH_TEST_KBD_PASSWORD=p2 cargo test --lib -- --ignored real_server_auth`
+/// `ITZTERM_SSH_TEST_HOST=127.0.0.1 ITZTERM_SSH_TEST_PORT=2222 ITZTERM_SSH_TEST_USER=u
+///  ITZTERM_SSH_TEST_PASSWORD=p ITZTERM_SSH_TEST_KEYS=<dir> ITZTERM_SSH_TEST_KEY_PASSPHRASE=k
+///  ITZTERM_SSH_TEST_KBD_USER=u2 ITZTERM_SSH_TEST_KBD_PASSWORD=p2 cargo test --lib -- --ignored real_server_auth`
 /// `<dir>` holds `id_ed25519_plain`, `id_ed25519_enc`, `id_rsa_pem` (authorized) and
 /// `id_ed25519_unauthorized`.
 #[tokio::test]
@@ -212,14 +212,14 @@ async fn real_server_auth_matrix() {
     // The test server's key must not reach the user's real known_hosts.
     super::super::known_hosts::isolate_stores_for_tests();
     let var = |name: &str| std::env::var(name).unwrap_or_else(|_| panic!("{name} not set"));
-    let host = var("TERMUL_SSH_TEST_HOST");
-    let port: u16 = var("TERMUL_SSH_TEST_PORT").parse().unwrap();
-    let user = var("TERMUL_SSH_TEST_USER");
-    let password = var("TERMUL_SSH_TEST_PASSWORD");
-    let keys = std::path::PathBuf::from(var("TERMUL_SSH_TEST_KEYS"));
-    let passphrase = var("TERMUL_SSH_TEST_KEY_PASSPHRASE");
-    let kbd_user = var("TERMUL_SSH_TEST_KBD_USER");
-    let kbd_password = var("TERMUL_SSH_TEST_KBD_PASSWORD");
+    let host = var("ITZTERM_SSH_TEST_HOST");
+    let port: u16 = var("ITZTERM_SSH_TEST_PORT").parse().unwrap();
+    let user = var("ITZTERM_SSH_TEST_USER");
+    let password = var("ITZTERM_SSH_TEST_PASSWORD");
+    let keys = std::path::PathBuf::from(var("ITZTERM_SSH_TEST_KEYS"));
+    let passphrase = var("ITZTERM_SSH_TEST_KEY_PASSPHRASE");
+    let kbd_user = var("ITZTERM_SSH_TEST_KBD_USER");
+    let kbd_password = var("ITZTERM_SSH_TEST_KBD_PASSWORD");
     let key = |name: &str| Some(keys.join(name).to_string_lossy().to_string());
 
     let run = |username: String,

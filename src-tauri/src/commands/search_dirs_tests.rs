@@ -258,11 +258,11 @@ fn start_dir_search_reports_spawn_failure() {
 }
 
 /// Real-rg integration: honors ignore rules, derives root-relative dirs, and
-/// leaves the file pass alone. Needs `rg` (PATH or `TERMUL_RG_PATH`).
+/// leaves the file pass alone. Needs `rg` (PATH or `ITZTERM_RG_PATH`).
 #[test]
 fn start_dir_search_finds_dirs_with_real_rg() {
     let root = std::env::temp_dir().join(format!(
-        "termul-dirs-{}-{}",
+        "itzterm-dirs-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ));

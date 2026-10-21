@@ -333,7 +333,7 @@ impl Drop for ConnectionCleanup {
             });
         } else {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 "connection cleanup dropped outside a Tokio runtime"
             );
         }

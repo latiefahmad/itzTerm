@@ -38,12 +38,12 @@ describe('ChatMarkdownCode with Streamdown', () => {
     })
   })
 
-  it('renders a termul-plan fence as a PlanPanel instead of a code block', async () => {
+  it('renders a itzterm-plan fence as a PlanPanel instead of a code block', async () => {
     const plan = [
       { content: 'Investigate the renderer bypass', status: 'completed' },
       { content: 'Fix the delegation in ChatMarkdownCode', status: 'in_progress' }
     ]
-    const fence = `\`\`\`termul-plan\n${JSON.stringify(plan)}\n\`\`\``
+    const fence = `\`\`\`itzterm-plan\n${JSON.stringify(plan)}\n\`\`\``
     const { container } = render(
       <TooltipProvider>
         <Streamdown

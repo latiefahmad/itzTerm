@@ -2,7 +2,7 @@ use super::*;
 
 fn temp_dir(label: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-sessions-{label}-{}-{}",
+        "itzterm-sessions-{label}-{}-{}",
         std::process::id(),
         Uuid::new_v4()
     ));

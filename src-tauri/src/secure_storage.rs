@@ -1,7 +1,7 @@
 use keyring::Entry;
 use serde::{Deserialize, Serialize};
 
-const SERVICE_NAME: &str = "com.termul.manager";
+const SERVICE_NAME: &str = "com.itzterm.manager";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SecureStorageRequest {

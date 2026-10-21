@@ -2,7 +2,7 @@
  * Unit tests for tauri-session-api.ts (desktop branch).
  *
  * The session lives in the persistence facade under `sessions/auto-save`. A
- * leftover entry of the legacy `termul-sessions.json` plugin-store file is moved
+ * leftover entry of the legacy `itzterm-sessions.json` plugin-store file is moved
  * once, then that file is never read again. The web branch (localStorage shim
  * of the legacy file) is covered by `tauri-session-api.web.test.ts`.
  */

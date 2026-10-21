@@ -8,7 +8,7 @@ export async function openApp(page: Page, project = 'acme-shop'): Promise<void> 
     await page.goto(`${DEMO_BASE_URL}/#token=${DEMO_TOKEN}`)
     try {
       await page.waitForFunction(
-        (t) => localStorage.getItem('termul.webAuthToken') === t,
+        (t) => localStorage.getItem('itzterm.webAuthToken') === t,
         DEMO_TOKEN,
         {
           timeout: 10_000

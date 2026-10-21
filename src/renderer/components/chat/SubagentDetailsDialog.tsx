@@ -61,7 +61,7 @@ export function SubagentDetailsDialog({
         className="flex max-h-[min(85vh,48rem)] w-[calc(100vw-2rem)] max-w-2xl flex-col overflow-hidden"
         onClick={(event) => {
           const target = event.target as Element
-          if (event.defaultPrevented && target.closest('[data-testid="termul-file-path"]')) {
+          if (event.defaultPrevented && target.closest('[data-testid="itzterm-file-path"]')) {
             onOpenChange(false)
           }
         }}

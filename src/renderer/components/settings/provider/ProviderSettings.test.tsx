@@ -232,7 +232,7 @@ describe('ProviderSettings', () => {
     await screen.findByTestId('claude-account-ab12')
     expect(screen.queryByRole('button', { name: /add account/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument()
-    expect(screen.getByText('termul-server claude account')).toBeInTheDocument()
+    expect(screen.getByText('itzterm-server claude account')).toBeInTheDocument()
     openMenu('Work')
     expect(await screen.findByRole('menuitem', { name: /Make default/ })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: 'Remove' })).not.toBeInTheDocument()

@@ -168,7 +168,7 @@ async fn a_spawn_over_the_terminal_cap_answers_terminal_limit_and_frees_its_id()
 async fn a_failed_spawn_releases_its_id_so_a_retry_executes() {
     let (state, _) = state_with_clock();
     let mut conn = gate_test_ctx(true);
-    let dir = std::env::temp_dir().join(format!("termul-spawn-retry-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("itzterm-spawn-retry-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     let payload = json!({ "projectId": "p", "cwd": dir.to_string_lossy() });
 

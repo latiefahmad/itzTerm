@@ -146,7 +146,7 @@ pub(super) async fn handle_get_session_payload(
             match persistence.session_payload_async(&parsed.session_id).await {
                 Ok(payload) => {
                     tracing::debug!(
-                        target: "termul::web::ws",
+                        target: "itzterm::web::ws",
                         session_id = %parsed.session_id,
                         messages = payload.messages.len(),
                         "get_session_payload: materialized host payload"
@@ -162,7 +162,7 @@ pub(super) async fn handle_get_session_payload(
                     // detail that do not belong on the wire. The full context
                     // stays in the host log.
                     tracing::warn!(
-                        target: "termul::web::ws",
+                        target: "itzterm::web::ws",
                         session_id = %parsed.session_id,
                         error = %error,
                         "get_session_payload: host payload materialization failed"
@@ -222,7 +222,7 @@ pub(super) async fn handle_get_session_payload_tail(
             {
                 Ok(payload) => {
                     tracing::debug!(
-                        target: "termul::web::ws",
+                        target: "itzterm::web::ws",
                         session_id = %parsed.session_id,
                         messages = payload.messages.len(),
                         "get_session_payload_tail: materialized host tail payload"
@@ -234,7 +234,7 @@ pub(super) async fn handle_get_session_payload_tail(
                 }
                 Err(error) => {
                     tracing::warn!(
-                        target: "termul::web::ws",
+                        target: "itzterm::web::ws",
                         session_id = %parsed.session_id,
                         error = %error,
                         "get_session_payload_tail: host tail materialization failed"
@@ -333,7 +333,7 @@ pub(super) async fn handle_record_agent_switch(
     {
         Ok(()) => {
             tracing::debug!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 session_id = %parsed.session_id,
                 "record_agent_switch: durable marker recorded"
             );
@@ -355,7 +355,7 @@ pub(super) async fn handle_record_agent_switch(
             // message: the error string may embed filesystem paths.
             // Ids-only context stays in the host log.
             tracing::warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 session_id = %parsed.session_id,
                 error = %error,
                 "record_agent_switch: durable marker write failed"
@@ -419,7 +419,7 @@ pub(super) async fn handle_recover_session_snapshot(
                     return WsReply::err(id, WsErrorCode::NotFound, "session snapshot not found");
                 }
                 tracing::warn!(
-                    target: "termul::web::ws",
+                    target: "itzterm::web::ws",
                     session_id = %parsed.session_id,
                     error = %error,
                     "recover_session_snapshot: transient snapshot materialization failure"
@@ -510,7 +510,7 @@ pub(super) async fn handle_get_session_cursor(
         })
         .unwrap_or(0);
     tracing::debug!(
-        target: "termul::web::ws",
+        target: "itzterm::web::ws",
         session_id = %parsed.session_id,
         watermark,
         "get_session_cursor"

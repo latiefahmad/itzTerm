@@ -8,7 +8,7 @@ const phone = { width: 390, height: 844 }
 
 async function openPhone(page: Page): Promise<void> {
   await page.goto(`${DEMO_BASE_URL}/#token=${DEMO_TOKEN}`)
-  await page.waitForFunction((t) => localStorage.getItem('termul.webAuthToken') === t, DEMO_TOKEN)
+  await page.waitForFunction((t) => localStorage.getItem('itzterm.webAuthToken') === t, DEMO_TOKEN)
   await page.goto(`${DEMO_BASE_URL}/#/`)
   await page.getByRole('button', { name: 'Open menu' }).waitFor()
   await page.locator('[data-composer-editor="true"][aria-label="Agent prompt"]').first().waitFor()
@@ -31,7 +31,7 @@ async function openMore(page: Page): Promise<void> {
 /** Stops the demo server the way an operator would, so the app sees its host go away. */
 function stopDemoServer(): void {
   const port = new URL(DEMO_BASE_URL).port
-  execSync(`pkill -TERM -f "termul-serve[r] --host 127.0.0.1 --port ${port} "`)
+  execSync(`pkill -TERM -f "itzterm-serve[r] --host 127.0.0.1 --port ${port} "`)
 }
 
 export const shots: Shot[] = [

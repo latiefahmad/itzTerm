@@ -4,8 +4,8 @@ fn answers_localhost() -> OnboardAnswers {
     OnboardAnswers {
         host: "127.0.0.1".into(),
         port: 8080,
-        sessions_dir: PathBuf::from("/home/opus/.local/state/termul/sessions"),
-        projects_file: PathBuf::from("/home/opus/.local/state/termul/projects.json"),
+        sessions_dir: PathBuf::from("/home/opus/.local/state/itzterm/sessions"),
+        projects_file: PathBuf::from("/home/opus/.local/state/itzterm/projects.json"),
         allow_remote_writes: false,
         update_channel: None,
         update_interval_secs: 21600,
@@ -16,8 +16,8 @@ fn answers_expose_remote() -> OnboardAnswers {
     OnboardAnswers {
         host: "0.0.0.0".into(),
         port: 8080,
-        sessions_dir: PathBuf::from("/home/opus/.local/state/termul/sessions"),
-        projects_file: PathBuf::from("/home/opus/.local/state/termul/projects.json"),
+        sessions_dir: PathBuf::from("/home/opus/.local/state/itzterm/sessions"),
+        projects_file: PathBuf::from("/home/opus/.local/state/itzterm/projects.json"),
         allow_remote_writes: true,
         update_channel: None,
         update_interval_secs: 21600,
@@ -28,8 +28,8 @@ fn answers_with_update() -> OnboardAnswers {
     OnboardAnswers {
         host: "127.0.0.1".into(),
         port: 8080,
-        sessions_dir: PathBuf::from("/home/opus/.local/state/termul/sessions"),
-        projects_file: PathBuf::from("/home/opus/.local/state/termul/projects.json"),
+        sessions_dir: PathBuf::from("/home/opus/.local/state/itzterm/sessions"),
+        projects_file: PathBuf::from("/home/opus/.local/state/itzterm/projects.json"),
         allow_remote_writes: false,
         update_channel: Some(UpdateChannel::Stable),
         update_interval_secs: 21600,
@@ -48,9 +48,9 @@ fn command_args_loopback_no_remote_writes() {
             "--port".into(),
             "8080".into(),
             "--sessions-dir".into(),
-            "/home/opus/.local/state/termul/sessions".into(),
+            "/home/opus/.local/state/itzterm/sessions".into(),
             "--projects-file".to_string(),
-            "/home/opus/.local/state/termul/projects.json".into(),
+            "/home/opus/.local/state/itzterm/projects.json".into(),
         ]
     );
     assert!(!args.iter().any(|a| a == "--allow-remote-writes"));
@@ -90,7 +90,7 @@ fn generated_unit_text_pins_projects_file() {
     // build_systemd_unit_text.
     let a = answers_localhost();
     let exec_start = build_exec_start(
-        Path::new("/usr/local/bin/termul-server"),
+        Path::new("/usr/local/bin/itzterm-server"),
         &a.to_command_args(),
     );
     let unit = build_systemd_unit_text(&exec_start, None, SystemdScope::System);
@@ -99,7 +99,7 @@ fn generated_unit_text_pins_projects_file() {
         "generated unit must pin --projects-file, got:\n{unit}"
     );
     assert!(
-        unit.contains("\"/home/opus/.local/state/termul/projects.json\""),
+        unit.contains("\"/home/opus/.local/state/itzterm/projects.json\""),
         "generated unit must carry the projects file path, got:\n{unit}"
     );
 }
@@ -111,14 +111,14 @@ fn generated_unit_preserves_literal_percent_in_projects_file() {
     // (`%%`) in the generated ExecStart or systemd would expand/reject it
     // and the server would start with a wrong registry path.
     let mut a = answers_localhost();
-    a.projects_file = PathBuf::from("/home/opus/.local/state/termul/100%/projects.json");
+    a.projects_file = PathBuf::from("/home/opus/.local/state/itzterm/100%/projects.json");
     let exec_start = build_exec_start(
-        Path::new("/usr/local/bin/termul-server"),
+        Path::new("/usr/local/bin/itzterm-server"),
         &a.to_command_args(),
     );
     let unit = build_systemd_unit_text(&exec_start, None, SystemdScope::System);
     assert!(
-        unit.contains("\"/home/opus/.local/state/termul/100%%/projects.json\""),
+        unit.contains("\"/home/opus/.local/state/itzterm/100%%/projects.json\""),
         "generated unit must escape % as %%, got:\n{unit}"
     );
     assert!(
@@ -212,11 +212,11 @@ fn env_lines_loopback_no_updates_has_shell_home_only() {
     assert!(
         !lines
             .iter()
-            .any(|l| l.starts_with("TERMUL_SERVER_ALLOW_REMOTE_WRITES")),
+            .any(|l| l.starts_with("ITZTERM_SERVER_ALLOW_REMOTE_WRITES")),
         "loopback must not emit remote-writes"
     );
     assert!(
-        !lines.iter().any(|l| l.starts_with("TERMUL_SERVER_UPDATE")),
+        !lines.iter().any(|l| l.starts_with("ITZTERM_SERVER_UPDATE")),
         "no update channel must not emit update vars"
     );
     #[cfg(unix)]
@@ -242,7 +242,7 @@ fn env_lines_expose_remote_writes() {
     let lines = a.to_env_lines();
     assert!(lines
         .iter()
-        .any(|l| l == "TERMUL_SERVER_ALLOW_REMOTE_WRITES=true"));
+        .any(|l| l == "ITZTERM_SERVER_ALLOW_REMOTE_WRITES=true"));
 }
 
 #[test]
@@ -251,13 +251,13 @@ fn env_lines_with_update_channel() {
     let lines = a.to_env_lines();
     assert!(lines
         .iter()
-        .any(|l| l == "TERMUL_SERVER_UPDATE_ENABLED=true"));
+        .any(|l| l == "ITZTERM_SERVER_UPDATE_ENABLED=true"));
     assert!(lines
         .iter()
-        .any(|l| l == "TERMUL_SERVER_UPDATE_CHANNEL=stable"));
+        .any(|l| l == "ITZTERM_SERVER_UPDATE_CHANNEL=stable"));
     assert!(lines
         .iter()
-        .any(|l| l == "TERMUL_SERVER_UPDATE_INTERVAL_SECS=21600"));
+        .any(|l| l == "ITZTERM_SERVER_UPDATE_INTERVAL_SECS=21600"));
 }
 
 #[test]
@@ -270,7 +270,7 @@ fn to_server_config_loopback_disables_remote_writes() {
     assert_eq!(cfg.seed_project_root, None, "onboard never seeds a project root");
     assert_eq!(
         cfg.sessions_dir.as_ref(),
-        Some(&PathBuf::from("/home/opus/.local/state/termul/sessions"))
+        Some(&PathBuf::from("/home/opus/.local/state/itzterm/sessions"))
     );
 }
 
@@ -310,8 +310,8 @@ fn detect_from_no_systemd_is_setsid() {
 #[test]
 fn systemd_unit_text_with_env_file_has_required_fields() {
     let unit = build_systemd_unit_text(
-        "/usr/local/bin/termul-server --host 127.0.0.1",
-        Some("/etc/termul/termul-server.env"),
+        "/usr/local/bin/itzterm-server --host 127.0.0.1",
+        Some("/etc/itzterm/itzterm-server.env"),
         SystemdScope::System,
     );
     assert!(unit.contains("ExecStart="));
@@ -323,7 +323,7 @@ fn systemd_unit_text_with_env_file_has_required_fields() {
 #[test]
 fn systemd_unit_text_without_env_file_omits_environment_file() {
     let unit = build_systemd_unit_text(
-        "/usr/local/bin/termul-server --host 127.0.0.1",
+        "/usr/local/bin/itzterm-server --host 127.0.0.1",
         None,
         SystemdScope::System,
     );
@@ -338,7 +338,7 @@ fn systemd_unit_text_user_scope_uses_default_target() {
     // `multi-user.target` (which doesn't exist in the user systemd
     // instance and makes `systemctl --user enable` fail).
     let unit = build_systemd_unit_text(
-        "/usr/local/bin/termul-server --host 127.0.0.1",
+        "/usr/local/bin/itzterm-server --host 127.0.0.1",
         None,
         SystemdScope::User,
     );
@@ -355,7 +355,7 @@ fn systemd_unit_text_user_scope_uses_default_target() {
 #[test]
 fn systemd_unit_text_system_scope_uses_multi_user_target() {
     let unit = build_systemd_unit_text(
-        "/usr/local/bin/termul-server --host 127.0.0.1",
+        "/usr/local/bin/itzterm-server --host 127.0.0.1",
         None,
         SystemdScope::System,
     );
@@ -371,16 +371,16 @@ fn env_lines_expose_with_update_channel_orders_remote_then_update() {
     let lines = a.to_env_lines();
     assert!(lines
         .iter()
-        .any(|l| l == "TERMUL_SERVER_ALLOW_REMOTE_WRITES=true"));
+        .any(|l| l == "ITZTERM_SERVER_ALLOW_REMOTE_WRITES=true"));
     assert!(lines
         .iter()
-        .any(|l| l == "TERMUL_SERVER_UPDATE_ENABLED=true"));
+        .any(|l| l == "ITZTERM_SERVER_UPDATE_ENABLED=true"));
     assert!(lines
         .iter()
-        .any(|l| l == "TERMUL_SERVER_UPDATE_CHANNEL=nightly"));
+        .any(|l| l == "ITZTERM_SERVER_UPDATE_CHANNEL=nightly"));
     assert!(lines
         .iter()
-        .any(|l| l == "TERMUL_SERVER_UPDATE_INTERVAL_SECS=3600"));
+        .any(|l| l == "ITZTERM_SERVER_UPDATE_INTERVAL_SECS=3600"));
 }
 
 #[test]
@@ -398,13 +398,13 @@ fn write_access_info_systemd_user_scope_includes_user_flag() {
         Path::new("/tmp"),
         false,
         None,
-        Path::new("/usr/local/bin/termul-server"),
+        Path::new("/usr/local/bin/itzterm-server"),
         &[],
     );
     let s = String::from_utf8(out).unwrap();
-    assert!(s.contains("journalctl --user -u termul-server"), "got: {s}");
+    assert!(s.contains("journalctl --user -u itzterm-server"), "got: {s}");
     assert!(
-        s.contains("systemctl --user stop termul-server"),
+        s.contains("systemctl --user stop itzterm-server"),
         "got: {s}"
     );
 }
@@ -422,11 +422,11 @@ fn write_access_info_systemd_system_scope_omits_user_flag() {
         Path::new("/tmp"),
         false,
         None,
-        Path::new("/usr/local/bin/termul-server"),
+        Path::new("/usr/local/bin/itzterm-server"),
         &[],
     );
     let s = String::from_utf8(out).unwrap();
-    assert!(s.contains("journalctl -u termul-server"), "got: {s}");
+    assert!(s.contains("journalctl -u itzterm-server"), "got: {s}");
     assert!(!s.contains("journalctl --user"), "got: {s}");
 }
 
@@ -443,7 +443,7 @@ fn write_access_info_surfaces_update_channel_when_some() {
         Path::new("/tmp"),
         false,
         Some(UpdateChannel::Insider),
-        Path::new("/usr/local/bin/termul-server"),
+        Path::new("/usr/local/bin/itzterm-server"),
         &[],
     );
     let s = String::from_utf8(out).unwrap();
@@ -534,7 +534,7 @@ fn write_access_info_public_bind_points_at_token_file_not_logs() {
         Path::new("/tmp/state"),
         false,
         None,
-        Path::new("/usr/local/bin/termul-server"),
+        Path::new("/usr/local/bin/itzterm-server"),
         &[],
     );
     let s = String::from_utf8(out).unwrap();
@@ -552,7 +552,7 @@ fn write_access_info_public_bind_points_at_token_file_not_logs() {
 #[test]
 fn ensure_state_dir_creates_missing_dir() {
     let base = std::env::temp_dir().join(format!(
-        "termul-onboard-state-{}-{}",
+        "itzterm-onboard-state-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -573,7 +573,7 @@ fn ensure_state_dir_fails_fast_when_path_is_a_file() {
     // every platform, regardless of privileges (root bypasses permission
     // bits, so a chmod-based read-only dir is unreliable).
     let base = std::env::temp_dir().join(format!(
-        "termul-onboard-state-file-{}-{}",
+        "itzterm-onboard-state-file-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

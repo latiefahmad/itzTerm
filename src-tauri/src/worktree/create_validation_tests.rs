@@ -57,7 +57,7 @@ fn create_nests_a_slashed_name_under_the_worktrees_folder() {
         .expect("a branch-shaped name creates a nested worktree");
     assert!(project
         .path()
-        .join(".termul/worktrees/feat/login/a.txt")
+        .join(".itzterm/worktrees/feat/login/a.txt")
         .exists());
 }
 
@@ -71,7 +71,7 @@ fn create_rejects_an_existing_branch_that_looks_like_a_git_option() {
     let err = WorktreeManager::create(p, "detached", "--detach", false, None, None, None)
         .expect_err("`--detach` is not a branch");
     assert_eq!(err.error_code(), "INVALID_BRANCH_NAME");
-    assert!(!project.path().join(".termul/worktrees/detached").exists());
+    assert!(!project.path().join(".itzterm/worktrees/detached").exists());
 }
 
 #[test]
@@ -89,7 +89,7 @@ fn create_rejects_a_new_branch_that_looks_like_a_git_option() {
         project.path(),
         &["show-ref", "--verify", "--quiet", "refs/heads/victim"],
     );
-    assert!(!project.path().join(".termul/worktrees/probe").exists());
+    assert!(!project.path().join(".itzterm/worktrees/probe").exists());
 }
 
 #[test]

@@ -3,7 +3,7 @@ use super::*;
 
 fn temp_dir(label: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-sessions-wtbranch-{label}-{}-{}",
+        "itzterm-sessions-wtbranch-{label}-{}-{}",
         std::process::id(),
         now_millis()
     ));
@@ -48,7 +48,7 @@ async fn creator_registration_records_auto_source_and_launch_branch() {
         &persistence,
         &root,
         "s1",
-        Some("/p/.termul/worktrees/ab12"),
+        Some("/p/.itzterm/worktrees/ab12"),
         true,
     )
     .await;
@@ -177,7 +177,7 @@ async fn rename_rewrites_every_matching_session_across_path_forms_including_clos
         &persistence,
         &root,
         "creator",
-        Some(r"E:\proj\.termul\worktrees\ab12\"),
+        Some(r"E:\proj\.itzterm\worktrees\ab12\"),
         true,
     )
     .await;
@@ -185,7 +185,7 @@ async fn rename_rewrites_every_matching_session_across_path_forms_including_clos
         &persistence,
         &root,
         "later",
-        Some("e:/proj/.termul/worktrees/ab12"),
+        Some("e:/proj/.itzterm/worktrees/ab12"),
         false,
     )
     .await;
@@ -193,7 +193,7 @@ async fn rename_rewrites_every_matching_session_across_path_forms_including_clos
         &persistence,
         &root,
         "closed",
-        Some("E:/proj/.termul/worktrees/ab12/"),
+        Some("E:/proj/.itzterm/worktrees/ab12/"),
         false,
     )
     .await;
@@ -201,7 +201,7 @@ async fn rename_rewrites_every_matching_session_across_path_forms_including_clos
         &persistence,
         &root,
         "elsewhere",
-        Some("E:/proj/.termul/worktrees/zz99"),
+        Some("E:/proj/.itzterm/worktrees/zz99"),
         true,
     )
     .await;
@@ -213,7 +213,7 @@ async fn rename_rewrites_every_matching_session_across_path_forms_including_clos
 
     let count = persistence
         .rename_worktree_branch(
-            r"\\?\E:\proj\.termul\worktrees\ab12",
+            r"\\?\E:\proj\.itzterm\worktrees\ab12",
             "chat/fix-login",
             false,
         )

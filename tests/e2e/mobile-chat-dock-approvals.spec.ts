@@ -90,7 +90,7 @@ async function registerProject(
   await mkdir(path, { recursive: true })
   if (opts.git) {
     execSync('git init -q -b main', { cwd: path })
-    execSync('git -c user.email=e2e@termul -c user.name=e2e commit -q --allow-empty -m init', {
+    execSync('git -c user.email=e2e@itzterm -c user.name=e2e commit -q --allow-empty -m init', {
       cwd: path
     })
   }
@@ -222,7 +222,7 @@ async function launchChat(page: Page, prompt: string, opts: LaunchOptions = {}):
   })
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)
@@ -500,7 +500,7 @@ test('the Git action opens the sheet on the chat worktree, not the project root'
   await expect(sheet).toContainText(/chat\/[0-9a-f]+/)
   await expect(sheet).toContainText('worktree-only.txt')
   await expect(sheet.getByText('main', { exact: true })).toHaveCount(0)
-  expect(gitRequests.some((body) => slashes(body).includes('.termul/worktrees'))).toBe(true)
+  expect(gitRequests.some((body) => slashes(body).includes('.itzterm/worktrees'))).toBe(true)
   await expect
     .poll(() => logs().some((message) => message.includes('Git sheet opened from explicit cwd')))
     .toBe(true)

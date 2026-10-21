@@ -22,7 +22,7 @@ fn metadata() -> SessionMetadata {
         fold_open_role: None,
         fold_counted: false,
         discovered: false,
-        worktree_path: Some("/work/project/.termul/worktrees/chat/abc123".to_string()),
+        worktree_path: Some("/work/project/.itzterm/worktrees/chat/abc123".to_string()),
         worktree_branch: Some("chat/abc123".to_string()),
         model_id: None,
         model_name: None,
@@ -184,7 +184,7 @@ fn metadata_maps_agent_config_prefix_and_fallbacks() {
             "status": "active",
             // Issue #1192: an empty log has no open turn, said explicitly.
             "turnActive": false,
-            "worktreePath": "/work/project/.termul/worktrees/chat/abc123",
+            "worktreePath": "/work/project/.itzterm/worktrees/chat/abc123",
             "worktreeBranch": "chat/abc123",
         })
     );
@@ -461,7 +461,7 @@ fn materialized_payload_preserves_worktree_binding() {
     let payload = materialize_session_payload(&metadata(), &[]);
     assert_eq!(
         payload.metadata.worktree_path.as_deref(),
-        Some("/work/project/.termul/worktrees/chat/abc123")
+        Some("/work/project/.itzterm/worktrees/chat/abc123")
     );
     assert_eq!(
         payload.metadata.worktree_branch.as_deref(),

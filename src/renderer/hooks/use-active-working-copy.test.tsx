@@ -10,7 +10,7 @@ import type { Project, Worktree } from '@/types/project'
 import { useActiveWorkingCopy } from './use-active-working-copy'
 
 const ROOT = 'E:/p'
-const WT_A = 'E:/p/.termul/worktrees/a'
+const WT_A = 'E:/p/.itzterm/worktrees/a'
 
 function wt(id: string, path: string): Worktree {
   return { id, name: id, branch: `b-${id}`, path, createdAt: '2026-01-01T00:00:00.000Z' }
@@ -59,7 +59,7 @@ describe('useActiveWorkingCopy', () => {
 
     act(() =>
       useAcpStore.setState({
-        sessions: { s1: mockAcpSession({ id: 's1', cwd: 'E:/p/.termul/worktrees/gone' }) }
+        sessions: { s1: mockAcpSession({ id: 's1', cwd: 'E:/p/.itzterm/worktrees/gone' }) }
       })
     )
     expect(result.current).toMatchObject({ state: 'unresolved' })
@@ -67,13 +67,13 @@ describe('useActiveWorkingCopy', () => {
 
   it('re-resolves when the worktree list changes (reconcile resolves it)', () => {
     useAcpStore.setState({
-      sessions: { s1: mockAcpSession({ id: 's1', cwd: 'E:/p/.termul/worktrees/new/src' }) }
+      sessions: { s1: mockAcpSession({ id: 's1', cwd: 'E:/p/.itzterm/worktrees/new/src' }) }
     })
     setActiveTab({ type: 'agent-chat', id: 'chat-s1', sessionId: 's1' })
     const { result } = renderHook(() => useActiveWorkingCopy())
     expect(result.current).toMatchObject({ state: 'unresolved' })
 
-    act(() => seed([wt('a', WT_A), wt('new', 'E:/p/.termul/worktrees/new')]))
+    act(() => seed([wt('a', WT_A), wt('new', 'E:/p/.itzterm/worktrees/new')]))
     expect(result.current).toMatchObject({ state: 'resolved', worktreeId: 'new' })
   })
 

@@ -8,11 +8,11 @@ import type { FullConfig } from 'playwright/test'
 import { type SeededServer, serverBinaryName, startSeededServer } from './helpers'
 
 /**
- * Global setup: one isolated termul-server per suite run.
+ * Global setup: one isolated itzterm-server per suite run.
  *
  * Requires (enforced, with the exact command printed on failure):
  * - `bun run build:web` — serves the freshly built web client.
- * - `cargo build --release --bin termul-server --features standalone-server`
+ * - `cargo build --release --bin itzterm-server --features standalone-server`
  *
  * Everything is throwaway: mkdtemp state dir, loopback bind, fixed port via
  * E2E_PORT (default 8188). The fake agent (tests/e2e/fake-longrun-agent.ts)
@@ -32,8 +32,8 @@ export default async function globalSetup(_config: FullConfig): Promise<() => Pr
 
   if (!existsSync(serverBinary)) {
     throw new Error(
-      `termul-server binary missing at ${serverBinary}.\n` +
-        'Build it first: cargo build --release --bin termul-server --features standalone-server'
+      `itzterm-server binary missing at ${serverBinary}.\n` +
+        'Build it first: cargo build --release --bin itzterm-server --features standalone-server'
     )
   }
   const distWeb = join(repoRoot, 'dist-web', 'index.html')
@@ -48,14 +48,14 @@ export default async function globalSetup(_config: FullConfig): Promise<() => Pr
   // git project — the launcher's `canUseWorktree` gate) + proj-x: a plain
   // dir dedicated to the crash-recovery suite, whose [CRASH] prompts kill
   // the owning agent process and must not share one with other suites.
-  workspaceRoot = await mkdtemp(join(tmpdir(), 'termul-e2e-work-'))
+  workspaceRoot = await mkdtemp(join(tmpdir(), 'itzterm-e2e-work-'))
   for (const name of ['proj-a', 'proj-b', 'proj-c', 'proj-e', 'proj-x']) {
     await mkdir(join(workspaceRoot, name), { recursive: true })
   }
   const projW = join(workspaceRoot, 'proj-w')
   await mkdir(projW, { recursive: true })
   execSync('git init -q -b main', { cwd: projW })
-  execSync('git -c user.email=e2e@termul -c user.name=e2e commit -q --allow-empty -m init', {
+  execSync('git -c user.email=e2e@itzterm -c user.name=e2e commit -q --allow-empty -m init', {
     cwd: projW
   })
   // Uncommitted changes for the shell-revamp journeys (Rail Diff stat, Changes
@@ -64,7 +64,7 @@ export default async function globalSetup(_config: FullConfig): Promise<() => Pr
   // is unaffected by them.
   await writeFile(join(projW, 'notes.txt'), 'one\ntwo\nthree\n')
   execSync('git add notes.txt', { cwd: projW })
-  execSync('git -c user.email=e2e@termul -c user.name=e2e commit -q -m "add notes"', {
+  execSync('git -c user.email=e2e@itzterm -c user.name=e2e commit -q -m "add notes"', {
     cwd: projW
   })
   await writeFile(join(projW, 'notes.txt'), 'one\nTWO\nthree\nfour\n')

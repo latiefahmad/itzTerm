@@ -4,10 +4,10 @@
 //! through, plus the standalone Axum server (Stories 1.2–1.3) and the live WS
 //! relay (Story 1.4).
 //!
-//! - Desktop and standalone `termul-server` both register a live
+//! - Desktop and standalone `itzterm-server` both register a live
 //!   [`sink::WsRelaySink`] (owns per-session event logs + seq counters +
 //!   subscriber set). The desktop renderer reads it over a Tauri
-//!   `ipc::Channel` ([`ws::channel`]); `termul-server` calls [`serve`].
+//!   `ipc::Channel` ([`ws::channel`]); `itzterm-server` calls [`serve`].
 //! - Dev static serving of `dist-web/` is [`assets`] (Story 1.3); production
 //!   rust-embed embedding/serving is complete.
 //!
@@ -105,7 +105,7 @@ pub(crate) fn test_pty_manager() -> Arc<PtyManager> {
 /// `registry` is the host's durable [`ProjectRegistry`] the router reads for
 /// `GET /projects` + project-root containment checks and writes through the
 /// project command service. The standalone binary opens it at startup from its
-/// projects file (`--projects-file` / `$TERMUL_PROJECTS_FILE` / the state-dir
+/// projects file (`--projects-file` / `$ITZTERM_PROJECTS_FILE` / the state-dir
 /// default); the desktop host builds its own once at setup and calls
 /// [`serve_router`] directly (it never reaches this `serve` wrapper).
 ///
@@ -123,7 +123,7 @@ pub(crate) fn test_pty_manager() -> Arc<PtyManager> {
 /// `ACP_INSTALL_UNAVAILABLE`.
 ///
 /// `store` is the host-owned [`WebStore`], opened by the caller AFTER the data
-/// locks are held (`termul-server` opens it under the state dir or
+/// locks are held (`itzterm-server` opens it under the state dir or
 /// `--store-file`); `serve` never opens a store itself (AD-14).
 ///
 /// The standalone binary owns its agent lifetime end-to-end, so it kills agents
@@ -214,12 +214,12 @@ pub async fn serve(
     // path and does not write that marker.
     if let Err(e) = acp.kill_all_checked().await {
         let e: Box<dyn std::error::Error + Send + Sync> = e.into();
-        log::error!("[termul-server] ACP kill_all failed during shutdown: {e}");
+        log::error!("[itzterm-server] ACP kill_all failed during shutdown: {e}");
         cleanup_errors.push(e);
     }
     if let Err(e) = acp.shutdown_persistence().await {
         let e: Box<dyn std::error::Error + Send + Sync> = e.into();
-        log::error!("[termul-server] ACP persistence shutdown failed: {e}");
+        log::error!("[itzterm-server] ACP persistence shutdown failed: {e}");
         cleanup_errors.push(e);
     }
     // PTY cleanup always runs — never skip terminal process-tree kill.
@@ -231,11 +231,11 @@ pub async fn serve(
 
     match serve_result {
         Ok(()) => {
-            info!("termul-server stopped");
+            info!("itzterm-server stopped");
             Ok(())
         }
         Err(join_err) if join_err.is_cancelled() => {
-            warn!("termul-server serve task cancelled");
+            warn!("itzterm-server serve task cancelled");
             Ok(())
         }
         Err(join_err) => Err(Box::new(join_err)),
@@ -313,7 +313,7 @@ pub async fn serve_router(
     };
     // The boundary is "inside any registered project"; there is no single host
     // project root. Only the removed `--project-root` flag (or its
-    // `$TERMUL_PROJECT_ROOT` fallback) seeds one in-memory project, and only
+    // `$ITZTERM_PROJECT_ROOT` fallback) seeds one in-memory project, and only
     // while the registry has no usable project — a registry with real
     // projects ignores it. The desktop host never passes one.
     if let Some(seed_root) = cfg.seed_project_root.as_deref() {
@@ -333,7 +333,7 @@ pub async fn serve_router(
     // A serve start is a new host epoch for the watch hub: a client that sees
     // the epoch change rebuilds its watched state from a fresh full-state frame.
     ws_relay.watches().renew_epoch();
-    info!(target: "termul::web::watch", "watch hub host epoch renewed for this serve start");
+    info!(target: "itzterm::web::watch", "watch hub host epoch renewed for this serve start");
     let store_for_gc = Arc::clone(&store);
     // Every change of a project's terminal set reaches its `terminals` watchers.
     crate::web::watch::attach_terminal_set_observer(&pty, &ws_relay);
@@ -415,7 +415,7 @@ pub async fn serve_router(
 /// instead.
 async fn shutdown_signal_future() {
     match shutdown_signal().await {
-        Ok(()) => info!("termul-server shutting down…"),
+        Ok(()) => info!("itzterm-server shutting down…"),
         Err(e) => {
             warn!("shutdown signal setup failed ({e}); serving until process exit");
             // Do not complete the shutdown future — that would stop the

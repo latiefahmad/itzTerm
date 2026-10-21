@@ -88,7 +88,7 @@ pub(super) async fn handle_promote_session(
         Ok(p) => p,
         Err(e) => {
             tracing::warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 error = %e,
                 "promote_session: malformed payload"
             );
@@ -106,7 +106,7 @@ pub(super) async fn handle_promote_session(
     {
         Ok(()) => {
             tracing::info!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 agent_id = %parsed.agent_id,
                 session_id = %session_id,
                 "promote_session: warm-pool session promoted to durable"
@@ -117,7 +117,7 @@ pub(super) async fn handle_promote_session(
         // (mirrors the `unknown agent` mapping in `acp_err_to_reply`).
         Err(e) if e.starts_with("unknown session") => {
             tracing::warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 agent_id = %parsed.agent_id,
                 session_id = %session_id,
                 error = %e,
@@ -127,7 +127,7 @@ pub(super) async fn handle_promote_session(
         }
         Err(e) => {
             tracing::warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 agent_id = %parsed.agent_id,
                 session_id = %session_id,
                 error = %e,
@@ -298,7 +298,7 @@ pub(super) async fn handle_register_discovered_session(
     {
         Ok(metadata) => {
             tracing::info!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 session_id = %metadata.session_id,
                 "register_discovered_session: metadata promoted"
             );
@@ -306,7 +306,7 @@ pub(super) async fn handle_register_discovered_session(
         }
         Err(error) => {
             tracing::warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 error = %error,
                 "register_discovered_session: persistence failed"
             );

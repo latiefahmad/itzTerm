@@ -21,7 +21,7 @@ const worktree = (id: string, extra: Partial<Worktree> = {}): Worktree => ({
   id,
   name: id,
   branch: `feat/${id}`,
-  path: `/work/.termul/worktrees/${id}`,
+  path: `/work/.itzterm/worktrees/${id}`,
   createdAt: '2026-01-01T00:00:00.000Z',
   ...extra
 })
@@ -63,8 +63,8 @@ describe('prepareLaunchWorktree: existing', () => {
 
   it('returns the listed worktree as the launch cwd with no network, reconcile or pick write', async () => {
     await expect(prepareLaunchWorktree(input('a'))).resolves.toEqual({
-      launchCwd: '/work/.termul/worktrees/a',
-      worktreePath: '/work/.termul/worktrees/a',
+      launchCwd: '/work/.itzterm/worktrees/a',
+      worktreePath: '/work/.itzterm/worktrees/a',
       worktreeBranch: 'feat/a'
     })
     expect(mocks.create).not.toHaveBeenCalled()
@@ -74,7 +74,7 @@ describe('prepareLaunchWorktree: existing', () => {
 
   it('does not need canUseWorktree (a read-only server may still launch)', async () => {
     await expect(prepareLaunchWorktree(input('a', false))).resolves.toMatchObject({
-      worktreePath: '/work/.termul/worktrees/a'
+      worktreePath: '/work/.itzterm/worktrees/a'
     })
   })
 
@@ -105,7 +105,7 @@ describe('prepareLaunchWorktree: collision retry', () => {
       .mockResolvedValueOnce({ success: false, error: 'collision', code })
       .mockImplementationOnce(async ({ name, branch }: { name: string; branch: string }) => ({
         success: true,
-        data: { name, branch, path: `/work/.termul/worktrees/${name}`, headCommit: '' }
+        data: { name, branch, path: `/work/.itzterm/worktrees/${name}`, headCommit: '' }
       }))
     const result = await prepareLaunchWorktree({
       isolationMode: 'worktree',

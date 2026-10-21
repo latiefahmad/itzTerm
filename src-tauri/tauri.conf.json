@@ -1,8 +1,8 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
-	"productName": "Termul Manager",
+	"productName": "itzTerm",
 	"version": "0.4.52",
-	"identifier": "com.termul-manager.app",
+	"identifier": "com.itzterm.app",
 	"build": {
 		"beforeDevCommand": "npx vite --config vite.config.tauri.ts",
 		"devUrl": "http://localhost:5180/tauri-index.html",
@@ -15,7 +15,7 @@
 			{
 				"label": "main",
 				"url": "tauri-index.html",
-				"title": "Termul Manager",
+				"title": "itzTerm",
 				"width": 1200,
 				"height": 800,
 				"minWidth": 800,
@@ -44,7 +44,7 @@
 			"active": true,
 			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZFNDdGQUQ5NTc4M0Q5OTIKUldTUzJZTlgyZnBIYmdObmg3dFc0QS9PN3F5N2Y5dUNoTy94dWcvTmNxam10Y25tS240dm0ySnYK",
 			"endpoints": [
-				"https://github.com/gnoviawan/termul/releases/latest/download/latest.json"
+				"https://github.com/latiefahmad/itzTerm/releases/latest/download/latest.json"
 			],
 			"windows": {
 				"installMode": "passive"
@@ -68,8 +68,8 @@
 		"publisher": "gnoviawan",
 		"copyright": "Copyright © 2025 gnoviawan",
 		"category": "Productivity",
-		"shortDescription": "Termul Manager - Project-aware terminal manager",
-		"longDescription": "Termul Manager is a desktop application built with Tauri for enhanced productivity. Organize terminals by project with persistent sessions and snapshots.",
+		"shortDescription": "itzTerm - Project-aware terminal manager",
+		"longDescription": "itzTerm is a desktop application built with Tauri for enhanced productivity. Organize terminals by project with persistent sessions and snapshots.",
 		"windows": {
 			"nsis": {
 				"displayLanguageSelector": false

@@ -316,7 +316,7 @@ describe('AppPreferences web honesty gates (Story 8)', () => {
     goTo('Logs')
     expect(await screen.findByRole('heading', { name: 'Server version' })).toBeInTheDocument()
     expect(
-      screen.getByText(/web client is served by the termul-server and updates together with it/i)
+      screen.getByText(/web client is served by the itzterm-server and updates together with it/i)
     ).toBeInTheDocument()
   })
 

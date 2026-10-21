@@ -1,9 +1,9 @@
 ---
 name: perf-toolkit
-description: Run Termul performance benchmarks, read the reports, and do before/after A/B compares with the tools/perf toolkit. Use when the user asks to measure app performance, run a perf scenario (stream-storm, project-switch, pty-flood, soak), compare runs, or investigate renderer jank/memory.
+description: Run itzTerm performance benchmarks, read the reports, and do before/after A/B compares with the tools/perf toolkit. Use when the user asks to measure app performance, run a perf scenario (stream-storm, project-switch, pty-flood, soak), compare runs, or investigate renderer jank/memory.
 ---
 
-# Termul Perf Toolkit
+# itzTerm Perf Toolkit
 
 Measures the desktop app's renderer performance under controlled, deterministic load: fake ACP agents stream seeded `sessionUpdate` traffic through the app's real custom-agent path while passive collectors capture React commits, page-level jank (LoAF/longtask/INP/rAF), and OS-level renderer memory/CPU. Every run writes a result directory with `result.json` + a self-contained `report.html`.
 
@@ -25,14 +25,14 @@ exactly as registered.
 
 
 The app exe must exist — **the worktree dev-identifier build**
-(`src-tauri/target/release/termul-manager.exe`, identifier
-`com.termul-manager.app.dev`). It must be built with the dev config so it
+(`src-tauri/target/release/itzterm-manager.exe`, identifier
+`com.itzterm.app.dev`). It must be built with the dev config so it
 escapes the user's installed-instance single-instance mutex AND carries
 `withGlobalTauri`:
 `bun x @tauri-apps/cli build --config src-tauri/tauri.conf.dev.json`
 (run `bun run build:frontend:tauri` first). Fallbacks: the worktree
 `x86_64-pc-windows-msvc/release` output, then the main checkout's
-`target/x86_64-pc-windows-msvc/release/termul-manager.exe`. Override with
+`target/x86_64-pc-windows-msvc/release/itzterm-manager.exe`. Override with
 `--exe <path>`; a same-identifier exe exits via the single-instance plugin
 when a user instance is running.
 
@@ -44,7 +44,7 @@ when a user instance is running.
 | `project-switch` | Repeated project switches under live agent+terminal load | `--projects 3 --cycles 10 --ui` (click sidebar vs store action) |
 | `pty-flood` | T terminals running the canned flood script (ANSI/wide/block lines + resize churn) | `--terminals 3 --lines-per-sec 200 --with-agent-stream` |
 | `soak` | Long stream + periodic switches (memory slope) | `--minutes 30 --yes` (ask-first: >15 min needs consent) |
-| `browser` | CAP-7 secondary lane vs termul-server (stream-storm/project-switch) | `--server http://127.0.0.1:3000` |
+| `browser` | CAP-7 secondary lane vs itzterm-server (stream-storm/project-switch) | `--server http://127.0.0.1:3000` |
 
 Shared: `--seed` (determinism), `--exe`, `--keep-state` (debugging),
 `--use-real-agent <id>` (drive a REAL catalog agent instead of the fake —
@@ -74,7 +74,7 @@ Prints per-metric min/median deltas with verdict lines (`improved` / `regressed`
 
 ## The fake agent (CAP-1)
 
-Registered through the app's own custom-agent persistence (`acp/agents` in `termul-data.json`, `configId: 'custom-perfstub'`, `command: bun`, `args: [tools/perf/fake-agent/fake-agent.ts]`) — zero app modification; the app spawns it over the real stdio JSON-RPC path. Knobs ride on the config's `env`:
+Registered through the app's own custom-agent persistence (`acp/agents` in `itzterm-data.json`, `configId: 'custom-perfstub'`, `command: bun`, `args: [tools/perf/fake-agent/fake-agent.ts]`) — zero app modification; the app spawns it over the real stdio JSON-RPC path. Knobs ride on the config's `env`:
 
 - `PERF_AGENT_SEED` — same seed → byte-identical sessionUpdate sequence (event-sequence hash recorded per run).
 - `PERF_AGENT_RATE` — updates/sec. `PERF_AGENT_DURATION` — seconds (0 = until cancelled).
@@ -90,7 +90,7 @@ Registered through the app's own custom-agent persistence (`acp/agents` in `term
 Dev builds already carry the DevTools hook (commit counts work out of the box). For release-grade timing, build with the gated alias:
 
 ```bash
-TERMUL_PERF_PROFILING=1 bun run build:frontend:tauri   # react-dom → react-dom/profiling
+ITZTERM_PERF_PROFILING=1 bun run build:frontend:tauri   # react-dom → react-dom/profiling
 ```
 
 Unset, the alias is inert — zero behavior change; it never ships.
@@ -111,7 +111,7 @@ Counts commits of `ChatMessage` / `ChatMessageList` / `AgentChatPanel` under a s
 
 ## Gotchas
 
-- The runner owns the spawned PID tree and kills it (`taskkill /T /F` + parent-PID sweep). If a run crashes hard, check for orphan `termul-manager`/`msedgewebview2` processes.
+- The runner owns the spawned PID tree and kills it (`taskkill /T /F` + parent-PID sweep). If a run crashes hard, check for orphan `itzterm-manager`/`msedgewebview2` processes.
 - Each run uses a scratch `WEBVIEW2_USER_DATA_FOLDER` under `tools/perf/results/<run-id>/userdata/` — the single-instance plugin stays isolated and user data is never touched. `--keep-state` preserves it for debugging.
 - Numbers are per-machine: only compare runs from the same machine; use the same `--seed`.
 - Windows-only desktop lane (WebView2 needs an interactive session). Browser lane covers headless.

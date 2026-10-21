@@ -1,13 +1,13 @@
 import { motion, type Transition, useReducedMotion } from 'framer-motion'
+import { ItzTermMark } from '@/components/ItzTermMark'
 import { Bug, FileText, ListChecks, Sparkles } from '@/components/icons'
-import { TermulMark } from '@/components/TermulMark'
 import { cn } from '@/lib/utils'
 import { CHAT_SPRING } from './chat-motion'
 
 /**
  * The chat start screen ("Empty chat · V1 Composer in the middle"), shared by
  * the agent launcher (before a session exists) and an empty chat (a session
- * with no messages yet): the Termul mark, one project question, the composer
+ * with no messages yet): the itzTerm mark, one project question, the composer
  * in the middle (each surface keeps its own composer), and quiet starter
  * chips under it. One source of truth for this copy, these starters, and
  * this spacing.
@@ -71,7 +71,7 @@ export function ChatStartHero({
         isExiting && !reducedMotion && '-translate-y-2 opacity-0 blur-[2px]'
       )}
     >
-      <TermulMark size={isMobileShell ? 32 : 48} className="text-foreground" />
+      <ItzTermMark size={isMobileShell ? 32 : 48} className="text-foreground" />
       <Heading
         className={cn(
           'break-words text-3xl font-medium tracking-tight text-foreground md:text-4xl',

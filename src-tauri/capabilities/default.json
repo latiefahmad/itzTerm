@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default capabilities for Termul Manager Tauri POC - Fase 3 Persistence & UI",
+  "description": "Default capabilities for itzTerm Tauri POC - Fase 3 Persistence & UI",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -36,8 +36,8 @@
     {
       "identifier": "fs:scope",
       "allow": [
-        { "path": "$APPDATA/termul/**" },
-        { "path": "$HOME/.termul/**" },
+        { "path": "$APPDATA/itzterm/**" },
+        { "path": "$HOME/.itzterm/**" },
         { "path": "$HOME/**" },
         { "path": "$HOME/Documents/**" },
         { "path": "$HOME/Downloads/**" },

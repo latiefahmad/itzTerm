@@ -65,7 +65,7 @@ fn git_run_error_display_is_stable() {
 
 #[test]
 fn it_git_runners_read_output_larger_than_the_pipe_buffer() {
-    let tmp = std::env::temp_dir().join(format!("termul-gitexec-big-{}", std::process::id()));
+    let tmp = std::env::temp_dir().join(format!("itzterm-gitexec-big-{}", std::process::id()));
     std::fs::create_dir_all(&tmp).expect("create temp dir");
     struct Cleanup(std::path::PathBuf);
     impl Drop for Cleanup {

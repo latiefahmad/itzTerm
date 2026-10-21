@@ -115,8 +115,8 @@ describe('overlay-stack-store route change and breakpoint flip', () => {
         usr: null,
         key: 'k2',
         idx: 2,
-        termulOverlay: true,
-        termulOverlayDepth: 1
+        itztermOverlay: true,
+        itztermOverlayDepth: 1
       })
       expect(location.hash).toBe('#/c/chat-1')
       expect(logsOf('info')).toContainEqual(

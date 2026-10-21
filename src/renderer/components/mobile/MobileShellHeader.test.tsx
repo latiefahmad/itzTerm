@@ -54,8 +54,8 @@ function renderHeader(overrides: Partial<HeaderProps> = {}) {
   }
   const props: HeaderProps = {
     title: 'Fix auth redirect loop',
-    subtitleText: 'termul · main · Local',
-    subtitleLabel: 'termul · main, switch project',
+    subtitleText: 'itzterm · main · Local',
+    subtitleLabel: 'itzterm · main, switch project',
     drawerOpen: false,
     onOpenDrawer: vi.fn(),
     menuButtonRef: refs.menu,
@@ -171,8 +171,8 @@ describe('MobileShellHeader', () => {
     it('shows the subtitle text, a chevron and the "{project} · {branch}, switch project" name', () => {
       renderHeader()
 
-      const subtitle = screen.getByRole('button', { name: 'termul · main, switch project' })
-      expect(subtitle).toHaveTextContent('termul · main · Local')
+      const subtitle = screen.getByRole('button', { name: 'itzterm · main, switch project' })
+      expect(subtitle).toHaveTextContent('itzterm · main · Local')
       expect(subtitle.querySelector('svg')).toHaveAttribute('aria-hidden', 'true')
       expect(subtitle).toHaveAttribute('aria-haspopup', 'dialog')
       expect(subtitle).toHaveAttribute('aria-expanded', 'false')
@@ -186,7 +186,7 @@ describe('MobileShellHeader', () => {
       const onOpenProjectSheet = vi.fn()
       const { rerender, props } = renderHeader({ onOpenProjectSheet })
 
-      const subtitle = screen.getByRole('button', { name: 'termul · main, switch project' })
+      const subtitle = screen.getByRole('button', { name: 'itzterm · main, switch project' })
       fireEvent.click(subtitle)
       expect(onOpenProjectSheet).toHaveBeenCalledTimes(1)
 
@@ -199,9 +199,9 @@ describe('MobileShellHeader', () => {
       tauriRef.current = true
       renderHeader()
 
-      expect(screen.getByText('termul · main · Local')).toBeInTheDocument()
+      expect(screen.getByText('itzterm · main · Local')).toBeInTheDocument()
       expect(
-        screen.queryByRole('button', { name: 'termul · main, switch project' })
+        screen.queryByRole('button', { name: 'itzterm · main, switch project' })
       ).not.toBeInTheDocument()
     })
 

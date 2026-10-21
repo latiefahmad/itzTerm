@@ -19,7 +19,7 @@ use uuid::Uuid;
 const MAX_LOG_FILE_SIZE: u128 = 5 * 1024 * 1024;
 
 /// Base file name (without extension) for the Rust log in the OS log dir.
-const LOG_FILE_NAME: &str = "termul";
+const LOG_FILE_NAME: &str = "itzterm";
 
 static RUN_ID: LazyLock<String> =
     LazyLock::new(|| Uuid::new_v4().simple().to_string()[..8].to_string());
@@ -91,9 +91,9 @@ fn parse_level(token: &str) -> Option<LevelFilter> {
 /// parse it to preserve the documented override behavior:
 /// - `RUST_LOG=trace` → global trace.
 /// - `RUST_LOG=off` → global off (logging genuinely disabled).
-/// - `RUST_LOG=termul_manager_lib=debug` → only that module at debug; everything
+/// - `RUST_LOG=itzterm_manager_lib=debug` → only that module at debug; everything
 ///   else stays at the floor (no third-party crate flooding).
-/// - `RUST_LOG=hyper=warn,termul_manager_lib=trace` → each module scoped
+/// - `RUST_LOG=hyper=warn,itzterm_manager_lib=trace` → each module scoped
 ///   independently.
 ///
 /// When `RUST_LOG` is unset or names no bare level, the global stays at the
@@ -212,7 +212,7 @@ pub fn install_panic_hook() {
     }));
 }
 
-/// Resolve the absolute path of the active log file (`<app_log_dir>/termul.log`).
+/// Resolve the absolute path of the active log file (`<app_log_dir>/itzterm.log`).
 /// The `LogDir` target writes `{file_name}.log`, so we append the `.log`
 /// extension the plugin adds.
 pub fn log_file_path<R: Runtime>(app: &tauri::AppHandle<R>) -> Option<std::path::PathBuf> {
@@ -231,7 +231,7 @@ pub fn log_startup_banner<R: Runtime>(app: &tauri::AppHandle<R>) {
         .unwrap_or_else(|| "<unavailable>".to_string());
 
     log::info!(
-        "[startup] termul v{} | {} {} | channel={} | run={} | log={}",
+        "[startup] itzterm v{} | {} {} | channel={} | run={} | log={}",
         env!("CARGO_PKG_VERSION"),
         std::env::consts::OS,
         std::env::consts::ARCH,

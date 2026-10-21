@@ -669,11 +669,11 @@ export function createTauriTerminalApi(): TerminalApi {
 
 /**
  * Expose spawn tracking for debugging
- * Access via: window.__TERMUL_SPAWN_TRACKER__
+ * Access via: window.__ITZTERM_SPAWN_TRACKER__
  */
 if (typeof window !== 'undefined' && IS_DEV) {
   const globalDebug = window as unknown as Record<string, unknown>
-  globalDebug.__TERMUL_SPAWN_TRACKER__ = {
+  globalDebug.__ITZTERM_SPAWN_TRACKER__ = {
     getCalls: () => [...SPAWN_CALLS],
     getCallCount: () => SPAWN_CALLS.length,
     clearCalls: () => {

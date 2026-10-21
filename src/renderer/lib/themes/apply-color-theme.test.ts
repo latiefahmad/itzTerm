@@ -19,16 +19,16 @@ function cssVarToHex(name: string): string {
 
 describe('apply-color-theme', () => {
   it('suppresses transitions while a theme swap commits', () => {
-    applyColorTheme('termul')
-    const style = document.getElementById('termul-disable-theme-transitions')
+    applyColorTheme('itzterm')
+    const style = document.getElementById('itzterm-disable-theme-transitions')
     expect(style?.textContent).toBe('*,*::before,*::after{transition:none !important}')
     style?.remove()
   })
 
   it('includes dark and light bundled themes', () => {
     const ids = Object.keys(BUNDLED_COLOR_THEMES)
-    expect(ids).toContain('termul')
-    expect(ids).toContain('termul-light')
+    expect(ids).toContain('itzterm')
+    expect(ids).toContain('itzterm-light')
     expect(ids).toContain('catppuccin')
     expect(ids).toContain('catppuccin-light')
     expect(ids.length).toBe(20)
@@ -42,8 +42,8 @@ describe('apply-color-theme', () => {
     expect(syntax.function).toBe('#89b4fa')
   })
 
-  it('separates termul function color from keyword', () => {
-    const syntax = resolveSyntaxColors(BUNDLED_COLOR_THEMES.termul)
+  it('separates itzterm function color from keyword', () => {
+    const syntax = resolveSyntaxColors(BUNDLED_COLOR_THEMES.itzterm)
     expect(syntax.keyword).toBe('#95d0cd')
     expect(syntax.function).toBe('#e6b387')
     expect(syntax.string).toBe('#d898d8')
@@ -86,9 +86,9 @@ describe('apply-color-theme', () => {
       expect(xterm.background).not.toBe('#000000')
     })
 
-    it('paints the Termul dark grid with the Linear void canvas and composer blue', () => {
-      applyColorTheme('termul')
-      const { xterm } = resolveThemeForTest(BUNDLED_COLOR_THEMES.termul)
+    it('paints the itzTerm dark grid with the Linear void canvas and composer blue', () => {
+      applyColorTheme('itzterm')
+      const { xterm } = resolveThemeForTest(BUNDLED_COLOR_THEMES.itzterm)
       expect(xterm.background).toBe('#08090a')
       expect(cssVarToHex('--background')).toBe('#08090a')
       expect(cssVarToHex('--terminal-bg')).toBe('#08090a')
@@ -97,8 +97,8 @@ describe('apply-color-theme', () => {
       expect(cssVarToHex('--popover')).toBe('#161718')
       expect(cssVarToHex('--foreground')).toBe('#e5e5e6')
       expect(cssVarToHex('--primary-fill')).toBe(oklchComponentsToHex('0.551 0.188 259.9'))
-      expect(BUNDLED_COLOR_THEMES.termul.dark.palette.primary).toBe('#3b82f6')
-      expect(BUNDLED_COLOR_THEMES.termul.dark.palette.accent).toBe('#3b82f6')
+      expect(BUNDLED_COLOR_THEMES.itzterm.dark.palette.primary).toBe('#3b82f6')
+      expect(BUNDLED_COLOR_THEMES.itzterm.dark.palette.accent).toBe('#3b82f6')
       expect(
         contrastRatio(cssVarToHex('--foreground'), cssVarToHex('--background'))
       ).toBeGreaterThanOrEqual(4.5)
@@ -110,8 +110,8 @@ describe('apply-color-theme', () => {
       ).toBeGreaterThanOrEqual(4.5)
     })
 
-    it('paints Termul light as paper with a mist sidebar and drops the flat flag on dark', () => {
-      applyColorTheme('termul-light')
+    it('paints itzTerm light as paper with a mist sidebar and drops the flat flag on dark', () => {
+      applyColorTheme('itzterm-light')
       expect(cssVarToHex('--background')).toBe('#f9f9f9')
       expect(cssVarToHex('--terminal-bg')).toBe('#f9f9f9')
       expect(cssVarToHex('--card')).toBe('#ffffff')
@@ -119,11 +119,11 @@ describe('apply-color-theme', () => {
       expect(cssVarToHex('--sidebar-background')).toBe('#f9f9f9')
       expect(cssVarToHex('--border')).toBe('#e5e5e5')
       expect(document.documentElement.dataset.flatElevation).toBe('true')
-      expect(BUNDLED_COLOR_THEMES['termul-light'].dark.palette.primary).toBe('#3b82f6')
+      expect(BUNDLED_COLOR_THEMES['itzterm-light'].dark.palette.primary).toBe('#3b82f6')
       const lightFill = cssVarToHex('--primary-fill')
-      applyColorTheme('termul')
+      applyColorTheme('itzterm')
       expect(cssVarToHex('--primary-fill')).toBe(lightFill)
-      applyColorTheme('termul-light')
+      applyColorTheme('itzterm-light')
       expect(
         contrastRatio(cssVarToHex('--foreground'), cssVarToHex('--background'))
       ).toBeGreaterThanOrEqual(4.5)
@@ -197,8 +197,8 @@ describe('apply-color-theme', () => {
     })
 
     it('keeps the terminal palette unchanged', () => {
-      const { xterm } = resolveThemeForTest(BUNDLED_COLOR_THEMES['termul-light'])
-      expect(xterm.yellow).toBe(BUNDLED_COLOR_THEMES['termul-light'].dark.palette.warning)
+      const { xterm } = resolveThemeForTest(BUNDLED_COLOR_THEMES['itzterm-light'])
+      expect(xterm.yellow).toBe(BUNDLED_COLOR_THEMES['itzterm-light'].dark.palette.warning)
     })
   })
 
@@ -240,16 +240,16 @@ describe('apply-color-theme', () => {
       document.documentElement.removeAttribute('style')
     })
 
-    it('emits dark scrollbar alphas for termul', () => {
-      applyColorTheme('termul')
+    it('emits dark scrollbar alphas for itzterm', () => {
+      applyColorTheme('itzterm')
       expect(document.documentElement.style.getPropertyValue('--scrollbar-thumb-alpha')).toBe('0.4')
       expect(document.documentElement.style.getPropertyValue('--terminal-scrollbar-alpha')).toBe(
         '0.15'
       )
     })
 
-    it('emits light scrollbar alphas for termul-light', () => {
-      applyColorTheme('termul-light')
+    it('emits light scrollbar alphas for itzterm-light', () => {
+      applyColorTheme('itzterm-light')
       expect(document.documentElement.style.getPropertyValue('--scrollbar-thumb-alpha')).toBe(
         '0.75'
       )
@@ -258,28 +258,28 @@ describe('apply-color-theme', () => {
       )
     })
 
-    it('emits search-match tokens for termul', () => {
-      applyColorTheme('termul')
+    it('emits search-match tokens for itzterm', () => {
+      applyColorTheme('itzterm')
       expect(document.documentElement.style.getPropertyValue('--search-match').trim()).not.toBe('')
       expect(cssVarToHex('--search-match-active')).toBe(cssVarToHex('--warning'))
     })
 
     it('emits overlay as black for every appearance', () => {
-      applyColorTheme('termul')
+      applyColorTheme('itzterm')
       expect(document.documentElement.style.getPropertyValue('--overlay').trim()).toBe('0 0 0')
-      applyColorTheme('termul-light')
+      applyColorTheme('itzterm-light')
       expect(document.documentElement.style.getPropertyValue('--overlay').trim()).toBe('0 0 0')
     })
 
-    it('emits Termul dark connection from palette info, not the CSS cyan fallback', () => {
-      applyColorTheme('termul')
+    it('emits itzTerm dark connection from palette info, not the CSS cyan fallback', () => {
+      applyColorTheme('itzterm')
       expect(cssVarToHex('--connection')).toBe(
-        oklchComponentsToHex(hexToOklchComponents(BUNDLED_COLOR_THEMES.termul.dark.palette.info))
+        oklchComponentsToHex(hexToOklchComponents(BUNDLED_COLOR_THEMES.itzterm.dark.palette.info))
       )
     })
 
-    it('emits the dark diff-added-foreground on Termul dark', () => {
-      applyColorTheme('termul')
+    it('emits the dark diff-added-foreground on itzTerm dark', () => {
+      applyColorTheme('itzterm')
       expect(cssVarToHex('--diff-added-foreground')).toBe(oklchComponentsToHex('0.786 0.138 154'))
     })
   })
@@ -290,7 +290,7 @@ describe('apply-color-theme', () => {
     })
 
     it('emits a darker fill for every project colour', () => {
-      applyColorTheme('termul')
+      applyColorTheme('itzterm')
       for (const color of Object.keys(PROJECT_COLOR_COMPONENTS)) {
         expect(
           document.documentElement.style.getPropertyValue(`--status-bar-${color}`).trim()
@@ -299,8 +299,8 @@ describe('apply-color-theme', () => {
     })
 
     it.each([
-      'termul',
-      'termul-light'
+      'itzterm',
+      'itzterm-light'
     ])('%s: project status-bar fills pass AA against primary-foreground', (themeId) => {
       applyColorTheme(themeId)
       const ink = cssVarToHex('--primary-foreground')
@@ -318,8 +318,8 @@ describe('apply-color-theme', () => {
       document.documentElement.removeAttribute('style')
     })
 
-    it('matches applyColorTheme termul for every token JS writes', () => {
-      applyColorTheme('termul')
+    it('matches applyColorTheme itzterm for every token JS writes', () => {
+      applyColorTheme('itzterm')
       const cssPath = join(dirname(fileURLToPath(import.meta.url)), '../../index.css')
       const css = readFileSync(cssPath, 'utf8')
       const match = css.match(/@layer base \{\s*:root \{([\s\S]*?)\n {2}\}\n\}/)

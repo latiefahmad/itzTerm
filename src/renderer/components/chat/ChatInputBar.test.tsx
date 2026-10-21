@@ -407,8 +407,8 @@ describe('ChatInputBar config controls', () => {
     renderInputBar({
       session: {
         ...session(),
-        cwd: '/work/.termul/worktrees/abcd1234',
-        worktreePath: '/work/.termul/worktrees/abcd1234',
+        cwd: '/work/.itzterm/worktrees/abcd1234',
+        worktreePath: '/work/.itzterm/worktrees/abcd1234',
         worktreeBranch: 'chat/abcd1234'
       }
     })
@@ -1190,8 +1190,8 @@ describe('ChatInputBar file mentions', () => {
     await waitFor(() => expect(screen.getByText('git-worktree')).toBeInTheDocument())
     expect(screen.getByText('auth.ts')).toBeInTheDocument()
     // The skill chip's Sparkles icon + the file chip's File icon both present.
-    expect(document.querySelector('svg[data-termul-icon="Sparkles"]')).not.toBeNull()
-    expect(document.querySelector('svg[data-termul-icon="File"]')).not.toBeNull()
+    expect(document.querySelector('svg[data-itzterm-icon="Sparkles"]')).not.toBeNull()
+    expect(document.querySelector('svg[data-itzterm-icon="File"]')).not.toBeNull()
   })
 
   it('backspace removes a whole file pill + trailing space', async () => {
@@ -1286,8 +1286,8 @@ describe('ChatInputBar command chip', () => {
       expect(screen.getByText('/compact')).toBeInTheDocument()
     })
     const commandPill = document.querySelector('[data-command-pill="true"]')
-    expect(commandPill?.querySelector('svg[data-termul-icon="TerminalSquare"]')).not.toBeNull()
-    expect(commandPill?.querySelector('svg[data-termul-icon="Sparkles"]')).toBeNull()
+    expect(commandPill?.querySelector('svg[data-itzterm-icon="TerminalSquare"]')).not.toBeNull()
+    expect(commandPill?.querySelector('svg[data-itzterm-icon="Sparkles"]')).toBeNull()
     expect(commandPill?.querySelector('.text-muted-foreground')).not.toBeNull()
   })
 

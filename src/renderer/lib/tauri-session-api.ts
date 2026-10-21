@@ -6,7 +6,7 @@
  * (device scope), so it follows the same store as every other device value:
  * the plugin-store file on desktop, the host store on web.
  *
- * Earlier builds kept it in its own plugin-store file `termul-sessions.json`
+ * Earlier builds kept it in its own plugin-store file `itzterm-sessions.json`
  * (a localStorage shim of that file on web). The first read, write or clear
  * moves a leftover entry into the facade, marks the move done with
  * `PersistenceKeys.sessionsLegacyMigrated` and deletes the legacy entry. After
@@ -33,7 +33,7 @@ import { isTauriContext } from './tauri-runtime'
 // ============================================================================
 
 /** The legacy plugin-store file (and its localStorage shim name on web). */
-const LEGACY_STORE_FILE = 'termul-sessions.json'
+const LEGACY_STORE_FILE = 'itzterm-sessions.json'
 /** The entry the legacy file kept the snapshot under. */
 const LEGACY_SESSION_ENTRY = 'sessions/auto-save'
 const AUTO_SAVE_DEBOUNCE_MS = 2000 // 2 seconds
@@ -63,7 +63,7 @@ interface LegacySessionStore {
 /**
  * Web-only localStorage-backed shim of the legacy session file (CAP-3). Mirrors
  * the Tauri `Store` shape over flat composite localStorage keys shaped
- * `${LEGACY_STORE_FILE}::${key}` (e.g. `termul-sessions.json::sessions/auto-save`).
+ * `${LEGACY_STORE_FILE}::${key}` (e.g. `itzterm-sessions.json::sessions/auto-save`).
  * Each logical key is its own localStorage entry; there is no shared envelope
  * object.
  *

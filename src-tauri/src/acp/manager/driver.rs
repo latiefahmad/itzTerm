@@ -423,7 +423,7 @@ pub(super) async fn drive_connection(
     // so by default those are redacted to direction + byte length — enough to
     // confirm streaming/traffic without writing secrets to disk.
     //
-    // Set `TERMUL_ACP_TRACE_RAW=1` to log the full stdin/stdout JSON-RPC bodies
+    // Set `ITZTERM_ACP_TRACE_RAW=1` to log the full stdin/stdout JSON-RPC bodies
     // (diagnostics only — may write secrets to the log; never enable in normal
     // use). Combine with a debug log level to see the trace.
     // Headless browser-open shim (spec-acp-terminal-auth): install a per-agent
@@ -435,7 +435,7 @@ pub(super) async fn drive_connection(
     //
     // Always injected on POSIX (spec-acp-terminal-auth): a uniform path — on
     // the desktop app the modal's "Open" button completes the localhost
-    // callback natively, on headless termul-server the paste-back replays it.
+    // callback natively, on headless itzterm-server the paste-back replays it.
     // When the gate is off (non-POSIX) or install fails, `shim_dir` is `None`
     // and the agent's browser-open behaves exactly as before.
     #[cfg(unix)]
@@ -454,7 +454,7 @@ pub(super) async fn drive_connection(
     let debug_agent_id = agent_id.clone();
     let redact_output = profile.redact_output;
     let trace_raw = !redact_output
-        && std::env::var("TERMUL_ACP_TRACE_RAW")
+        && std::env::var("ITZTERM_ACP_TRACE_RAW")
             .map(|v| v == "1" || v.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
     // `TreeKillAgent` is `AcpAgent` on unix; on Windows it puts the agent in a
@@ -539,7 +539,7 @@ pub(super) async fn drive_connection(
 
     let connection_result = Client
         .builder()
-        .name(format!("termul-acp-{agent_id}"))
+        .name(format!("itzterm-acp-{agent_id}"))
         .on_receive_notification(
             async move |notification: agent_client_protocol::schema::v1::SessionNotification,
                         _cx| {

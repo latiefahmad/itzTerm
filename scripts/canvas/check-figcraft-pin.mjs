@@ -20,7 +20,7 @@ if (ref === null) {
   )
 } else if (ref.kind === 'rev') {
   console.warn(
-    `figcraft pin check warning: figcraft-mcp is pinned by rev ${ref.value}, not a tag; it cannot be compared with canvas/figcraft.pin tag ${pin.tag}. Move the dependency to tag = "<termul-* tag>" once the fork publishes one.`
+    `figcraft pin check warning: figcraft-mcp is pinned by rev ${ref.value}, not a tag; it cannot be compared with canvas/figcraft.pin tag ${pin.tag}. Move the dependency to tag = "<itzterm-* tag>" once the fork publishes one.`
   )
 } else if (ref.value !== pin.tag) {
   console.error(

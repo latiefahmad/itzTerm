@@ -17,7 +17,7 @@ describe('ProjectIcon', () => {
   })
 
   it('renders a colored monogram tile when no icon is resolved', () => {
-    const project = mockProject({ name: 'termul', color: 'purple' })
+    const project = mockProject({ name: 'itzterm', color: 'purple' })
     const { container } = render(<ProjectIcon project={project} size={16} />)
     expect(container.querySelector('img')).toBeNull()
     const tile = container.querySelector('span')

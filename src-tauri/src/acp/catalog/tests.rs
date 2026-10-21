@@ -2,7 +2,7 @@ use super::*;
 
 fn temp_dir(label: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-acp-catalog-{label}-{}-{}",
+        "itzterm-acp-catalog-{label}-{}-{}",
         std::process::id(),
         now_millis()
     ));
@@ -167,8 +167,8 @@ fn installed_claude_does_not_bypass_node_or_cli_preflight() {
         version: "0.78.0".to_string(),
         platform_target: "linux-x86_64".to_string(),
         sha256: String::new(),
-        command: "/termul/cache/node".to_string(),
-        args: vec!["/termul/cache/claude-agent-acp/dist/index.js".to_string()],
+        command: "/itzterm/cache/node".to_string(),
+        args: vec!["/itzterm/cache/claude-agent-acp/dist/index.js".to_string()],
         installed_at: 0,
     };
 
@@ -190,8 +190,8 @@ fn installed_claude_does_not_bypass_node_or_cli_preflight() {
             version: "0.78.0".to_string(),
             platform_target: "linux-x86_64".to_string(),
             sha256: String::new(),
-            command: "/termul/cache/node".to_string(),
-            args: vec!["/termul/cache/claude-agent-acp/dist/index.js".to_string()],
+            command: "/itzterm/cache/node".to_string(),
+            args: vec!["/itzterm/cache/claude-agent-acp/dist/index.js".to_string()],
             installed_at: 0,
         }],
     );
@@ -212,8 +212,8 @@ fn installed_claude_does_not_bypass_node_or_cli_preflight() {
             version: "0.78.0".to_string(),
             platform_target: "linux-x86_64".to_string(),
             sha256: String::new(),
-            command: "/termul/cache/node".to_string(),
-            args: vec!["/termul/cache/claude-agent-acp/dist/index.js".to_string()],
+            command: "/itzterm/cache/node".to_string(),
+            args: vec!["/itzterm/cache/claude-agent-acp/dist/index.js".to_string()],
             installed_at: 0,
         }],
     );
@@ -230,8 +230,8 @@ fn installed_claude_does_not_bypass_node_or_cli_preflight() {
             version: "0.78.0".to_string(),
             platform_target: "linux-x86_64".to_string(),
             sha256: String::new(),
-            command: "/termul/cache/node".to_string(),
-            args: vec!["/termul/cache/claude-agent-acp/dist/index.js".to_string()],
+            command: "/itzterm/cache/node".to_string(),
+            args: vec!["/itzterm/cache/claude-agent-acp/dist/index.js".to_string()],
             installed_at: 0,
         }],
     );
@@ -766,7 +766,7 @@ async fn snapshot_fetcher_forwards_path_and_force_flag_unchanged() {
     static FORWARD_CALLS: Mutex<Vec<(PathBuf, bool)>> = Mutex::new(Vec::new());
 
     let fetcher = snapshot_fetcher(echo_delegate);
-    let path = PathBuf::from("/tmp/termul-test-snapshot-cache.json");
+    let path = PathBuf::from("/tmp/itzterm-test-snapshot-cache.json");
     for force in [false, true] {
         let resolved = fetcher(path.clone(), force).await.unwrap();
         assert_eq!(resolved.snapshot.agents[0].id, "cdn-only-test-agent");

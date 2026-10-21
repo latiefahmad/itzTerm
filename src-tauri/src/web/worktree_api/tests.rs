@@ -22,7 +22,7 @@ impl TempDir {
             .duration_since(UNIX_EPOCH)
             .expect("clock")
             .as_nanos();
-        let path = std::env::temp_dir().join(format!("termul-web-wt-{label}-{nanos}"));
+        let path = std::env::temp_dir().join(format!("itzterm-web-wt-{label}-{nanos}"));
         std::fs::create_dir_all(&path).expect("create temp dir");
         Self { path }
     }
@@ -198,7 +198,7 @@ fn init_repo(tag: &str) -> RepoFixture {
 /// Owns the `TempDir` so the repo survives the test body; drops (removing
 /// the temp dir) when the fixture goes out of scope at test teardown. This
 /// replaces the old `std::mem::forget(dir)` pattern that accumulated
-/// `%TEMP%\termul-web-wt-*` dirs across CI runs.
+/// `%TEMP%\itzterm-web-wt-*` dirs across CI runs.
 struct RepoFixture {
     _dir: TempDir,
     path: std::path::PathBuf,
@@ -829,7 +829,7 @@ async fn existing_worktree_listed_but_create_refused_on_server_without_opt_in() 
     if git_missing() {
         return;
     }
-    // `termul-server` without `--allow-remote-writes`, LAN peer.
+    // `itzterm-server` without `--allow-remote-writes`, LAN peer.
     let lan = SocketAddr::from(([192, 168, 1, 60], 40010));
     let create =
         assert_existing_worktree_listed_under("topo-server-closed", false, false, lan).await;
@@ -841,7 +841,7 @@ async fn existing_worktree_listed_on_server_with_allow_remote_writes() {
     if git_missing() {
         return;
     }
-    // `termul-server --allow-remote-writes`, LAN peer: the list read is admitted
+    // `itzterm-server --allow-remote-writes`, LAN peer: the list read is admitted
     // exactly as in the read-only topologies (writes are admitted here too).
     let lan = SocketAddr::from(([192, 168, 1, 61], 40011));
     let create = assert_existing_worktree_listed_under("topo-server-open", true, false, lan).await;

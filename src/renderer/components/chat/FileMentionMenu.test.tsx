@@ -52,9 +52,9 @@ describe('FileMentionMenu', () => {
     // File row first, folder row second (Files section precedes Folders).
     expect(options[0]).toHaveTextContent('components.ts')
     expect(options[1]).toHaveTextContent('src/renderer/components')
-    expect(options[0].querySelector('[data-termul-icon="File"]')).not.toBeNull()
-    expect(options[0].querySelector('[data-termul-icon="Folder"]')).toBeNull()
-    expect(options[1].querySelector('[data-termul-icon="Folder"]')).not.toBeNull()
+    expect(options[0].querySelector('[data-itzterm-icon="File"]')).not.toBeNull()
+    expect(options[0].querySelector('[data-itzterm-icon="Folder"]')).toBeNull()
+    expect(options[1].querySelector('[data-itzterm-icon="Folder"]')).not.toBeNull()
 
     fireEvent.click(options[1])
     expect(onSelect).toHaveBeenCalledWith(

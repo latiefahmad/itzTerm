@@ -106,7 +106,7 @@ async fn worktree_create_effect(
     let pid = progress_id.filter(|id| !id.is_empty());
 
     // Boundary log: the create inputs so a failed launch is diagnosable
-    // from termul.log alone. `{:?}` quotes/escapes renderer-controlled
+    // from itzterm.log alone. `{:?}` quotes/escapes renderer-controlled
     // values so a `\n` cannot forge log lines.
     log::info!(
         "[worktree-create] project={:?} name={:?} branch={:?} is_new_branch={} start_ref={:?} target_path={:?} streaming={}",
@@ -176,10 +176,10 @@ async fn worktree_create_effect(
                 e.error_code(),
                 e
             );
-            // `termul:`-prefixed terminal sentinel — a real git stderr line
+            // `itzterm:`-prefixed terminal sentinel — a real git stderr line
             // can legitimately start with `error:` mid-run and must not be
             // parsed as the error terminator by the progress store.
-            emit_progress(&format!("termul:error: {}", e));
+            emit_progress(&format!("itzterm:error: {}", e));
             Ok(IpcResult::error(e.to_string(), e.error_code()))
         }
     }
@@ -302,7 +302,7 @@ pub async fn worktree_check_dirty(worktree_path: String) -> Result<IpcResult<Dir
     }
 }
 
-/// Remove all Termul-managed worktrees for a project.
+/// Remove all itzTerm-managed worktrees for a project.
 /// Reports per-worktree success/failure. Refused as a whole with
 /// `destructive_op_blocked` when a session is mid-turn inside any worktree
 /// that would be removed.
@@ -430,7 +430,7 @@ pub async fn worktree_ensure_symlinks(
     Ok(IpcResult::success(infos))
 }
 
-/// Archive a worktree by moving it to `.termul/archives/`.
+/// Archive a worktree by moving it to `.itzterm/archives/`.
 #[tauri::command]
 pub async fn worktree_archive(
     project_path: String,

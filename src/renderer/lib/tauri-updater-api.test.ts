@@ -90,25 +90,25 @@ describe('compareVersions — SemVer prerelease precedence', () => {
 describe('channel URL selection', () => {
   it('returns the manifest URL for each channel per the spec hosting scheme', () => {
     expect(getChannelManifestUrl('stable')).toBe(
-      'https://github.com/gnoviawan/termul/releases/latest/download/latest-stable.json'
+      'https://github.com/latiefahmad/itzTerm/releases/latest/download/latest-stable.json'
     )
     expect(getChannelManifestUrl('insider')).toBe(
-      'https://github.com/gnoviawan/termul/releases/download/insider/latest-insider.json'
+      'https://github.com/latiefahmad/itzTerm/releases/download/insider/latest-insider.json'
     )
     expect(getChannelManifestUrl('nightly')).toBe(
-      'https://github.com/gnoviawan/termul/releases/download/nightly/latest-nightly.json'
+      'https://github.com/latiefahmad/itzTerm/releases/download/nightly/latest-nightly.json'
     )
   })
 
   it('returns the release page URL for manual download fallbacks', () => {
     expect(getChannelReleasePageUrl('stable')).toBe(
-      'https://github.com/gnoviawan/termul/releases/latest'
+      'https://github.com/latiefahmad/itzTerm/releases/latest'
     )
     expect(getChannelReleasePageUrl('insider')).toBe(
-      'https://github.com/gnoviawan/termul/releases/tag/insider'
+      'https://github.com/latiefahmad/itzTerm/releases/tag/insider'
     )
     expect(getChannelReleasePageUrl('nightly')).toBe(
-      'https://github.com/gnoviawan/termul/releases/tag/nightly'
+      'https://github.com/latiefahmad/itzTerm/releases/tag/nightly'
     )
   })
 
@@ -154,7 +154,7 @@ describe('fetchChannelManifest via invoke (CSP/CORS-free server-side fetch)', ()
     expect(update).not.toBeNull()
     expect(update?.version).toBe('0.9.0')
     expect(update?.releaseNotes).toBe('nightly build')
-    expect(update?.downloadUrl).toBe('https://github.com/gnoviawan/termul/releases/tag/nightly')
+    expect(update?.downloadUrl).toBe('https://github.com/latiefahmad/itzTerm/releases/tag/nightly')
   })
 
   it('surfaces an IpcResult error as createUpdaterCheckError naming the manifest URL', async () => {
@@ -165,7 +165,7 @@ describe('fetchChannelManifest via invoke (CSP/CORS-free server-side fetch)', ()
     })
 
     await expect(checkForUpdates('nightly')).rejects.toThrow(
-      'Failed to check for updates from https://github.com/gnoviawan/termul/releases/download/nightly/latest-nightly.json: channel manifest returned HTTP 404'
+      'Failed to check for updates from https://github.com/latiefahmad/itzTerm/releases/download/nightly/latest-nightly.json: channel manifest returned HTTP 404'
     )
   })
 
@@ -173,7 +173,7 @@ describe('fetchChannelManifest via invoke (CSP/CORS-free server-side fetch)', ()
     mockInvoke.mockRejectedValue(new Error('network down'))
 
     await expect(checkForUpdates('nightly')).rejects.toThrow(
-      'Failed to check for updates from https://github.com/gnoviawan/termul/releases/download/nightly/latest-nightly.json: network down'
+      'Failed to check for updates from https://github.com/latiefahmad/itzTerm/releases/download/nightly/latest-nightly.json: network down'
     )
   })
 })

@@ -19,9 +19,9 @@
 //!   denied submit never spawns `gh` on the host.
 //! - **Log resolution:** `AppState` carries neither an `AppHandle` nor the
 //!   `ServerConfig`, so [`host_log_path`] re-resolves the single candidate
-//!   the current deployment mode logs to — the desktop `termul.log` on a
+//!   the current deployment mode logs to — the desktop `itzterm.log` on a
 //!   shared-live host (`shared_live_writes_denied`), `<state
-//!   dir>/termul-server.log` on a standalone `termul-server`. A miss is
+//!   dir>/itzterm-server.log` on a standalone `itzterm-server`. A miss is
 //!   `logAvailable: false` in the payload — never a route failure.
 //! - **Blocking work:** the log-tail read and the `gh` probe/spawn are
 //!   BLOCKING and run on `tokio::task::spawn_blocking`, never inline on the
@@ -44,14 +44,14 @@ use crate::web::config::ServerConfig;
 use crate::web::fs_api::{check_local_only, IpcBody};
 use crate::web::ws::AppState;
 
-/// Standalone log file name — where `termul-server` logs actually land
+/// Standalone log file name — where `itzterm-server` logs actually land
 /// depends on how it was launched: the onboard `setsid` path redirects
-/// stdout/stderr to `<state dir>/termul-server.log` (`onboard.rs`), the
-/// documented nohup recipe writes `/tmp/termul-server.log`
+/// stdout/stderr to `<state dir>/itzterm-server.log` (`onboard.rs`), the
+/// documented nohup recipe writes `/tmp/itzterm-server.log`
 /// (`server_main.rs`), and a systemd-onboarded server logs to journald —
 /// no file at all. Only the first is found here; for the other two
 /// `logAvailable: false` is the expected outcome.
-const SERVER_LOG_FILE_NAME: &str = "termul-server.log";
+const SERVER_LOG_FILE_NAME: &str = "itzterm-server.log";
 
 /// Cap on the `POST /log/report-bug` JSON body (`{title, body}`). Generous
 /// over the 64 KiB diagnostics tail a composed report can carry; a tighter
@@ -112,7 +112,7 @@ async fn diagnostics_inner(
         Ok(context) => (StatusCode::OK, Json(IpcBody::ok(context))),
         Err(error) => {
             tracing::warn!(
-                target: "termul::web::diagnostics_api",
+                target: "itzterm::web::diagnostics_api",
                 "bug-report collect worker failed: {error}"
             );
             (
@@ -147,7 +147,7 @@ async fn report_bug_inner(
         Ok(result) => (StatusCode::OK, Json(IpcBody::ok(result))),
         Err(error) => {
             tracing::warn!(
-                target: "termul::web::diagnostics_api",
+                target: "itzterm::web::diagnostics_api",
                 "bug-report submit worker failed: {error}"
             );
             (
@@ -168,9 +168,9 @@ async fn report_bug_inner(
 /// `shared_live` says
 /// WHICH host shape this process is (the route only ever runs inside one):
 /// on the desktop shared-live host (`shared_live_writes_denied: true`)
-/// only the desktop `termul.log` candidate is tried — a stale
-/// `termul-server.log` left by a past standalone run must not win — while
-/// on a standalone `termul-server` only `<state dir>/termul-server.log` is
+/// only the desktop `itzterm.log` candidate is tried — a stale
+/// `itzterm-server.log` left by a past standalone run must not win — while
+/// on a standalone `itzterm-server` only `<state dir>/itzterm-server.log` is
 /// tried, so a stale desktop log is never attached when the server log is
 /// absent. `AppState` deliberately carries no `AppHandle` or `ServerConfig`,
 /// so the candidate is re-resolved each call; a miss (or an unreadable
@@ -188,12 +188,12 @@ fn log_path_candidates(shared_live: bool) -> Vec<PathBuf> {
     let candidate = if shared_live {
         desktop_log_path()
     } else {
-        termul_server_log_path()
+        itzterm_server_log_path()
     };
     candidate.into_iter().collect()
 }
 
-/// `termul-server`: `<state dir>/termul-server.log` — written only by the
+/// `itzterm-server`: `<state dir>/itzterm-server.log` — written only by the
 /// onboard `setsid` launch (the nohup recipe targets `/tmp`; systemd
 /// onboards log to journald). The state dir is re-derived by parsing an
 /// empty args list so the exact `ServerConfig::service_account_state_dir`
@@ -202,14 +202,14 @@ fn log_path_candidates(shared_live: bool) -> Vec<PathBuf> {
 /// flag is operator knowledge the router state does not retain — that
 /// miss, like the nohup/journald cases, degrades to `logAvailable: false`,
 /// never a failure.
-fn termul_server_log_path() -> Option<PathBuf> {
+fn itzterm_server_log_path() -> Option<PathBuf> {
     ServerConfig::from_args(std::iter::empty::<String>())
         .ok()
         .map(|cfg| cfg.service_account_state_dir().join(SERVER_LOG_FILE_NAME))
 }
 
 /// Desktop shared-live: the Tauri `app_log_dir` layout for the app
-/// identifier `com.termul-manager.app` (`tauri.conf.json`) — the same paths
+/// identifier `com.itzterm.app` (`tauri.conf.json`) — the same paths
 /// the GitHub issue template prints. Selected when
 /// `shared_live_writes_denied` marks this process as a desktop-hosted
 /// shared-live server.
@@ -218,8 +218,8 @@ fn desktop_log_path() -> Option<PathBuf> {
     std::env::home_dir().map(|home| {
         home.join("Library")
             .join("Logs")
-            .join("com.termul-manager.app")
-            .join("termul.log")
+            .join("com.itzterm.app")
+            .join("itzterm.log")
     })
 }
 
@@ -231,9 +231,9 @@ fn desktop_log_path() -> Option<PathBuf> {
         .filter(|p| !p.as_os_str().is_empty() && p.is_absolute())
         .or_else(|| std::env::home_dir().map(|home| home.join(".local").join("share")));
     data_home.map(|base| {
-        base.join("com.termul-manager.app")
+        base.join("com.itzterm.app")
             .join("logs")
-            .join("termul.log")
+            .join("itzterm.log")
     })
 }
 
@@ -243,9 +243,9 @@ fn desktop_log_path() -> Option<PathBuf> {
     std::env::var_os("LOCALAPPDATA")
         .map(PathBuf::from)
         .map(|base| {
-            base.join("com.termul-manager.app")
+            base.join("com.itzterm.app")
                 .join("logs")
-                .join("termul.log")
+                .join("itzterm.log")
         })
 }
 

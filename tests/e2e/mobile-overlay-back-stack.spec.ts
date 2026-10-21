@@ -27,7 +27,7 @@ import { launchChat, openRailNewProjectModal, openWorkspace } from './ui'
  * - the desktop shell pushes and consumes nothing for these overlays.
  *
  * The browser's history is read through the Navigation API (`index` of the
- * current entry) plus `history.state`, the `termulOverlay` marker the app puts
+ * current entry) plus `history.state`, the `itztermOverlay` marker the app puts
  * on its sentinel entries. A system back is a real history traversal
  * (`page.goBack()`), the same thing Android's back button does. The Navigation
  * API is Chromium-only, which is the only engine this suite runs on.
@@ -65,7 +65,7 @@ interface HistoryPosition {
   /** Index of the current entry in this tab's history (Navigation API). */
   index: number
   hash: string
-  /** `termulOverlayDepth` of the current entry; 0 when it is not a sentinel. */
+  /** `itztermOverlayDepth` of the current entry; 0 when it is not a sentinel. */
   sentinelDepth: number
 }
 
@@ -109,7 +109,7 @@ async function bootMobileShell(
   const project = await registerActiveProject(files)
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)
@@ -200,11 +200,11 @@ async function historyPosition(page: Page): Promise<HistoryPosition> {
   return page.evaluate(() => {
     const navigation = (window as unknown as { navigation: { currentEntry: { index: number } } })
       .navigation
-    const state = history.state as { termulOverlay?: boolean; termulOverlayDepth?: number } | null
+    const state = history.state as { itztermOverlay?: boolean; itztermOverlayDepth?: number } | null
     return {
       index: navigation.currentEntry.index,
       hash: location.hash,
-      sentinelDepth: state?.termulOverlay === true ? (state.termulOverlayDepth ?? 1) : 0
+      sentinelDepth: state?.itztermOverlay === true ? (state.itztermOverlayDepth ?? 1) : 0
     }
   })
 }
@@ -240,7 +240,7 @@ async function pressSystemBack(page: Page): Promise<void> {
 
 async function openDrawer(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Open menu' }).tap()
-  await expect(page.getByRole('dialog', { name: 'Termul', exact: true })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'itzTerm', exact: true })).toBeVisible()
 }
 
 /**
@@ -331,7 +331,7 @@ test('system back closes the open drawer and leaves the page where it was', asyn
 
   await pressSystemBack(page)
 
-  await expect(page.getByRole('dialog', { name: 'Termul', exact: true })).toBeHidden()
+  await expect(page.getByRole('dialog', { name: 'itzTerm', exact: true })).toBeHidden()
   // Back landed on the page entry itself: same hash, no sentinel on top.
   await expectHistory(page, { index: base.index, hash: '#/', sentinelDepth: 0 })
 })
@@ -342,7 +342,7 @@ for (const method of ['its close button', 'Esc'] as const) {
     page
   }) => {
     const { base } = await bootMobileShell(page)
-    const drawer = page.getByRole('dialog', { name: 'Termul', exact: true })
+    const drawer = page.getByRole('dialog', { name: 'itzTerm', exact: true })
     await openDrawer(page)
     await expectHistory(page, { index: base.index + 1, sentinelDepth: 1 })
 
@@ -392,7 +392,7 @@ test('drawer to Settings swaps in one tap: one entry, back closes Settings', asy
   await openDrawer(page)
   await page.getByRole('button', { name: 'Settings', exact: true }).tap()
   await expect(settings).toBeVisible()
-  await expect(page.getByRole('dialog', { name: 'Termul', exact: true })).toBeHidden()
+  await expect(page.getByRole('dialog', { name: 'itzTerm', exact: true })).toBeHidden()
   await settleBackStack(page)
   // The drawer's sentinel now serves Settings: no traversal, no second push.
   await expectHistory(page, { index: base.index + 1, hash: '#/', sentinelDepth: 1 })
@@ -932,7 +932,7 @@ test('a reload with an overlay open lands on a stale sentinel and the shell step
   // leftover sentinel of ours: the shell traverses back to the page entry
   // instead of leaving it for a dead back press.
   await expect(projectSubtitle(page)).toContainText(name)
-  await expect(page.getByRole('dialog', { name: 'Termul', exact: true })).toBeHidden()
+  await expect(page.getByRole('dialog', { name: 'itzTerm', exact: true })).toBeHidden()
   await expectHistory(page, { index: base.index, hash: '#/', sentinelDepth: 0 })
 })
 
@@ -969,7 +969,7 @@ test.describe('a History API that misbehaves', () => {
       }
     })
     const { base } = await bootMobileShell(page)
-    const drawer = page.getByRole('dialog', { name: 'Termul', exact: true })
+    const drawer = page.getByRole('dialog', { name: 'itzTerm', exact: true })
 
     await openDrawer(page)
     await expect
@@ -1000,7 +1000,7 @@ test.describe('a History API that misbehaves', () => {
       History.prototype.back = () => {}
     })
     const { base } = await bootMobileShell(page)
-    const drawer = page.getByRole('dialog', { name: 'Termul', exact: true })
+    const drawer = page.getByRole('dialog', { name: 'itzTerm', exact: true })
     const misses = (): number => logs.filter((message) => message.includes('no popstate')).length
 
     await openDrawer(page)

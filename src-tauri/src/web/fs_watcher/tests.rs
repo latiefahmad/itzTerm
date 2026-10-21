@@ -19,7 +19,7 @@ fn reportable_paths_pass() {
         std::path::Path::new("/root/proj")
     ));
     assert!(is_reportable_below_root(
-        std::path::Path::new("/root/proj/.termul/worktrees/a"),
+        std::path::Path::new("/root/proj/.itzterm/worktrees/a"),
         std::path::Path::new("/root/proj")
     ));
 }
@@ -31,7 +31,7 @@ fn ignored_directories_are_suppressed() {
         "/root/proj/node_modules/pkg/index.js",
         "/root/proj/.git/index",
         "/root/proj/dist/bundle.js",
-        "/root/proj/target/debug/termul",
+        "/root/proj/target/debug/itzterm",
         "/root/proj/src/__pycache__/mod.cpython-311.pyc",
     ] {
         assert!(
@@ -150,7 +150,7 @@ fn temp_project_dir(label: &str) -> PathBuf {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let dir = std::env::temp_dir().join(format!(
-        "termul-fswatch-{label}-{}-{nanos}",
+        "itzterm-fswatch-{label}-{}-{nanos}",
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("create project dir");
@@ -347,7 +347,7 @@ async fn reading_a_file_or_listing_a_dir_publishes_no_delta() {
     // An open editor tab reloads through `/fs/read`; if that read came back as
     // a change, the tab would reload again and spin forever.
     let temp = tempfile::Builder::new()
-        .prefix("termul-fswatch-read-")
+        .prefix("itzterm-fswatch-read-")
         .tempdir()
         .expect("create project dir");
     let dir = temp.path().canonicalize().expect("canonicalize project dir");

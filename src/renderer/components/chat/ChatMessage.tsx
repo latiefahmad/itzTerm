@@ -46,7 +46,7 @@ import { CommandChipLink, SkillChipLink } from './skill-file-links'
 
 // The markdown renderer moved to `chat-agent-prose.tsx` to keep this file under
 // the ~800-line limit. Re-exported so existing importers keep their paths.
-export { AgentProse, TermulFilePathButton, TermulMarkdownImage } from './chat-agent-prose'
+export { AgentProse, ItzTermFilePathButton, ItzTermMarkdownImage } from './chat-agent-prose'
 
 /** Concatenate the text of all text blocks. */
 function blocksToText(blocks: ContentBlock[]): string {

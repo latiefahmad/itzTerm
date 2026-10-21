@@ -1,4 +1,4 @@
-/* Termul PWA service worker (termul-server / shared-live web client).
+/* itzTerm PWA service worker (itzterm-server / shared-live web client).
  *
  * Hand-rolled caching for the static shell only — no offline data. On install
  * the worker precaches the shell files AND the hashed /assets/* entry bundle
@@ -31,13 +31,13 @@
  * fetch (the page keeps working when caching is unavailable).
  *
  * Bump CACHE_NAME whenever the caching strategy or allowlist changes; the
- * activate handler purges stale `termul-pwa-*` caches. /assets/ writes are
+ * activate handler purges stale `itzterm-pwa-*` caches. /assets/ writes are
  * bounded at WRITE time (not just activate — an unchanged sw.js never
  * re-activates across deploys, yet new deploys emit new hashed names): each
  * stored entry is capped at MAX_ASSET_ENTRY_BYTES by Content-Length and the
  * set is trimmed to the newest MAX_ASSET_ENTRIES after every put.
  */
-const CACHE_NAME = 'termul-pwa-v2'
+const CACHE_NAME = 'itzterm-pwa-v2'
 
 /** Upper bound on cached /assets/* entries kept across deploys. */
 const MAX_ASSET_ENTRIES = 150
@@ -286,7 +286,7 @@ self.addEventListener('activate', (event) => {
       const names = await caches.keys()
       await Promise.all(
         names
-          .filter((name) => name.startsWith('termul-pwa-') && name !== CACHE_NAME)
+          .filter((name) => name.startsWith('itzterm-pwa-') && name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       )
       // Bound quota growth left over from before write-time trimming existed

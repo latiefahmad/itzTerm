@@ -87,7 +87,7 @@ async function drive(ctx: ScenarioContext): Promise<void> {
   const seeds: PerfProjectSeed[] = []
   for (let p = 0; p < projects; p++) {
     const name = `perf-project-${p}`
-    const dir = path.join(projectsRoot, `termul-perf-${name}`)
+    const dir = path.join(projectsRoot, `itzterm-perf-${name}`)
     mkdirSync(dir, { recursive: true })
     seeds.push({ id: `perf-project-${String(p).padStart(4, '0')}`, name, path: dir })
   }

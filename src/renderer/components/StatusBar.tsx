@@ -183,7 +183,7 @@ export function StatusBar({ project }: StatusBarProps): React.JSX.Element {
         <ConnectionStatusIndicator />
 
         {/* #843: "Remote terminal access" is the desktop shared-live host's
-            own status — a web client served by termul-server has no
+            own status — a web client served by itzterm-server has no
             shared-live host to inspect, so hide the popover instead of
             rendering a dead desktop-only control. */}
         {isTauriContext() && <RemoteAccessPopover />}

@@ -418,7 +418,7 @@ type AgentLockMap = HashMap<String, Arc<TokioMutex<()>>>;
 // ---------------------------------------------------------------------------
 
 /// Host-owned verified-atomic ACP install service. One instance per host
-/// runtime (desktop OR standalone `termul-server`, never shared across
+/// runtime (desktop OR standalone `itzterm-server`, never shared across
 /// processes). Constructed via [`AcpInstallService::open`], which creates the
 /// root directory + idempotent re-open (like `AcpCatalogService::open`).
 ///
@@ -633,7 +633,7 @@ impl AcpInstallService {
         self.install(agent, &catalog.host, None, None).await
     }
 
-    /// Install the pinned Claude ACP npm package into Termul's host cache.
+    /// Install the pinned Claude ACP npm package into itzTerm's host cache.
     /// This path is deliberately separate from registry npx launch: package
     /// installation is explicit, version-locked, staged, and atomically
     /// activated. It never installs or modifies the external Claude CLI.
@@ -668,7 +668,7 @@ impl AcpInstallService {
             Some(crate::acp::claude_agent::ClaudeRuntimeBlock::NodeTooOld) => {
                 return Err(InstallError::new(
                     code::NOT_INSTALLABLE,
-                    "Claude Agent ACP requires Node.js 22 or newer. Upgrade Node.js and restart Termul.",
+                    "Claude Agent ACP requires Node.js 22 or newer. Upgrade Node.js and restart itzTerm.",
                 ));
             }
             Some(crate::acp::claude_agent::ClaudeRuntimeBlock::NpmMissing) => {

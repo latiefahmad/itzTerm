@@ -903,7 +903,7 @@ describe('MobileFileExplorer', () => {
     expect(current).toHaveAttribute('aria-current', 'page')
     expect(current.closest('button')).toBeNull()
     // Separators are decorative chevrons between segments, hidden from AT.
-    const separators = nav.querySelectorAll('[data-termul-icon="ChevronRight"]')
+    const separators = nav.querySelectorAll('[data-itzterm-icon="ChevronRight"]')
     expect(separators).toHaveLength(3)
     for (const separator of separators) expect(separator).toHaveAttribute('aria-hidden', 'true')
     expect(nav.textContent).toBe('projsrcrendererlib')
@@ -1077,7 +1077,7 @@ describe('MobileFileExplorer', () => {
     expect(within(nav).getByText('lib').className).toContain('text-foreground')
   })
 
-  describe('a Windows-hosted termul-server (verbatim paths, L-20)', () => {
+  describe('a Windows-hosted itzterm-server (verbatim paths, L-20)', () => {
     it('shows real segments for a persisted verbatim folder under a plain drive root', async () => {
       const nav = await openAtFolder('C:/proj', '//?/C:/proj/src/lib', [['C:/proj/src/lib', []]])
 

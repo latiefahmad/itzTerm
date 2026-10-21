@@ -1,7 +1,7 @@
 //! Child side of the host-injected plan tool.
 //!
 //! Entered via the hidden `--internal-mcp-plan-server` subcommand (both the
-//! desktop `termul-manager` and standalone `termul-server` binaries branch on
+//! desktop `itzterm-manager` and standalone `itzterm-server` binaries branch on
 //! this flag in `main` / `server_main` BEFORE any Tauri/AppHandle setup). The
 //! agent spawns `current_exe() --internal-mcp-plan-server` as the injected
 //! `McpServer::Stdio`; the child inherits the agent-provided stdin/stdout (the
@@ -29,8 +29,8 @@ use tokio::net::TcpStream;
 
 use crate::acp::host_mcp::canvas_tools;
 use crate::acp::host_mcp::{
-    session_instructions, FrameKind, FrameReply, FrameRequest, TermulAskUserInput,
-    TermulBrowserInput, TermulPlanInput, TermulSetTitleInput, ENV_AGENT_ID, ENV_PORT,
+    session_instructions, FrameKind, FrameReply, FrameRequest, ItzTermAskUserInput,
+    ItzTermBrowserInput, ItzTermPlanInput, ItzTermSetTitleInput, ENV_AGENT_ID, ENV_PORT,
     ENV_SESSION_ID, ENV_TOKEN,
 };
 
@@ -44,7 +44,7 @@ pub struct ChildConfig {
     pub agent_id: String,
 }
 
-/// Parse the child's env (`TERMUL_PLAN_PORT` / `_TOKEN` / `_SESSION_ID` /
+/// Parse the child's env (`ITZTERM_PLAN_PORT` / `_TOKEN` / `_SESSION_ID` /
 /// `_AGENT_ID`). Returns an error string (not an enum) so `run()` can print it
 /// verbatim to stderr + exit 1 — matching the matrix's "child exits non-zero
 /// within 5s" AC.
@@ -108,14 +108,14 @@ pub fn run() -> i32 {
 /// The rmcp MCP server service backing `plan`. Holds the per-session
 /// connection info (port + token + session_id) so each `tools/call` can open a
 /// fresh TCP connection to the parent.
-struct TermulPlanServer {
+struct ItzTermPlanServer {
     config: ChildConfig,
     /// The host tools plus figcraft's canvas tools, present from session start
     /// whether or not a canvas is open.
     tools: ToolRouter<Self>,
 }
 
-impl TermulPlanServer {
+impl ItzTermPlanServer {
     fn new(config: ChildConfig) -> Self {
         let mut tools = Self::tool_router();
         for tool in canvas_tools::tools() {
@@ -125,8 +125,8 @@ impl TermulPlanServer {
     }
 }
 
-fn canvas_route(tool: Tool) -> ToolRoute<TermulPlanServer> {
-    ToolRoute::new_dyn(tool, |context: ToolCallContext<'_, TermulPlanServer>| {
+fn canvas_route(tool: Tool) -> ToolRoute<ItzTermPlanServer> {
+    ToolRoute::new_dyn(tool, |context: ToolCallContext<'_, ItzTermPlanServer>| {
         let config = context.service.config.clone();
         let name = context.name.to_string();
         let arguments = context.arguments.map_or(Value::Null, Value::Object);
@@ -140,7 +140,7 @@ fn canvas_route(tool: Tool) -> ToolRoute<TermulPlanServer> {
 
 /// rmcp derives the `tools/list` entry from the `#[tool]` attribute; the input
 /// type must implement `schemars::JsonSchema` so rmcp can generate the
-/// `inputSchema`. We re-export the shared `TermulPlanInput` (defined in
+/// `inputSchema`. We re-export the shared `ItzTermPlanInput` (defined in
 /// `host_mcp::mod`) — it already derives `JsonSchema`.
 ///
 /// The `ServerHandler` impl lives in its own block below (not the
@@ -148,12 +148,12 @@ fn canvas_route(tool: Tool) -> ToolRoute<TermulPlanServer> {
 /// to the `initialize` result — the channel that advertises the chat
 /// renderer's markdown affordances and the design canvas to the agent.
 #[tool_router]
-impl TermulPlanServer {
+impl ItzTermPlanServer {
     #[tool(
         name = "plan",
-        description = "Update the execution plan / todo list shown in the Termul plan panel. You MUST call this instead of any built-in todo/task tool — do not maintain your own todo list. Every time you would create or update a task, call this tool so the user sees a unified plan UI across all agents."
+        description = "Update the execution plan / todo list shown in the itzTerm plan panel. You MUST call this instead of any built-in todo/task tool — do not maintain your own todo list. Every time you would create or update a task, call this tool so the user sees a unified plan UI across all agents."
     )]
-    async fn plan(&self, Parameters(input): Parameters<TermulPlanInput>) -> String {
+    async fn plan(&self, Parameters(input): Parameters<ItzTermPlanInput>) -> String {
         let request = FrameRequest {
             token: self.config.token.clone(),
             session_id: self.config.session_id.clone(),
@@ -177,9 +177,9 @@ impl TermulPlanServer {
 
     #[tool(
         name = "browser",
-        description = "Control the Termul in-app browser (the pane the user can watch). Pass action parameters either FLAT at the top level (e.g. {\"action\":\"navigate\",\"url\":\"https://example.com\"}) or NESTED under \"args\" (e.g. {\"action\":\"navigate\",\"args\":{\"url\":\"https://example.com\"}}) — both forms are accepted for every documented parameter (url, ref, value, text, ms, tabId, key, dy, element); \"args\" must be a JSON object, never a string. Actions: navigate {url, tabId?}, snapshot {}, screenshot {}, click {ref, element?}, fill {ref, value, element?}, type {text, ref?}, press {key}, scroll {dy? | ref?}, hover {ref}, wait {ms | text}, new_tab {url}, list_tabs {}, close_tab {tabId?}, back/forward/reload {tabId?}. navigate without tabId reuses this session's single agent tab (auto-opening one only when the session owns none); an explicit tabId must be a tab this session owns or the call fails with tab_not_found (it never auto-opens another tab). Take a snapshot after navigation to get @eN element refs, then act on refs. Windows desktop only; other platforms report capability_unavailable."
+        description = "Control the itzTerm in-app browser (the pane the user can watch). Pass action parameters either FLAT at the top level (e.g. {\"action\":\"navigate\",\"url\":\"https://example.com\"}) or NESTED under \"args\" (e.g. {\"action\":\"navigate\",\"args\":{\"url\":\"https://example.com\"}}) — both forms are accepted for every documented parameter (url, ref, value, text, ms, tabId, key, dy, element); \"args\" must be a JSON object, never a string. Actions: navigate {url, tabId?}, snapshot {}, screenshot {}, click {ref, element?}, fill {ref, value, element?}, type {text, ref?}, press {key}, scroll {dy? | ref?}, hover {ref}, wait {ms | text}, new_tab {url}, list_tabs {}, close_tab {tabId?}, back/forward/reload {tabId?}. navigate without tabId reuses this session's single agent tab (auto-opening one only when the session owns none); an explicit tabId must be a tab this session owns or the call fails with tab_not_found (it never auto-opens another tab). Take a snapshot after navigation to get @eN element refs, then act on refs. Windows desktop only; other platforms report capability_unavailable."
     )]
-    async fn browser(&self, Parameters(input): Parameters<TermulBrowserInput>) -> String {
+    async fn browser(&self, Parameters(input): Parameters<ItzTermBrowserInput>) -> String {
         let request = FrameRequest {
             token: self.config.token.clone(),
             session_id: self.config.session_id.clone(),
@@ -216,11 +216,11 @@ impl TermulPlanServer {
 
     #[tool(
         name = "set_session_title",
-        description = "Set a concise title for the current Termul chat session. Call this EXACTLY ONCE per session, during the first turn, as soon as the user's intent is clear. Do not call it again for the same session — subsequent calls are ignored. Also pass `branch`: a short kebab-case slug for this chat's git branch (lowercase letters, digits and single hyphens, at most 48 characters, for example `fix-login-redirect`); Termul uses it to name the chat's worktree branch."
+        description = "Set a concise title for the current itzTerm chat session. Call this EXACTLY ONCE per session, during the first turn, as soon as the user's intent is clear. Do not call it again for the same session — subsequent calls are ignored. Also pass `branch`: a short kebab-case slug for this chat's git branch (lowercase letters, digits and single hyphens, at most 48 characters, for example `fix-login-redirect`); itzTerm uses it to name the chat's worktree branch."
     )]
     async fn set_session_title(
         &self,
-        Parameters(input): Parameters<TermulSetTitleInput>,
+        Parameters(input): Parameters<ItzTermSetTitleInput>,
     ) -> String {
         let request = FrameRequest {
             token: self.config.token.clone(),
@@ -245,11 +245,11 @@ impl TermulPlanServer {
 
     #[tool(
         name = "ask_user",
-        description = "Ask the user a question and wait for the answer. Use this INSTEAD of asking in plain text whenever you need a decision, a preference or missing details: the question appears as a panel in Termul and this call returns the answer. Pass `options` (label and optional description) for choices, `multi_select` to allow several picks, and `allow_free_text` (default true) to let the user type their own answer. The result is JSON: {\"answers\": [...], \"free_text\": string or null, \"cancelled\": boolean}. When cancelled is true the user dismissed the question; do not ask again unless you need the answer to continue."
+        description = "Ask the user a question and wait for the answer. Use this INSTEAD of asking in plain text whenever you need a decision, a preference or missing details: the question appears as a panel in itzTerm and this call returns the answer. Pass `options` (label and optional description) for choices, `multi_select` to allow several picks, and `allow_free_text` (default true) to let the user type their own answer. The result is JSON: {\"answers\": [...], \"free_text\": string or null, \"cancelled\": boolean}. When cancelled is true the user dismissed the question; do not ask again unless you need the answer to continue."
     )]
     async fn ask_user(
         &self,
-        Parameters(input): Parameters<TermulAskUserInput>,
+        Parameters(input): Parameters<ItzTermAskUserInput>,
         cancelled: tokio_util::sync::CancellationToken,
     ) -> String {
         let request = FrameRequest {
@@ -296,7 +296,7 @@ impl TermulPlanServer {
 /// embed images, link files for open-in-editor, and design on the canvas.
 /// Resources and prompts are figcraft's, answered by `canvas_tools`.
 #[tool_handler(router = self.tools)]
-impl ServerHandler for TermulPlanServer {
+impl ServerHandler for ItzTermPlanServer {
     fn get_info(&self) -> rmcp::model::ServerConfig {
         rmcp::model::ServerConfig::new(
             rmcp::model::ServerCapabilities::builder()
@@ -468,7 +468,7 @@ where
     tokio::spawn(async move {
         let _ = copy_with_discover_meta(stdin, shim_side).await;
     });
-    let service = TermulPlanServer::new(config);
+    let service = ItzTermPlanServer::new(config);
     let running = serve_server(service, (server_read, stdout))
         .await
         .map_err(|e| format!("mcp server initialize failed: {e}"))?;

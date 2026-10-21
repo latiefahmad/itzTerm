@@ -246,7 +246,7 @@ describe('installedBinaryConfig', () => {
   it('converts installer output into a persisted registry config', () => {
     const config = installedBinaryConfig(
       agent('opencode', { binary: {} }, 'OpenCode'),
-      { command: 'C:/termul/opencode.exe', args: ['acp'] },
+      { command: 'C:/itzterm/opencode.exe', args: ['acp'] },
       { env: { OPENCODE: '1' } }
     )
 
@@ -255,7 +255,7 @@ describe('installedBinaryConfig', () => {
       templateId: 'opencode',
       configId: 'acp-registry:opencode',
       name: 'OpenCode',
-      command: 'C:/termul/opencode.exe',
+      command: 'C:/itzterm/opencode.exe',
       args: ['acp'],
       env: { OPENCODE: '1' },
       allowTerminal: false
@@ -311,7 +311,7 @@ describe('needsPersistedConfigUpdate', () => {
         },
         {
           command: 'node',
-          args: ['/termul/cache/claude-agent-acp/dist/index.js'],
+          args: ['/itzterm/cache/claude-agent-acp/dist/index.js'],
           env: {}
         }
       )

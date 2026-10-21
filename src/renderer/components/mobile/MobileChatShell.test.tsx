@@ -550,11 +550,11 @@ describe('MobileChatShell', () => {
         expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Agent Chat')
       })
 
-      it('is "Termul" with no active tab', () => {
+      it('is "itzTerm" with no active tab', () => {
         seedTabs([], null)
         renderShell()
 
-        expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Termul')
+        expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('itzTerm')
       })
     })
 
@@ -563,7 +563,7 @@ describe('MobileChatShell', () => {
         tauriRef.current = false
         projectRef.current = {
           id: 'p1',
-          name: 'termul',
+          name: 'itzterm',
           path: '/work',
           gitBranch: 'main',
           isGitRepo: true
@@ -575,14 +575,14 @@ describe('MobileChatShell', () => {
           s1: {
             title: 'Hello chat',
             projectId: 'p1',
-            worktreePath: '/work/.termul/worktrees/ab12',
+            worktreePath: '/work/.itzterm/worktrees/ab12',
             worktreeBranch: 'chat/ab12'
           }
         }
         renderShell()
 
-        const subtitle = screen.getByRole('button', { name: 'termul · chat/ab12, switch project' })
-        expect(subtitle).toHaveTextContent('termul · chat/ab12 · Worktree')
+        const subtitle = screen.getByRole('button', { name: 'itzterm · chat/ab12, switch project' })
+        expect(subtitle).toHaveTextContent('itzterm · chat/ab12 · Worktree')
       })
 
       it('local chat: the project branch and Local', () => {
@@ -590,8 +590,8 @@ describe('MobileChatShell', () => {
         renderShell()
 
         expect(
-          screen.getByRole('button', { name: 'termul · main, switch project' })
-        ).toHaveTextContent('termul · main · Local')
+          screen.getByRole('button', { name: 'itzterm · main, switch project' })
+        ).toHaveTextContent('itzterm · main · Local')
       })
 
       it('a session that is not loaded uses the active project and no worktree', () => {
@@ -599,8 +599,8 @@ describe('MobileChatShell', () => {
         renderShell()
 
         expect(
-          screen.getByRole('button', { name: 'termul · main, switch project' })
-        ).toHaveTextContent('termul · main · Local')
+          screen.getByRole('button', { name: 'itzterm · main, switch project' })
+        ).toHaveTextContent('itzterm · main · Local')
       })
 
       it("a chat from another project shows that project's name and branch, not the active one's", () => {
@@ -625,7 +625,7 @@ describe('MobileChatShell', () => {
           s1: {
             title: 'Hello chat',
             projectId: 'p1',
-            worktreePath: '/work/.termul/worktrees/ab12',
+            worktreePath: '/work/.itzterm/worktrees/ab12',
             worktreeBranch: 'chat/ab12'
           }
         }
@@ -633,42 +633,42 @@ describe('MobileChatShell', () => {
         renderShell()
 
         expect(
-          screen.getByRole('button', { name: 'termul · main, switch project' })
-        ).toHaveTextContent('termul · main · Local')
+          screen.getByRole('button', { name: 'itzterm · main, switch project' })
+        ).toHaveTextContent('itzterm · main · Local')
       })
 
       it('detached HEAD: project · Detached HEAD · Local', () => {
-        projectRef.current = { id: 'p1', name: 'termul', path: '/work', isGitRepo: true }
+        projectRef.current = { id: 'p1', name: 'itzterm', path: '/work', isGitRepo: true }
         seedTabs([], null)
         renderShell()
 
         expect(
-          screen.getByRole('button', { name: 'termul · Detached HEAD, switch project' })
-        ).toHaveTextContent('termul · Detached HEAD · Local')
+          screen.getByRole('button', { name: 'itzterm · Detached HEAD, switch project' })
+        ).toHaveTextContent('itzterm · Detached HEAD · Local')
       })
 
       it('worktree with an unknown branch: project · Worktree', () => {
-        projectRef.current = { id: 'p1', name: 'termul', path: '/work' }
+        projectRef.current = { id: 'p1', name: 'itzterm', path: '/work' }
         sessionsRef.current = {
           s1: {
             title: 'Hello chat',
             projectId: 'p1',
-            worktreePath: '/work/.termul/worktrees/ab12'
+            worktreePath: '/work/.itzterm/worktrees/ab12'
           }
         }
         renderShell()
 
-        expect(screen.getByRole('button', { name: 'termul, switch project' })).toHaveTextContent(
-          'termul · Worktree'
+        expect(screen.getByRole('button', { name: 'itzterm, switch project' })).toHaveTextContent(
+          'itzterm · Worktree'
         )
       })
 
       it('non-git project: the name only', () => {
-        projectRef.current = { id: 'p1', name: 'termul', path: '/work', isGitRepo: false }
+        projectRef.current = { id: 'p1', name: 'itzterm', path: '/work', isGitRepo: false }
         renderShell()
 
-        const subtitle = screen.getByRole('button', { name: 'termul, switch project' })
-        expect(subtitle).toHaveTextContent(/^termul$/)
+        const subtitle = screen.getByRole('button', { name: 'itzterm, switch project' })
+        expect(subtitle).toHaveTextContent(/^itzterm$/)
       })
 
       it('no project: "No project", and it still opens the project sheet', async () => {
@@ -686,7 +686,7 @@ describe('MobileChatShell', () => {
         tauriRef.current = true
         renderShell()
 
-        expect(screen.getByText('termul · main · Local')).toBeInTheDocument()
+        expect(screen.getByText('itzterm · main · Local')).toBeInTheDocument()
         expect(screen.queryByRole('button', { name: /switch project/ })).not.toBeInTheDocument()
       })
     })
@@ -806,7 +806,7 @@ describe('MobileChatShell', () => {
     }
 
     it('opens from ⋯ with the title and subtitle, and ⋯ reports it', async () => {
-      projectRef.current = { id: 'p1', name: 'termul', path: '/work', gitBranch: 'main' }
+      projectRef.current = { id: 'p1', name: 'itzterm', path: '/work', gitBranch: 'main' }
       renderWeb()
 
       const more = screen.getByLabelText('More')
@@ -817,7 +817,7 @@ describe('MobileChatShell', () => {
 
       expect(dialog.id).toBe('mobile-header-more-sheet')
       expect(dialog).toHaveAccessibleName('Hello chat')
-      expect(dialog).toHaveAccessibleDescription('termul · main · Local')
+      expect(dialog).toHaveAccessibleDescription('itzterm · main · Local')
       expect(more).toHaveAttribute('aria-expanded', 'true')
       expect(more).toHaveAttribute('aria-controls', 'mobile-header-more-sheet')
     })

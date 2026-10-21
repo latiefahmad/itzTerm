@@ -31,7 +31,7 @@ pub(super) async fn run_command_loop(
     // kills the child via the SDK's `ChildGuard`.
     let init_request = InitializeRequest::new(ProtocolVersion::V1)
         .client_capabilities(client::client_capabilities(allow_terminal))
-        .client_info(Implementation::new("termul", env!("CARGO_PKG_VERSION")).title("Termul"));
+        .client_info(Implementation::new("itzterm", env!("CARGO_PKG_VERSION")).title("itzTerm"));
     let init_message = match initialize_message(&init_request) {
         Ok(message) => message,
         Err(error) => {
@@ -53,7 +53,7 @@ pub(super) async fn run_command_loop(
             };
             if response.protocol_version != ProtocolVersion::V1 {
                 let message = format!(
-                    "This agent requires ACP protocol version {:?}. Termul supports version 1.",
+                    "This agent requires ACP protocol version {:?}. itzTerm supports version 1.",
                     response.protocol_version
                 );
                 log::warn!("[acp] agent {agent_id} {message}");

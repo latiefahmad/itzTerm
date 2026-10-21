@@ -149,7 +149,7 @@ vi.mock('@/stores/app-settings-store', () => ({
   useConfirmTerminalClose: vi.fn(() => true),
   useUpdateAppSetting: vi.fn(() => vi.fn()),
   useDefaultProjectColor: vi.fn(() => 'blue'),
-  useColorTheme: vi.fn(() => 'termul'),
+  useColorTheme: vi.fn(() => 'itzterm'),
   useAppearanceMode: vi.fn(() => 'dark')
 }))
 
@@ -350,7 +350,7 @@ vi.mock('@/pages/AppPreferences', () => ({ AppPreferencesModal: () => <div>prefe
 vi.mock('@/pages/ProjectSettings', () => ({
   ProjectSettingsModal: () => <div>project-settings</div>
 }))
-vi.mock('@/components/TermulMark', () => ({ TermulMark: () => <span>mark</span> }))
+vi.mock('@/components/ItzTermMark', () => ({ ItzTermMark: () => <span>mark</span> }))
 vi.mock('@/components/chat/ChatHistoryTab', () => ({
   ChatHistoryTab: () => <div>history</div>
 }))

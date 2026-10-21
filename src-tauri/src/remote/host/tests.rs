@@ -752,7 +752,7 @@ async fn shared_live_start_never_seeds_a_project() {
 /// Windows `std::env::temp_dir()` resolves to `%USERPROFILE%\AppData\Local\
 /// Temp` — i.e. INSIDE the home tree — so using it would let the buggy
 /// `project_root = home` code accept the project (false pass). We instead
-/// derive the project dirs from an outside-home base: `$TERMUL_TEST_OUTSIDE_
+/// derive the project dirs from an outside-home base: `$ITZTERM_TEST_OUTSIDE_
 /// HOME_BASE` when set (so CI can pin a known-writable path outside home),
 /// falling back to `home.parent()` (a sibling of home) when unset. If the
 /// base cannot be resolved or (without an override) is not writable, the
@@ -772,21 +772,21 @@ async fn shared_live_boundary_is_any_registered_cross_drive_project() {
         eprintln!("skip: cannot resolve user home dir for cross-drive test");
         return;
     };
-    // `$TERMUL_TEST_OUTSIDE_HOME_BASE` lets CI pin a known-writable path
+    // `$ITZTERM_TEST_OUTSIDE_HOME_BASE` lets CI pin a known-writable path
     // outside home (e.g. `/var/tmp` or a separate drive on runners where
     // `home.parent()` is locked down). When unset, fall back to
     // `home.parent()`. An explicit override that is unusable is a hard
     // error — the operator asked for it, so a silent skip would mask a
     // broken setup.
-    let override_set = std::env::var_os("TERMUL_TEST_OUTSIDE_HOME_BASE").is_some();
-    let outside_base = match std::env::var("TERMUL_TEST_OUTSIDE_HOME_BASE") {
+    let override_set = std::env::var_os("ITZTERM_TEST_OUTSIDE_HOME_BASE").is_some();
+    let outside_base = match std::env::var("ITZTERM_TEST_OUTSIDE_HOME_BASE") {
         Ok(raw) if !raw.trim().is_empty() => std::path::PathBuf::from(raw.trim()),
         _ => match home.parent() {
             Some(p) => p.to_path_buf(),
             None => {
                 eprintln!(
                     "skip: home dir has no parent and \
-                         TERMUL_TEST_OUTSIDE_HOME_BASE is unset"
+                         ITZTERM_TEST_OUTSIDE_HOME_BASE is unset"
                 );
                 return;
             }
@@ -797,14 +797,14 @@ async fn shared_live_boundary_is_any_registered_cross_drive_project() {
     // without an override, skip silently — local dev may lack a writable
     // outside-home path.
     let probe = outside_base.join(format!(
-        "termul-xdrive-probe-{}-{}",
+        "itzterm-xdrive-probe-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ));
     if std::fs::create_dir_all(&probe).is_err() {
         if override_set {
             panic!(
-                "TERMUL_TEST_OUTSIDE_HOME_BASE='{}' is not writable; CI cannot \
+                "ITZTERM_TEST_OUTSIDE_HOME_BASE='{}' is not writable; CI cannot \
                      run the cross-drive test reliably — fix the override path",
                 outside_base.display()
             );
@@ -812,7 +812,7 @@ async fn shared_live_boundary_is_any_registered_cross_drive_project() {
         eprintln!(
             "skip: cannot write outside-home base '{}'; cross-drive layout \
                  not reproducible on this filesystem (set \
-                 TERMUL_TEST_OUTSIDE_HOME_BASE to force)",
+                 ITZTERM_TEST_OUTSIDE_HOME_BASE to force)",
             outside_base.display()
         );
         return;
@@ -829,12 +829,12 @@ async fn shared_live_boundary_is_any_registered_cross_drive_project() {
     }
 
     let dir_a = outside_base.join(format!(
-        "termul-cross-drive-a-{}-{}",
+        "itzterm-cross-drive-a-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ));
     let dir_b = outside_base.join(format!(
-        "termul-cross-drive-b-{}-{}",
+        "itzterm-cross-drive-b-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ));

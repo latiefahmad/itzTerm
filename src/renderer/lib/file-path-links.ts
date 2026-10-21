@@ -478,14 +478,15 @@ function getErrorMessage(
 
 /**
  * The stored cursor position only applies when an editor first mounts, so an
- * already-open file needs the `termul:reveal-line` event to move. The window
+ * already-open file needs the `itzterm:reveal-line` event to move. The window
  * slot covers an editor that mounts after this event fires.
  */
 function revealEditorLine(filePath: string, lineNumber: number): void {
   const detail = { filePath, lineNumber }
-  ;(window as unknown as { __termulPendingRevealLine?: typeof detail }).__termulPendingRevealLine =
-    detail
-  window.dispatchEvent(new CustomEvent('termul:reveal-line', { detail }))
+  ;(
+    window as unknown as { __itztermPendingRevealLine?: typeof detail }
+  ).__itztermPendingRevealLine = detail
+  window.dispatchEvent(new CustomEvent('itzterm:reveal-line', { detail }))
 }
 
 /** Opens a resolved file path from terminal output and adds it to the editor workspace. */

@@ -158,7 +158,7 @@ export async function preparePlatformArtifacts({
     const signature = (await readFile(signatureArtifact.path, 'utf8')).trim()
     assertNonEmptyString(signature, `${platform} ${bundle} signature`)
     return {
-      url: `https://github.com/gnoviawan/termul/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(updaterAssetName)}`,
+      url: `https://github.com/latiefahmad/itzTerm/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(updaterAssetName)}`,
       signature
     }
   }

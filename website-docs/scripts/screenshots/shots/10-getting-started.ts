@@ -244,7 +244,7 @@ export const shots: Shot[] = [
     run: async (page) => {
       await page.goto(`${DEMO_BASE_URL}/#token=${DEMO_TOKEN}`)
       await page.waitForFunction(
-        (t) => localStorage.getItem('termul.webAuthToken') === t,
+        (t) => localStorage.getItem('itzterm.webAuthToken') === t,
         DEMO_TOKEN
       )
       await page.goto(`${DEMO_BASE_URL}/#/`)

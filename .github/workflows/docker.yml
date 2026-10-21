@@ -31,9 +31,9 @@ jobs:
           - arch: arm64
             runner: ubuntu-24.04-arm
     env:
-      TERMUL_IMAGE: termul-server:ci
+      ITZTERM_IMAGE: itzterm-server:ci
       BASE_URL: http://127.0.0.1:8080
-      TOKEN_FILE: /home/termul/.local/state/termul/web-auth-token
+      TOKEN_FILE: /home/itzterm/.local/state/itzterm/web-auth-token
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -45,10 +45,10 @@ jobs:
       - name: Build image from the nightly release
         run: |
           docker build \
-            --build-arg TERMUL_RELEASE=nightly \
-            --build-arg TERMUL_UID="$(id -u)" \
-            --build-arg TERMUL_GID="$(id -g)" \
-            --tag "$TERMUL_IMAGE" .
+            --build-arg ITZTERM_RELEASE=nightly \
+            --build-arg ITZTERM_UID="$(id -u)" \
+            --build-arg ITZTERM_GID="$(id -g)" \
+            --tag "$ITZTERM_IMAGE" .
 
       - name: Start the compose stack
         run: |
@@ -58,10 +58,10 @@ jobs:
       - name: Check user, auth gate, remote writes, and token secrecy
         run: |
           set -euo pipefail
-          container_uid="$(docker compose exec -T termul-server id -u)"
+          container_uid="$(docker compose exec -T itzterm-server id -u)"
           test "$container_uid" = "$(id -u)"
           test "$container_uid" != 0
-          docker compose exec -T termul-server sh -c \
+          docker compose exec -T itzterm-server sh -c \
             'touch "$HOME/.local/bin/.probe" /tmp/.probe && ! touch /.probe 2>/dev/null'
 
           curl -fsS "$BASE_URL/health"
@@ -69,7 +69,7 @@ jobs:
           status="$(curl -s -o /dev/null -w '%{http_code}' "$BASE_URL/projects")"
           test "$status" = 401
 
-          token="$(docker compose exec -T termul-server cat "$TOKEN_FILE")"
+          token="$(docker compose exec -T itzterm-server cat "$TOKEN_FILE")"
           echo "::add-mask::$token"
           auth="Authorization: Bearer $token"
           curl -fsS -H "$auth" -H 'Content-Type: application/json' \
@@ -80,7 +80,7 @@ jobs:
             "$BASE_URL/fs/mkdir" | jq -e '.success == true'
           test -d workspace/created-by-ci
 
-          if docker compose logs termul-server | grep -qF "$token"; then
+          if docker compose logs itzterm-server | grep -qF "$token"; then
             echo "The server printed the auth token." >&2
             exit 1
           fi
@@ -88,19 +88,19 @@ jobs:
       - name: Check that state survives container recreation
         run: |
           set -euo pipefail
-          before="$(docker compose exec -T termul-server sha256sum "$TOKEN_FILE")"
+          before="$(docker compose exec -T itzterm-server sha256sum "$TOKEN_FILE")"
           docker compose down
           docker compose up -d --no-build --pull never --wait --wait-timeout 120
-          after="$(docker compose exec -T termul-server sha256sum "$TOKEN_FILE")"
+          after="$(docker compose exec -T itzterm-server sha256sum "$TOKEN_FILE")"
           test "$before" = "$after"
-          token="$(docker compose exec -T termul-server cat "$TOKEN_FILE")"
+          token="$(docker compose exec -T itzterm-server cat "$TOKEN_FILE")"
           echo "::add-mask::$token"
           curl -fsS -H "Authorization: Bearer $token" "$BASE_URL/projects" \
             | jq -e '.data.projects | any(.id == "ci")'
 
       - name: Show server logs
         if: failure()
-        run: docker compose logs termul-server
+        run: docker compose logs itzterm-server
 
       - name: Stop the compose stack
         if: always()

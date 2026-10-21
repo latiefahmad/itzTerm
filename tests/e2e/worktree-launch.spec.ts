@@ -3,7 +3,7 @@ import { E2E_TOKEN } from './helpers'
 import { openWorkspace, selectProject } from './ui'
 
 /**
- * Worktree-launch E2E on termul-server: the web launcher's chat composer must
+ * Worktree-launch E2E on itzterm-server: the web launcher's chat composer must
  * offer the same worktree isolation the desktop has ("New worktree"), and
  * launching in that mode creates a real `git worktree` + a chat in it.
  *

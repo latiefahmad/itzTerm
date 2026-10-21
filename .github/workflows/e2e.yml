@@ -1,6 +1,6 @@
 name: E2E
 
-# Runs the Playwright suite in tests/e2e. It drives a release `termul-server`
+# Runs the Playwright suite in tests/e2e. It drives a release `itzterm-server`
 # and the built web client against a fake ACP agent (tests/e2e/fake-longrun-agent.ts),
 # so it covers spawn, prompt streaming, permissions, elicitations, crash
 # recovery and reconnect without a network LLM or credentials.
@@ -45,7 +45,7 @@ concurrency:
 
 jobs:
   e2e:
-    name: Playwright e2e (termul-server)
+    name: Playwright e2e (itzterm-server)
     runs-on: ubuntu-22.04
     timeout-minutes: 75
     steps:
@@ -89,9 +89,9 @@ jobs:
       - name: Assert dist-web/index.html exists
         run: test -f dist-web/index.html && test -s dist-web/index.html
 
-      - name: Build termul-server (release)
+      - name: Build itzterm-server (release)
         working-directory: src-tauri
-        run: cargo build --release --bin termul-server --features standalone-server
+        run: cargo build --release --bin itzterm-server --features standalone-server
 
       - name: Install Playwright Chromium
         run: bun run playwright install --with-deps chromium
@@ -102,7 +102,7 @@ jobs:
           # These seven tests fail on dev for reasons outside the harness. In four of
           # them a project switch opens the Project Settings dialog, which then
           # covers the New chat button. The other three fail or flake on chat tab and
-          # tool card assertions. Tracked in https://github.com/gnoviawan/termul/issues/1343.
+          # tool card assertions. Tracked in https://github.com/latiefahmad/itzTerm/issues/1343.
           # Remove a title from this list when its test is fixed.
           E2E_KNOWN_RED: 'closing a chat mid-turn only detaches it|tab switching mid-run: another chat tab|project switching mid-run|three projects run concurrently|browser reload with a crashed chat open|project switch round-trips the streaming chat tab|reload mid-turn: the reopened chat shows the tool cards'
         # Playwright reads each word of E2E_SPECS as a file filter. `set -f` stops the

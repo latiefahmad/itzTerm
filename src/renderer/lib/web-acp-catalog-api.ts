@@ -7,7 +7,7 @@
  * map to `IpcResult { success: false, code: 'NETWORK_ERROR' }` so the
  * renderer never sees a thrown exception from the network layer.
  *
- * Routes (same-origin under `termul-server`):
+ * Routes (same-origin under `itzterm-server`):
  * - `GET  /acp/catalog` — list (optional `?refresh=true`).
  * - `POST /acp/catalog/opt-in` — set opt-in.
  *

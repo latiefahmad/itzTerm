@@ -2,7 +2,7 @@ import { findFilePathMatches } from '@/lib/file-path-links'
 
 /**
  * Escape `& < > "` so interpolated path/alt/url values cannot break out of
- * the raw HTML we emit for `termul-file-path` / `termul-image` elements.
+ * the raw HTML we emit for `itzterm-file-path` / `itzterm-image` elements.
  */
 export function escapeHtmlAttribute(value: string): string {
   return value
@@ -24,8 +24,8 @@ type MarkdownNode = {
  * visible label defaults to the path (bare prose paths); markdown links pass
  * their link text.
  */
-export function termulFilePathTag(path: string, label: string = path): string {
-  return `<termul-file-path data-path="${escapeHtmlAttribute(path)}">${escapeHtmlAttribute(label)}</termul-file-path>`
+export function itztermFilePathTag(path: string, label: string = path): string {
+  return `<itzterm-file-path data-path="${escapeHtmlAttribute(path)}">${escapeHtmlAttribute(label)}</itzterm-file-path>`
 }
 
 const URI_SCHEME_RE = /^[a-zA-Z][a-zA-Z0-9+.-]*:/
@@ -121,7 +121,7 @@ function linkToFileButton(node: MarkdownNode): MarkdownNode | null {
   const path = localLinkPath(node.url ?? '')
   if (path === null) return null
   const label = nodeText(node).trim() || path
-  return { type: 'html', value: termulFilePathTag(path, label) }
+  return { type: 'html', value: itztermFilePathTag(path, label) }
 }
 
 function splitTextNode(node: MarkdownNode): MarkdownNode[] {
@@ -136,7 +136,7 @@ function splitTextNode(node: MarkdownNode): MarkdownNode[] {
     if (match.start > cursor) {
       result.push({ type: 'text', value: value.slice(cursor, match.start) })
     }
-    result.push({ type: 'html', value: termulFilePathTag(match.text) })
+    result.push({ type: 'html', value: itztermFilePathTag(match.text) })
     cursor = match.start + match.text.length
   }
 
@@ -162,7 +162,7 @@ function transformNode(node: MarkdownNode): MarkdownNode[] {
 
 /**
  * Streamdown remark plugin that turns prose path tokens into
- * `<termul-file-path data-path>` raw-HTML nodes. Unlike an href marker, the
+ * `<itzterm-file-path data-path>` raw-HTML nodes. Unlike an href marker, the
  * custom element survives streamdown's `rehype-sanitize` (registered via the
  * `allowedTags` prop) and `rehype-harden` never sees an `a`/`img` to block.
  */

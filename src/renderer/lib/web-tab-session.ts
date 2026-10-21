@@ -12,7 +12,7 @@
  * Do NOT treat `acp-store.activeSessionId` as the cross-tab isolation boundary.
  */
 
-const STORAGE_KEY = 'termul.web.focusedSessionId'
+const STORAGE_KEY = 'itzterm.web.focusedSessionId'
 
 function canUseSessionStorage(): boolean {
   try {

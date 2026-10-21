@@ -10,7 +10,7 @@ import { wireBlocksToDisplay, wireTextToDisplay } from '@/lib/skills-wire-revers
 
 const GIT_PATH = '/home/u/.agents/skills/git-worktree/SKILL.md'
 const REL_PATH = '/home/u/.agents/skills/release-version/SKILL.md'
-const WIN_PATH = 'E:\\open-source\\PecutAPP\\termul\\.agents\\skills\\bmad-build\\SKILL.md'
+const WIN_PATH = 'E:\\open-source\\PecutAPP\\itzterm\\.agents\\skills\\bmad-build\\SKILL.md'
 
 describe('wireTextToDisplay', () => {
   it('reconstructs a single framed skill with its inline marker', () => {

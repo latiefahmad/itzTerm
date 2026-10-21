@@ -1,7 +1,7 @@
 /**
  * Shared fetch helpers for the web/remote (`web-*-api.ts`) IPC adapters.
  *
- * In web/remote mode the browser is served by `termul-server` itself, so the
+ * In web/remote mode the browser is served by `itzterm-server` itself, so the
  * same-origin HTTP routes mirror the desktop Tauri commands. Every helper
  * maps transport/parse failures to `IpcResult { success: false, code:
  * 'NETWORK_ERROR' }` so the renderer never sees a thrown exception from the
@@ -44,7 +44,7 @@ import { authHeader } from '../web-auth-token'
 
 /**
  * Same-origin base for the embedded server. In web/remote mode the browser is
- * served by `termul-server` itself, so `window.location.origin` is the
+ * served by `itzterm-server` itself, so `window.location.origin` is the
  * server. Returns the empty string under Tauri (desktop build) so a
  * misconfigured call fails fast rather than hitting a phantom origin.
  */

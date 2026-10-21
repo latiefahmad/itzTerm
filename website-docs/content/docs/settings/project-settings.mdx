@@ -21,7 +21,7 @@ Project settings are not saved until you save them. When you change something, a
 - Select **Save Changes** to keep your changes.
 - Select **Discard** to drop them.
 
-If you close the window with unsaved changes, Termul asks you to confirm. Select **Leave** to close without saving.
+If you close the window with unsaved changes, itzTerm asks you to confirm. Select **Leave** to close without saving.
 
 ## General
 
@@ -43,7 +43,7 @@ To add a variable:
 
 To remove a variable, select the **X** at the end of its row.
 
-To copy the variables from a `.env` file, select **Import from .env**. Termul reads the `.env` file in the project's root folder. A variable from the file replaces a variable with the same name. If some lines of the file are not valid, Termul imports the rest and lists the lines it skipped.
+To copy the variables from a `.env` file, select **Import from .env**. itzTerm reads the `.env` file in the project's root folder. A variable from the file replaces a variable with the same name. If some lines of the file are not valid, itzTerm imports the rest and lists the lines it skipped.
 
 ## Shell Settings
 
@@ -53,7 +53,7 @@ To copy the variables from a `.env` file, select **Import from .env**. Termul re
 
 A worktree is a second working folder of the same git repository, often on another branch. See [Worktrees](/docs/git/worktrees). A new worktree does not have folders that git ignores, such as `node_modules`. Without them, you must install your dependencies again in each worktree.
 
-This tab lists folders that Termul links from the project folder into each new worktree. A linked folder is shared, so the worktree uses the same `node_modules` as the project.
+This tab lists folders that itzTerm links from the project folder into each new worktree. A linked folder is shared, so the worktree uses the same `node_modules` as the project.
 
 ![The Worktree Symlinks tab with the Sync from .gitignore and Add Directory buttons](/screenshots/settings-project-symlinks.png)
 
@@ -61,7 +61,7 @@ This tab lists folders that Termul links from the project folder into each new w
 - **Add Directory** adds an empty row. Type a folder name, such as `node_modules`.
 - The **X** at the end of a row removes the folder from the list.
 
-When the list of a git project is empty, Termul fills it from `.gitignore` the first time you open project settings. Select **Save Changes** to keep that list.
+When the list of a git project is empty, itzTerm fills it from `.gitignore` the first time you open project settings. Select **Save Changes** to keep that list.
 
 When you create a worktree, the **Symlink Directories** part of the new worktree window lists these folders. Clear a folder's checkbox to skip it for that worktree.
 
@@ -79,4 +79,4 @@ Emergency Mode has three controls meant for fast worktree work:
 - **Skip .gitignore Selection** says new worktrees use the folders from **Worktree Symlinks** without asking.
 - **Default Branch Prefix** is the start of new branch names, such as `feature/` or `hotfix/`.
 
-<Callout type="warn">In this version these three controls have no effect. Termul does not save them, and they reset when you close the window.</Callout>
+<Callout type="warn">In this version these three controls have no effect. itzTerm does not save them, and they reset when you close the window.</Callout>

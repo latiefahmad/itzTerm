@@ -220,7 +220,7 @@ pub(in crate::web::ws) async fn dispatch_connection_text(
     });
     if submitted.is_err() {
         warn!(
-            target: "termul::web::ws",
+            target: "itzterm::web::ws",
             request_id = %id,
             "/ws request refused: too many requests in flight on this connection"
         );
@@ -294,7 +294,7 @@ fn pre_auth_reply(request: &WsRequest, conn: &mut ConnState, env: &HandlerEnv) -
         Ok(validated) => validated,
         Err(refusal) => {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 request_id = %request.id,
                 check = refusal.check,
                 code = refusal.code.as_str(),
@@ -314,7 +314,7 @@ fn pre_auth_reply(request: &WsRequest, conn: &mut ConnState, env: &HandlerEnv) -
             // Durable boundary event (AGENTS.md logging policy). NEVER log the
             // presented token — only that the gate refused.
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 request_id = %request.id,
                 token_presented = !presented.is_empty(),
                 "web auth gate refused /ws authenticate (invalid or missing token)"
@@ -323,7 +323,7 @@ fn pre_auth_reply(request: &WsRequest, conn: &mut ConnState, env: &HandlerEnv) -
         }
     }
     info!(
-        target: "termul::web::ws",
+        target: "itzterm::web::ws",
         request_id = %request.id,
         device_id = %ClientIdentity::log_label(&validated.device_id),
         client_instance_id = %ClientIdentity::log_label(&validated.client_instance_id),

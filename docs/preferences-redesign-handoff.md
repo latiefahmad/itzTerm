@@ -1,7 +1,7 @@
 # Preferences redesign — hand-off checklist
 
 Status: implemented in pull request #1380 (2026-10-18). Items that are still open stay unchecked below.
-Design source: `termul-design.pen`, section **"Preferences — redesign (v2)"**. The canvas frame for this file is `Prefs v2 · Shared · Hand-off checklist`.
+Design source: `itzterm-design.pen`, section **"Preferences — redesign (v2)"**. The canvas frame for this file is `Prefs v2 · Shared · Hand-off checklist`.
 
 Scope is the desktop Application Preferences modal (`src/renderer/pages/AppPreferences.tsx`). `AGENTS.md` asks to check every surface: the browser client renders the same React pages, so check it too. Keep each file under about 800 lines and split leaf components and hooks.
 
@@ -10,7 +10,7 @@ Scope is the desktop Application Preferences modal (`src/renderer/pages/AppPrefe
 | Topic | Decision |
 |---|---|
 | Navigation | One page per category. Scroll-spy over one long page is removed. |
-| Visual direction | Current Termul tokens (OKLCH, Inter, keycap). New structure and components. |
+| Visual direction | Current itzTerm tokens (OKLCH, Inter, keycap). New structure and components. |
 | Surfaces | Desktop modal. Browser client to be checked with the parity checklist. |
 | Pilot | Editor + Notifications (from the old Behavior section). |
 

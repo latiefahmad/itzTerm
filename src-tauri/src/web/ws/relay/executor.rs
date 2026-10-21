@@ -200,7 +200,7 @@ impl KeyedExecutor {
 async fn run_job(job: Job, fault: &CancellationToken) {
     if AssertUnwindSafe(job).catch_unwind().await.is_err() {
         error!(
-            target: "termul::web::ws",
+            target: "itzterm::web::ws",
             "request handler panicked; closing the connection"
         );
         fault.cancel();

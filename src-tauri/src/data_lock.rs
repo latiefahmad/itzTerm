@@ -11,18 +11,18 @@
 //! stores' own reads/renames. Sidecars are:
 //!
 //! - directory store (`state dir`, `sessions`, `acp-catalog`, …):
-//!   `<dir>/.termul.lock`;
+//!   `<dir>/.itzterm.lock`;
 //! - single-file store (`store.json`, `projects.json`): `<file>.lock` next to
 //!   the file.
 //!
 //! A second host that finds a lock held refuses to start with
-//! [`DataLockError::Busy`], which names the path and says another Termul host
+//! [`DataLockError::Busy`], which names the path and says another itzTerm host
 //! owns it. Lock paths are canonicalized and de-duplicated, so aliases and
 //! symlinks of one path (and the same path named twice, e.g. a default that an
 //! override also points at) are locked once — a second `try_lock` on a second
 //! handle in the SAME process would otherwise fail against ourselves.
 //!
-//! This module is Tauri-free so `termul-server` and the desktop share it.
+//! This module is Tauri-free so `itzterm-server` and the desktop share it.
 
 use std::collections::HashSet;
 use std::fs::{self, File, TryLockError};
@@ -35,7 +35,7 @@ use crate::web::ServerConfig;
 const MAX_PID_RECORD_BYTES: usize = 256;
 
 /// Sidecar lock file name inside a directory store.
-pub const DIR_LOCK_FILE_NAME: &str = ".termul.lock";
+pub const DIR_LOCK_FILE_NAME: &str = ".itzterm.lock";
 
 /// File name of the desktop's web store under `app_data_dir`.
 pub const DESKTOP_STORE_FILE_NAME: &str = "store.json";
@@ -49,7 +49,7 @@ pub const ACP_INSTALL_DIR_NAME: &str = "acp-registry-binaries";
 /// Why a data path could not be locked.
 #[derive(Debug)]
 pub enum DataLockError {
-    /// Another process holds the lock: another Termul host owns this path.
+    /// Another process holds the lock: another itzTerm host owns this path.
     Busy {
         /// The durable path the caller asked to protect.
         path: PathBuf,
@@ -72,7 +72,7 @@ impl std::fmt::Display for DataLockError {
             } => {
                 write!(
                     f,
-                    "data path '{}' is already in use by another Termul host (lock file '{}' is held",
+                    "data path '{}' is already in use by another itzTerm host (lock file '{}' is held",
                     path.display(),
                     lock_file.display()
                 )?;
@@ -81,7 +81,7 @@ impl std::fmt::Display for DataLockError {
                 }
                 write!(
                     f,
-                    "); stop the other host (desktop app or termul-server) or point this one at a different data directory"
+                    "); stop the other host (desktop app or itzterm-server) or point this one at a different data directory"
                 )
             }
             Self::Io { path, source } => write!(
@@ -143,7 +143,7 @@ impl DataLocks {
     }
 
     /// Lock a directory store: creates the directory if needed and locks
-    /// `<dir>/.termul.lock`.
+    /// `<dir>/.itzterm.lock`.
     pub fn lock_dir(&mut self, dir: &Path) -> Result<(), DataLockError> {
         create_private_dir_all(dir).map_err(|source| io_error(dir, source))?;
         let canonical = fs::canonicalize(dir).map_err(|source| io_error(dir, source))?;
@@ -291,7 +291,7 @@ fn create_private_dir_all(dir: &Path) -> io::Result<()> {
     }
 }
 
-/// The durable paths the standalone `termul-server` uses, resolved once from
+/// The durable paths the standalone `itzterm-server` uses, resolved once from
 /// its [`ServerConfig`] so locking, store opening and logging agree.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StandalonePaths {

@@ -137,7 +137,7 @@ describe('McpBadge popover (per-server enable/disable + status dot)', () => {
     )
     openPopover()
     fireEvent.click(screen.getAllByText(/show tools/i)[0])
-    const failedLine = screen.getByText(/Termul could not reach this server/i)
+    const failedLine = screen.getByText(/itzTerm could not reach this server/i)
     expect(failedLine).toHaveAttribute('title', 'initialize failed: connection refused')
   })
 
@@ -152,8 +152,8 @@ describe('McpBadge popover (per-server enable/disable + status dot)', () => {
     )
     openPopover()
     fireEvent.click(screen.getAllByText(/show tools/i)[1])
-    const failedLine = screen.getByText(/Termul could not reach this server/i)
-    expect(failedLine).toHaveAttribute('title', 'Termul could not reach this server.')
+    const failedLine = screen.getByText(/itzTerm could not reach this server/i)
+    expect(failedLine).toHaveAttribute('title', 'itzTerm could not reach this server.')
   })
 })
 
@@ -222,7 +222,7 @@ describe('McpServerList (shared by the popover and the + sheet)', () => {
       />
     )
     fireEvent.click(screen.getAllByText(/show tools/i)[1])
-    expect(screen.getByText('Termul could not reach this server.')).toHaveAttribute(
+    expect(screen.getByText('itzTerm could not reach this server.')).toHaveAttribute(
       'title',
       'connection refused'
     )

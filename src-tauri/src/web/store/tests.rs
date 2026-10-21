@@ -10,7 +10,7 @@ pub(super) fn tempdir_like(label: &str) -> PathBuf {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let p = std::env::temp_dir().join(format!(
-        "termul-store-{label}-{}-{nanos}",
+        "itzterm-store-{label}-{}-{nanos}",
         std::process::id()
     ));
     std::fs::create_dir_all(&p).expect("create tempdir");

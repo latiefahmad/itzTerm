@@ -30,21 +30,21 @@ import { isTauriContext } from '@/lib/tauri-runtime'
 import { syntaxShikiPair } from '@/lib/themes/syntax-shiki'
 import { cn } from '@/lib/utils'
 import { useColorTheme } from '@/stores/app-settings-store'
-import { TermulPlanRenderer } from './ChatMarkdownPlanFence'
+import { ItzTermPlanRenderer } from './ChatMarkdownPlanFence'
 import { guessMimeType, uint8ToBase64 } from './chat-attachments'
 import { chatCodePlugin } from './chat-code-plugin'
 import { ChatMarkdownCode } from './chat-markdown-code'
 import { remarkFilePathLinks } from './chat-markdown-file-links'
-import { remarkTermulImages, resolveLocalImagePath } from './chat-markdown-images'
+import { remarkItzTermImages, resolveLocalImagePath } from './chat-markdown-images'
 import { ChatMarkdownTable } from './chat-markdown-table'
 import { ChatMarkdownSpan } from './chat-markdown-word'
 
-/** Always-on remark plugins: streamdown defaults plus the termul-image rewrite. */
-const IMAGE_REMARK_PLUGINS = [...Object.values(defaultRemarkPlugins), remarkTermulImages]
+/** Always-on remark plugins: streamdown defaults plus the itzterm-image rewrite. */
+const IMAGE_REMARK_PLUGINS = [...Object.values(defaultRemarkPlugins), remarkItzTermImages]
 /** Adds prose file-path linkification when a `filePathContext` exists. */
 const FILE_PATH_REMARK_PLUGINS = [
   ...Object.values(defaultRemarkPlugins),
-  remarkTermulImages,
+  remarkItzTermImages,
   remarkFilePathLinks
 ]
 
@@ -54,8 +54,8 @@ const FILE_PATH_REMARK_PLUGINS = [
  * `href`/`src`, so `rehype-harden` never blocks them.
  */
 const STREAMDOWN_ALLOWED_TAGS: AllowedTags = {
-  'termul-file-path': ['dataPath'],
-  'termul-image': ['dataUrl', 'dataAlt']
+  'itzterm-file-path': ['dataPath'],
+  'itzterm-image': ['dataUrl', 'dataAlt']
 }
 
 /**
@@ -67,7 +67,7 @@ const CODE_PLUGIN = chatCodePlugin
 const MERMAID_PLUGIN = mermaidPlugin
 /**
  * Base plugin set used while the agent message is still streaming. The
- * `termul-plan` renderer is deliberately absent here so an in-flight turn
+ * `itzterm-plan` renderer is deliberately absent here so an in-flight turn
  * never renders a duplicate inline plan (the live sticky `PlanPanel` covers
  * the streaming turn). Historical (non-streaming) messages swap in
  * `STREAMDOWN_PLUGINS_WITH_PLAN` via the `plugins` prop on `AgentProse`.
@@ -75,7 +75,7 @@ const MERMAID_PLUGIN = mermaidPlugin
 const STREAMDOWN_PLUGINS = { code: CODE_PLUGIN, mermaid: MERMAID_PLUGIN }
 const STREAMDOWN_PLUGINS_WITH_PLAN = {
   ...STREAMDOWN_PLUGINS,
-  renderers: [{ language: 'termul-plan', component: TermulPlanRenderer }]
+  renderers: [{ language: 'itzterm-plan', component: ItzTermPlanRenderer }]
 }
 
 // Copy on code blocks, plus download (save an agent-generated file); no line
@@ -180,10 +180,10 @@ function scrollToFragment(messageRoot: HTMLElement | null, href: string): void {
 }
 
 /** Muted fallback for images we cannot render (web without Tauri, unreadable). */
-function TermulImageAltChip({ alt }: { alt: string }): React.JSX.Element {
+function ItzTermImageAltChip({ alt }: { alt: string }): React.JSX.Element {
   return (
     <span
-      data-testid="termul-image-alt"
+      data-testid="itzterm-image-alt"
       title={alt}
       className="inline-flex max-w-[16rem] items-center rounded border border-border/40 bg-muted/40 px-1.5 py-0.5 align-middle text-xs text-muted-foreground"
     >
@@ -200,14 +200,14 @@ interface ResolvedImagePreview {
 }
 
 /**
- * Renders a `<termul-image>` element emitted by `remarkTermulImages`.
+ * Renders a `<itzterm-image>` element emitted by `remarkItzTermImages`.
  * `data:`/`blob:` URLs render directly; `file://` and relative URLs are
  * resolved against the chat cwd and read via the brokered
  * `readAttachmentBytes` command (Tauri only). On the web or any read failure
  * the muted alt-text chip renders instead. A preview that fails to decode
  * after render (`<img>` onError) also falls back to the chip.
  */
-export function TermulMarkdownImage({
+export function ItzTermMarkdownImage({
   url,
   alt,
   cwd
@@ -245,7 +245,7 @@ export function TermulMarkdownImage({
         if (cancelled) return
         void logFrontendError({
           level: 'warn',
-          source: 'ChatMessage.termulImage',
+          source: 'ChatMessage.itztermImage',
           message: `Failed to read chat image '${url}': ${String(error)}`
         })
       }
@@ -268,22 +268,22 @@ export function TermulMarkdownImage({
           setResolved(null)
           void logFrontendError({
             level: 'warn',
-            source: 'ChatMessage.termulImage',
+            source: 'ChatMessage.itztermImage',
             message: `Failed to display chat image '${url}': image decode/load failed`
           })
         }}
       />
     )
   }
-  return <TermulImageAltChip alt={alt} />
+  return <ItzTermImageAltChip alt={alt} />
 }
 
 /**
- * Renders a `<termul-file-path>` element emitted by `remarkFilePathLinks` as
+ * Renders a `<itzterm-file-path>` element emitted by `remarkFilePathLinks` as
  * the open-in-editor button. The path arrives in the `data-path` attribute
  * (hast property `dataPath`), already HTML-unescaped by the parser.
  */
-export function TermulFilePathButton({
+export function ItzTermFilePathButton({
   path,
   context,
   children
@@ -295,7 +295,7 @@ export function TermulFilePathButton({
   return (
     <button
       type="button"
-      data-testid="termul-file-path"
+      data-testid="itzterm-file-path"
       data-path={path}
       className="cursor-pointer appearance-none text-left font-medium text-primary underline underline-offset-2"
       title="Open in editor"
@@ -348,10 +348,10 @@ export function AgentProse({
   const components = useMemo<Components>(() => {
     const merged: Components = {
       ...STREAMDOWN_COMPONENTS,
-      'termul-image': (props: Record<string, unknown>) => {
+      'itzterm-image': (props: Record<string, unknown>) => {
         const url = typeof props['data-url'] === 'string' ? props['data-url'] : ''
         const alt = typeof props['data-alt'] === 'string' ? props['data-alt'] : ''
-        return <TermulMarkdownImage url={url} alt={alt} cwd={filePathContext?.cwd} />
+        return <ItzTermMarkdownImage url={url} alt={alt} cwd={filePathContext?.cwd} />
       },
       a: ({ href, children, node, className, ...props }) => {
         if (href?.startsWith('#')) {
@@ -404,12 +404,12 @@ export function AgentProse({
     }
     if (filePathContext) {
       const context = filePathContext
-      merged['termul-file-path'] = (props: Record<string, unknown>) => {
+      merged['itzterm-file-path'] = (props: Record<string, unknown>) => {
         const path = typeof props['data-path'] === 'string' ? props['data-path'] : ''
         return (
-          <TermulFilePathButton path={path} context={context}>
+          <ItzTermFilePathButton path={path} context={context}>
             {props.children as React.ReactNode}
-          </TermulFilePathButton>
+          </ItzTermFilePathButton>
         )
       }
     }
@@ -424,7 +424,7 @@ export function AgentProse({
         caret={streaming ? 'block' : undefined}
         animated={reduced ? false : STREAMDOWN_ANIMATED}
         parseIncompleteMarkdown={streaming}
-        // The `termul-plan` renderer is attached only to historical
+        // The `itzterm-plan` renderer is attached only to historical
         // (non-streaming) messages so an in-flight turn never renders a
         // duplicate inline plan — the live sticky `PlanPanel` owns the
         // streaming turn.

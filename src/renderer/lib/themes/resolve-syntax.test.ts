@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { BUNDLED_COLOR_THEMES, COLOR_THEME_LIST, getColorThemeDefinition } from './bundled-themes'
 import { contrastRatio, hexToOklch, shouldOverrideToken, TEXT_CONTRAST_MIN } from './color-utils'
+import { ITZTERM_DARK_CHROME } from './itzterm-dark-chrome'
+import { ITZTERM_LIGHT_CHROME } from './itzterm-light-chrome'
 import { resolveSyntaxColors } from './resolve-syntax'
-import { TERMUL_DARK_CHROME } from './termul-dark-chrome'
-import { TERMUL_LIGHT_CHROME } from './termul-light-chrome'
 
 const EXPECTED_SYNTAX: Record<
   string,
@@ -16,7 +16,7 @@ const EXPECTED_SYNTAX: Record<
     type: string
   }>
 > = {
-  termul: {
+  itzterm: {
     keyword: '#95d0cd',
     string: '#d898d8',
     function: '#e6b387',
@@ -78,7 +78,7 @@ const EXPECTED_SYNTAX: Record<
     variable: '#d29922',
     property: '#39c5cf'
   },
-  'termul-light': {
+  'itzterm-light': {
     keyword: '#3e7875',
     string: '#945995',
     function: '#94653b',
@@ -111,9 +111,9 @@ describe('resolveSyntaxColors', () => {
     expect(syntax.tag).toBe(syntax.keyword)
   })
 
-  it('paints termul tags and declarations in lavender', () => {
-    const dark = resolveSyntaxColors(BUNDLED_COLOR_THEMES.termul)
-    const light = resolveSyntaxColors(BUNDLED_COLOR_THEMES['termul-light'])
+  it('paints itzterm tags and declarations in lavender', () => {
+    const dark = resolveSyntaxColors(BUNDLED_COLOR_THEMES.itzterm)
+    const light = resolveSyntaxColors(BUNDLED_COLOR_THEMES['itzterm-light'])
     expect(dark.definition).toBe('#a9a1f4')
     expect(dark.tag).toBe(dark.definition)
     expect(dark.attributeName).toBe(dark.definition)
@@ -127,15 +127,15 @@ describe('resolveSyntaxColors', () => {
     expect(syntax.definition).toBe(syntax.variable)
   })
 
-  it('keeps termul syntax roles apart and readable', () => {
+  it('keeps itzterm syntax roles apart and readable', () => {
     const cases = [
       {
-        themeId: 'termul',
-        surfaces: [TERMUL_DARK_CHROME.background, TERMUL_DARK_CHROME.card]
+        themeId: 'itzterm',
+        surfaces: [ITZTERM_DARK_CHROME.background, ITZTERM_DARK_CHROME.card]
       },
       {
-        themeId: 'termul-light',
-        surfaces: [TERMUL_LIGHT_CHROME.background, TERMUL_LIGHT_CHROME.card]
+        themeId: 'itzterm-light',
+        surfaces: [ITZTERM_LIGHT_CHROME.background, ITZTERM_LIGHT_CHROME.card]
       }
     ] as const
     const readable = [
@@ -198,6 +198,6 @@ describe('resolveSyntaxColors', () => {
 describe('getColorThemeDefinition', () => {
   it('falls back for unknown ids without prototype pollution', () => {
     const theme = getColorThemeDefinition('toString')
-    expect(theme.id).toBe('termul')
+    expect(theme.id).toBe('itzterm')
   })
 })

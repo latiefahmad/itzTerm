@@ -363,7 +363,7 @@ describe('createWebPersistenceApi', () => {
     }
 
     it('presents the persisted web auth token on authenticate', async () => {
-      window.localStorage.setItem('termul.webAuthToken', 's3cret-token')
+      window.localStorage.setItem('itzterm.webAuthToken', 's3cret-token')
       await api.read('warmup')
       expect(sentAuthenticate().payload.token).toBe('s3cret-token')
     })
@@ -382,7 +382,7 @@ describe('createWebPersistenceApi', () => {
         token: 'dev',
         protocolVersion: WS_PROTOCOL_VERSION,
         deviceId: DEVICE,
-        clientInstanceId: window.sessionStorage.getItem('termul.clientInstanceId')
+        clientInstanceId: window.sessionStorage.getItem('itzterm.clientInstanceId')
       })
     })
   })
@@ -511,7 +511,7 @@ describe('createWebPersistenceApi', () => {
         data: {
           value: 'b',
           revision: 2,
-          clientInstanceId: window.sessionStorage.getItem('termul.clientInstanceId')
+          clientInstanceId: window.sessionStorage.getItem('itzterm.clientInstanceId')
         }
       })
     })

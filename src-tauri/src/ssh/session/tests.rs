@@ -177,20 +177,20 @@ async fn cancel_aborts_a_stalled_handshake() {
 }
 
 /// Real-server check. Run with a reachable sshd:
-/// `TERMUL_SSH_TEST_HOST=127.0.0.1 TERMUL_SSH_TEST_PORT=2222 TERMUL_SSH_TEST_USER=u
-///  TERMUL_SSH_TEST_PASSWORD=p cargo test --lib ssh::session -- --ignored`
+/// `ITZTERM_SSH_TEST_HOST=127.0.0.1 ITZTERM_SSH_TEST_PORT=2222 ITZTERM_SSH_TEST_USER=u
+///  ITZTERM_SSH_TEST_PASSWORD=p cargo test --lib ssh::session -- --ignored`
 #[tokio::test]
 #[ignore]
 async fn real_server_shell_round_trip() {
     // The test server's key must not reach the user's real known_hosts.
     super::super::known_hosts::isolate_stores_for_tests();
-    let host = std::env::var("TERMUL_SSH_TEST_HOST").expect("TERMUL_SSH_TEST_HOST");
-    let port: u16 = std::env::var("TERMUL_SSH_TEST_PORT")
+    let host = std::env::var("ITZTERM_SSH_TEST_HOST").expect("ITZTERM_SSH_TEST_HOST");
+    let port: u16 = std::env::var("ITZTERM_SSH_TEST_PORT")
         .unwrap_or_else(|_| "22".into())
         .parse()
         .unwrap();
-    let user = std::env::var("TERMUL_SSH_TEST_USER").expect("TERMUL_SSH_TEST_USER");
-    let password = std::env::var("TERMUL_SSH_TEST_PASSWORD").expect("TERMUL_SSH_TEST_PASSWORD");
+    let user = std::env::var("ITZTERM_SSH_TEST_USER").expect("ITZTERM_SSH_TEST_USER");
+    let password = std::env::var("ITZTERM_SSH_TEST_PASSWORD").expect("ITZTERM_SSH_TEST_PASSWORD");
 
     let (manager, events) = recording_manager();
     // Trust whatever key the test server presents.
@@ -222,7 +222,7 @@ async fn real_server_shell_round_trip() {
     assert!(manager.cached_secret("p1").is_some());
 
     pty.resize(&terminal_id, 120, 40).await.expect("resize");
-    pty.write(&terminal_id, "stty size; echo termul-$((40+2))\r")
+    pty.write(&terminal_id, "stty size; echo itzterm-$((40+2))\r")
         .await
         .expect("write");
 
@@ -236,12 +236,12 @@ async fn real_server_shell_round_trip() {
             .iter()
             .map(|chunk| String::from_utf8_lossy(&chunk.data).to_string())
             .collect();
-        if output.contains("termul-42") && output.contains("40 120") {
+        if output.contains("itzterm-42") && output.contains("40 120") {
             break;
         }
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
-    assert!(output.contains("termul-42"), "output was: {output}");
+    assert!(output.contains("itzterm-42"), "output was: {output}");
     assert!(output.contains("40 120"), "resize not applied: {output}");
 
     pty.kill(&terminal_id).await.expect("kill");

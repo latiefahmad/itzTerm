@@ -15,7 +15,7 @@
  *
  * Mobile shell: while `mobileShell` is true the history sentinels are managed
  * by a coalesced reconciler (see `installOverlayBackHandler`) that keeps the
- * number of `termulOverlay` entries equal to the stack depth, so a close by
+ * number of `itztermOverlay` entries equal to the stack depth, so a close by
  * X, Esc or scrim never leaves a dead back press behind. While it is false the
  * legacy push-on-growth + popstate re-arm path is unchanged.
  */
@@ -148,14 +148,14 @@ export function useOverlayRegistration(
 
 /**
  * Sentinel depth of a `history.state` value: the positive integer
- * `termulOverlayDepth` (or 1 when it is missing) when `termulOverlay === true`,
+ * `itztermOverlayDepth` (or 1 when it is missing) when `itztermOverlay === true`,
  * and 0 for anything else (route entries, null, malformed values).
  */
 export function readOverlaySentinelDepth(state: unknown): number {
   if (typeof state !== 'object' || state === null) return 0
   const record = state as Record<string, unknown>
-  if (record.termulOverlay !== true) return 0
-  const depth = record.termulOverlayDepth
+  if (record.itztermOverlay !== true) return 0
+  const depth = record.itztermOverlayDepth
   return typeof depth === 'number' && Number.isInteger(depth) && depth > 0 ? depth : 1
 }
 
@@ -222,7 +222,7 @@ function handleLegacyPopState(): void {
   // overlay rather than navigating the app.
   if (remaining.length > 0) {
     try {
-      history.pushState({ termulOverlay: true }, '')
+      history.pushState({ itztermOverlay: true }, '')
     } catch {
       // History API unavailable/limited (iOS 100-call cap, sandboxed test
       // env): overlays still close via their visible controls.
@@ -235,14 +235,14 @@ function handleLegacyPopState(): void {
  * (QA F5). Returns a detach function (used by tests and effect cleanup).
  *
  * Desktop / `mobileShell` false (legacy): when the first overlay opens, a
- * state entry `{ termulOverlay: true }` is pushed via `history.pushState` —
+ * state entry `{ itztermOverlay: true }` is pushed via `history.pushState` —
  * a state push, NOT a hash change, so the hash router's URL is untouched. A
  * hardware back pops that sentinel: popstate fires, we close the topmost
  * overlay, and — if overlays remain — push a new sentinel so the next back
  * still consumes an overlay.
  *
  * Mobile shell (managed): a coalesced reconciler keeps the number of
- * `termulOverlay` sentinels equal to the stack depth.
+ * `itztermOverlay` sentinels equal to the stack depth.
  * - The stack grew: push sentinels up to the depth (router state spread into
  *   each, so React Router reads the same `idx` and treats the pop as a no-op).
  * - A non-back close shrank it (X, Esc, scrim): consume with one
@@ -301,7 +301,7 @@ export function installOverlayBackHandler(options: OverlayBackHandlerOptions = {
       for (let depth = from; depth <= to; depth += 1) {
         const routerState =
           typeof history.state === 'object' && history.state !== null ? history.state : {}
-        history.pushState({ ...routerState, termulOverlay: true, termulOverlayDepth: depth }, '')
+        history.pushState({ ...routerState, itztermOverlay: true, itztermOverlayDepth: depth }, '')
       }
     } catch (error) {
       // History API unavailable/limited (iOS rate cap, sandbox): overlays
@@ -537,7 +537,7 @@ export function installOverlayBackHandler(options: OverlayBackHandlerOptions = {
  */
 export function pushOverlaySentinel(): void {
   try {
-    history.pushState({ termulOverlay: true }, '')
+    history.pushState({ itztermOverlay: true }, '')
   } catch {
     // Best-effort: failure degrades to visible-close-only behavior.
   }

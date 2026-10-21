@@ -139,7 +139,7 @@ async fn open(
         Ok(path) => path,
         Err(err) => {
             tracing::warn!(
-                target: "termul::web::canvas",
+                target: "itzterm::web::canvas",
                 "canvas open rejected project_id={log_project_id}: {}",
                 err.message
             );
@@ -149,7 +149,7 @@ async fn open(
     match open_canvas(same_origin_base(), &req.project_id, doc_key, req.request).await {
         Ok(info) => {
             tracing::info!(
-                target: "termul::web::canvas",
+                target: "itzterm::web::canvas",
                 "canvas open (web) project_id={log_project_id} canvas_id={}",
                 info.canvas_id
             );
@@ -157,7 +157,7 @@ async fn open(
         }
         Err(err) => {
             tracing::warn!(
-                target: "termul::web::canvas",
+                target: "itzterm::web::canvas",
                 "canvas open failed project_id={log_project_id} code={}",
                 err.code
             );
@@ -182,7 +182,7 @@ async fn close(
     let mode = crate::commands::close_mode(req.discard);
     let project_id = crate::commands::sanitize_log_field(&req.project_id);
     tracing::info!(
-        target: "termul::web::canvas",
+        target: "itzterm::web::canvas",
         "canvas close (web) project_id={project_id} mount_seq={} mode={mode:?}",
         req.mount_seq
     );
@@ -190,12 +190,12 @@ async fn close(
         Ok(outcome) => {
             if outcome.discarded {
                 tracing::warn!(
-                    target: "termul::web::canvas",
+                    target: "itzterm::web::canvas",
                     "canvas closed project_id={project_id}: unsaved changes discarded by the user"
                 );
             } else {
                 tracing::info!(
-                    target: "termul::web::canvas",
+                    target: "itzterm::web::canvas",
                     "canvas closed project_id={project_id} unmounted={} saved={}",
                     outcome.unmounted,
                     outcome.saved_version.as_deref().unwrap_or("none")
@@ -205,7 +205,7 @@ async fn close(
         }
         Err(err) => {
             tracing::warn!(
-                target: "termul::web::canvas",
+                target: "itzterm::web::canvas",
                 "canvas close refused project_id={project_id} code={}: {}",
                 err.code,
                 err.message

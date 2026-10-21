@@ -82,7 +82,7 @@ pub(super) async fn handle_create_session(
             Ok(project_id) => project_id,
             Err(unknown) => {
                 warn!(
-                    target: "termul::web::ws",
+                    target: "itzterm::web::ws",
                     project_id = %unknown,
                     "create_session: unknown projectId"
                 );
@@ -96,7 +96,7 @@ pub(super) async fn handle_create_session(
     // A project being removed or archived takes no new sessions.
     if registry.is_removing(&project_id) {
         warn!(
-            target: "termul::web::ws",
+            target: "itzterm::web::ws",
             project_id = %project_id,
             "create_session: project is being removed"
         );
@@ -129,7 +129,7 @@ pub(super) async fn handle_create_session(
             // bound to a project that is going away or gone.
             if registry.project_left_while_starting(&project_id, was_active) {
                 warn!(
-                    target: "termul::web::ws",
+                    target: "itzterm::web::ws",
                     project_id = %project_id,
                     "create_session: project was removed while the session started; stopping it"
                 );
@@ -229,7 +229,7 @@ pub(super) async fn handle_set_default_project(
         Ok(p) => p,
         Err(e) => {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 error = e.to_string(),
                 "set_default_project: malformed payload (want projectId)"
             );
@@ -252,7 +252,7 @@ pub(super) async fn handle_add_project(id: String, payload: &Value, env: &Handle
         Ok(p) => p,
         Err(e) => {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 error = e.to_string(),
                 "add_project: malformed payload (want id + name + path + color)"
             );
@@ -290,7 +290,7 @@ pub(super) async fn handle_update_project(
         Ok(p) => p,
         Err(e) => {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 error = e.to_string(),
                 "update_project: malformed payload (want projectId)"
             );
@@ -328,7 +328,7 @@ pub(super) async fn handle_remove_project(
         Ok(p) => p,
         Err(e) => {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 error = e.to_string(),
                 "remove_project: malformed payload (want projectId)"
             );

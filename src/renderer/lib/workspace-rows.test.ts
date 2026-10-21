@@ -21,8 +21,8 @@ function worktree(id: string, path: string, extra: Partial<Worktree> = {}): Work
   }
 }
 
-const WT_A = worktree('a', 'E:\\p\\.termul\\worktrees\\a')
-const WT_B = worktree('b', 'E:/p/.termul/worktrees/b')
+const WT_A = worktree('a', 'E:\\p\\.itzterm\\worktrees\\a')
+const WT_B = worktree('b', 'E:/p/.itzterm/worktrees/b')
 const project: BuildWorkspaceRowsInput['project'] = {
   id: 'p1',
   path: 'E:/p',
@@ -63,8 +63,8 @@ describe('buildWorkspaceRows', () => {
     ])
     expect(rows.map((r) => r.key)).toEqual([
       'e:/p',
-      'e:/p/.termul/worktrees/a',
-      'e:/p/.termul/worktrees/b'
+      'e:/p/.itzterm/worktrees/a',
+      'e:/p/.itzterm/worktrees/b'
     ])
   })
 
@@ -73,7 +73,7 @@ describe('buildWorkspaceRows', () => {
       project: {
         ...project,
         gitBranch: undefined,
-        worktrees: [worktree('c', 'E:/p/.termul/worktrees/c', { branch: '' })]
+        worktrees: [worktree('c', 'E:/p/.itzterm/worktrees/c', { branch: '' })]
       }
     })
     expect(rows.map((r) => r.label)).toEqual(['Workspace', 'c'])
@@ -96,11 +96,11 @@ describe('buildWorkspaceRows', () => {
   it('counts tabs under the deepest working copy, across Windows path forms', () => {
     const rows = build({
       tabs: [chatTab('s1'), chatTab('s2'), termTab('t1'), termTab('t2'), termTab('t3')],
-      sessions: [session('s1', 'e:\\P\\.termul\\worktrees\\a\\src'), session('s2', 'E:/p/src')],
+      sessions: [session('s1', 'e:\\P\\.itzterm\\worktrees\\a\\src'), session('s2', 'E:/p/src')],
       terminals: [
         // `cd`'d out of the worktree: counts where it is now.
         terminal('t1', 'E:/p'),
-        terminal('t2', 'E:/p/.termul/worktrees/b'),
+        terminal('t2', 'E:/p/.itzterm/worktrees/b'),
         // No cwd yet: counts nowhere.
         terminal('t3', undefined)
       ]
@@ -111,7 +111,7 @@ describe('buildWorkspaceRows', () => {
   it('counts neither path-less tabs nor unresolved managed paths', () => {
     const rows = build({
       tabs: [{ type: 'git', id: 'g', cwd: 'E:/p' }, chatTab('s1'), chatTab('missing')],
-      sessions: [session('s1', 'E:/p/.termul/worktrees/pruned/src')]
+      sessions: [session('s1', 'E:/p/.itzterm/worktrees/pruned/src')]
     })
     expect(rows.map((r) => r.openTabCount)).toEqual([0, 0, 0])
   })
@@ -130,8 +130,8 @@ describe('buildWorkspaceRows', () => {
     it('is set by a busy chat in a worktree, not by an idle one', () => {
       const rows = build({
         sessions: [
-          session('s1', 'E:/p/.termul/worktrees/a', { busy: true }),
-          session('s2', 'E:/p/.termul/worktrees/b')
+          session('s1', 'E:/p/.itzterm/worktrees/a', { busy: true }),
+          session('s2', 'E:/p/.itzterm/worktrees/b')
         ]
       })
       expect(rows.map((r) => r.running)).toEqual([false, true, false])
@@ -150,8 +150,8 @@ describe('buildWorkspaceRows', () => {
     it('is set by a running terminal with activity only', () => {
       const rows = build({
         terminals: [
-          terminal('t1', 'E:/p/.termul/worktrees/a', { hasActivity: true }),
-          terminal('t2', 'E:/p/.termul/worktrees/b', { hasActivity: false }),
+          terminal('t1', 'E:/p/.itzterm/worktrees/a', { hasActivity: true }),
+          terminal('t2', 'E:/p/.itzterm/worktrees/b', { hasActivity: false }),
           terminal('t3', 'E:/p', { hasActivity: true, healthStatus: 'crashed' }),
           terminal('t4', 'E:/p', { hasActivity: true, projectId: 'other' })
         ]

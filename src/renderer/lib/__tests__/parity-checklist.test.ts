@@ -855,7 +855,7 @@ describe('Parity Checklist Automation', () => {
   })
 
   // GH-587/588/589: Web non-secure-context + cross-OS parity. The shared
-  // `dist-web` bundle is served by `termul-server` over plain HTTP on a bare
+  // `dist-web` bundle is served by `itzterm-server` over plain HTTP on a bare
   // IP, where `crypto.randomUUID` / `navigator.clipboard` are unavailable and
   // `navigator.platform` reflects the client browser, not the host. These
   // static assertions pin the three fallback seams so a regression (re-adding a
@@ -900,7 +900,7 @@ describe('Parity Checklist Automation', () => {
 
     // GH-587 regression guard: the safe @/lib/uuid wrapper exists, but a
     // direct `crypto.randomUUID()` call anywhere in the renderer bundle throws
-    // `TypeError: crypto.randomUUID is not a function` on the termul-server
+    // `TypeError: crypto.randomUUID is not a function` on the itzterm-server
     // web client (served over plain HTTP — a non-secure context where the
     // global is `undefined`). This blank-screens / silently breaks the feature
     // that owns the call site (e.g. Add MCP server, custom-agent paste,
@@ -2046,7 +2046,7 @@ describe('Claude Accounts parity (ADR-0004)', () => {
   it('every UI carrier checks the sign-in before it stores a choice; headless setup does not', () => {
     // #1392: the ws handlers serve desktop and the browser; the Tauri commands
     // are the desktop invoke carrier. Both refuse a signed-out Account. The
-    // `termul-server claude account` CLI may assign before `login`.
+    // `itzterm-server claude account` CLI may assign before `login`.
     const ws = read('web', 'ws', 'claude_accounts.rs')
     const tauri = read('acp', 'commands', 'claude_accounts.rs')
     for (const source of [ws, tauri]) {
@@ -2149,7 +2149,7 @@ describe('Git History commit detail parity', () => {
 // spec-bug-report-dialog: bug-report facade parity. One renderer facade ships
 // the diagnostics collect + `gh` submit on BOTH transports — the Tauri
 // commands `collect_bug_report_context` / `submit_bug_report` (desktop) and
-// the `/log/*` HTTP routes (web/remote + termul-server; the `/log/` prefix
+// the `/log/*` HTTP routes (web/remote + itzterm-server; the `/log/` prefix
 // inherits the server's GATED_PREFIXES bearer auth). The Rust-side wiring
 // (commands module, invoke_handler, router.rs, the route handlers) is pinned
 // by the Rust test suite — this block pins the renderer-side contract.

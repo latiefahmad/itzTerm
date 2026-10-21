@@ -6,14 +6,14 @@ import { describe, expect, test } from 'vitest'
 import { mergeUpdaterManifests, requiredPlatformKeys } from './merge-updater-manifests.mjs'
 
 const version = '1.2.3'
-const assetName = (suffix: string) => `Termul-${version}-${suffix}.bin`
+const assetName = (suffix: string) => `itzTerm-${version}-${suffix}.bin`
 const record = (suffix: string) => ({
-  url: `https://github.com/gnoviawan/termul/releases/download/v${version}/${assetName(suffix)}`,
+  url: `https://github.com/latiefahmad/itzTerm/releases/download/v${version}/${assetName(suffix)}`,
   signature: `signature-${suffix}`
 })
 
 async function fixtureDir() {
-  return mkdtemp(join(tmpdir(), 'termul-updater-manifest-'))
+  return mkdtemp(join(tmpdir(), 'itzterm-updater-manifest-'))
 }
 
 async function writeManifest(
@@ -125,12 +125,12 @@ describe('mergeUpdaterManifests', () => {
   test.each([
     [
       'a different release tag',
-      `https://github.com/gnoviawan/termul/releases/download/v9.9.9/${assetName('linux-x86_64')}`,
+      `https://github.com/latiefahmad/itzTerm/releases/download/v9.9.9/${assetName('linux-x86_64')}`,
       'must target the current v1.2.3 GitHub release'
     ],
     [
       'an uncollected asset',
-      `https://github.com/gnoviawan/termul/releases/download/v${version}/uncollected.bin`,
+      `https://github.com/latiefahmad/itzTerm/releases/download/v${version}/uncollected.bin`,
       'references uncollected release asset uncollected.bin'
     ]
   ])('rejects updater URLs referencing %s', async (_name, url, error) => {
@@ -212,11 +212,11 @@ describe('mergeUpdaterManifests', () => {
     const dir = await fixtureDir()
     const serverKeys = ['linux-x86_64-server', 'linux-aarch64-server']
     const serverAssets: Record<string, string> = {
-      'linux-x86_64-server': 'termul-server',
-      'linux-aarch64-server': 'termul-server-linux-aarch64'
+      'linux-x86_64-server': 'itzterm-server',
+      'linux-aarch64-server': 'itzterm-server-linux-aarch64'
     }
     const releaseUrl = (name: string) =>
-      `https://github.com/gnoviawan/termul/releases/download/nightly/${name}`
+      `https://github.com/latiefahmad/itzTerm/releases/download/nightly/${name}`
     const nightlyVersion = '0.0.0-nightly.20260807.abc1234'
 
     const desktopKeys = requiredPlatformKeys.filter((key: string) => !serverKeys.includes(key))
@@ -256,9 +256,9 @@ describe('mergeUpdaterManifests', () => {
       channel: 'nightly'
     })
 
-    expect(merged.platforms['linux-x86_64-server'].url).toBe(releaseUrl('termul-server'))
+    expect(merged.platforms['linux-x86_64-server'].url).toBe(releaseUrl('itzterm-server'))
     expect(merged.platforms['linux-aarch64-server'].url).toBe(
-      releaseUrl('termul-server-linux-aarch64')
+      releaseUrl('itzterm-server-linux-aarch64')
     )
   })
 
@@ -285,7 +285,7 @@ describe('mergeUpdaterManifests', () => {
         requiredPlatformKeys.map((key: string) => [
           key,
           {
-            url: `https://github.com/gnoviawan/termul/releases/download/nightly/${assetName(key)}`,
+            url: `https://github.com/latiefahmad/itzTerm/releases/download/nightly/${assetName(key)}`,
             signature: `signature-${key}`
           }
         ])
@@ -304,7 +304,7 @@ describe('mergeUpdaterManifests', () => {
       })
 
       expect(merged.platforms['linux-x86_64-server'].url).toBe(
-        `https://github.com/gnoviawan/termul/releases/download/nightly/${assetName('linux-x86_64-server')}`
+        `https://github.com/latiefahmad/itzTerm/releases/download/nightly/${assetName('linux-x86_64-server')}`
       )
       expect(JSON.parse(await readFile(outputPath, 'utf8'))).toEqual(merged)
     })
@@ -321,7 +321,7 @@ describe('mergeUpdaterManifests', () => {
         nightlyKeys.map((key: string) => [
           key,
           {
-            url: `https://github.com/gnoviawan/termul/releases/download/nightly/${assetName(key)}`,
+            url: `https://github.com/latiefahmad/itzTerm/releases/download/nightly/${assetName(key)}`,
             signature: `signature-${key}`
           }
         ])
@@ -351,7 +351,7 @@ describe('mergeUpdaterManifests', () => {
       // URL uses v<version> (the versioned tag) but the nightly channel expects
       // the moving `nightly` tag.
       nightlyPlatforms['linux-x86_64'] = {
-        url: `https://github.com/gnoviawan/termul/releases/download/v${nightlyVersion}/${assetName('linux-x86_64')}`,
+        url: `https://github.com/latiefahmad/itzTerm/releases/download/v${nightlyVersion}/${assetName('linux-x86_64')}`,
         signature: `signature-linux-x86_64`
       }
       const input = join(dir, 'manifest.json')
@@ -377,7 +377,7 @@ describe('mergeUpdaterManifests', () => {
         requiredPlatformKeys.map((key: string) => [
           key,
           {
-            url: `https://github.com/gnoviawan/termul/releases/download/v${rcVersion}/${assetName(key)}`,
+            url: `https://github.com/latiefahmad/itzTerm/releases/download/v${rcVersion}/${assetName(key)}`,
             signature: `signature-${key}`
           }
         ])

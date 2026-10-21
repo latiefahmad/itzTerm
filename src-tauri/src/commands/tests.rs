@@ -162,7 +162,7 @@ fn host_entry_to_desktop_model_keys_match_ws_entry_serialization() {
 #[test]
 fn sanitize_log_field_escapes_newlines_and_strips_controls() {
     // Newlines/CR/tab are escaped so injected content stays on one line.
-    let forged = "oops\n[startup] termul forged line\r\tend";
+    let forged = "oops\n[startup] itzterm forged line\r\tend";
     let cleaned = sanitize_log_field(forged);
     assert!(!cleaned.contains('\n'));
     assert!(!cleaned.contains('\r'));
@@ -183,7 +183,7 @@ fn sanitize_log_field_truncates_oversized_input() {
 }
 
 fn rg_fixture_root(name: &str) -> PathBuf {
-    let root = std::env::temp_dir().join(format!("termul_rg_{name}_{}", std::process::id()));
+    let root = std::env::temp_dir().join(format!("itzterm_rg_{name}_{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&root);
     std::fs::create_dir_all(&root).expect("create rg fixture root");
     root

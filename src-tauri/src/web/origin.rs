@@ -4,7 +4,7 @@
 //! Browsers attach `Origin` on WebSocket upgrades and on state-changing
 //! fetches. When the header is present it must name the same host and port
 //! as the request's `Host` header, or an origin the operator listed
-//! (`--allowed-origins` / `TERMUL_ALLOWED_ORIGINS`) for a reverse proxy whose
+//! (`--allowed-origins` / `ITZTERM_ALLOWED_ORIGINS`) for a reverse proxy whose
 //! public origin does not match that `Host`. Clients that omit `Origin`
 //! (scripts, other non-browser callers) are unchanged.
 //!
@@ -60,15 +60,15 @@ impl OriginPolicy {
     }
 
     /// CLI list wins when `cli` is `Some`. Otherwise read
-    /// `TERMUL_ALLOWED_ORIGINS`. Unset or blank falls back to same-host only.
+    /// `ITZTERM_ALLOWED_ORIGINS`. Unset or blank falls back to same-host only.
     /// An invalid environment value is a startup error.
     pub fn from_cli_or_env(cli: Option<Self>) -> Result<Self, String> {
         if let Some(policy) = cli {
             return Ok(policy);
         }
-        match std::env::var("TERMUL_ALLOWED_ORIGINS") {
+        match std::env::var("ITZTERM_ALLOWED_ORIGINS") {
             Ok(value) if !value.trim().is_empty() => Self::parse_list(&value)
-                .map_err(|error| format!("invalid TERMUL_ALLOWED_ORIGINS: {error}")),
+                .map_err(|error| format!("invalid ITZTERM_ALLOWED_ORIGINS: {error}")),
             _ => Ok(Self::default()),
         }
     }
@@ -156,7 +156,7 @@ fn origin_and_host(headers: &HeaderMap) -> (Option<String>, Option<String>, bool
 
 fn forbidden(path: &str, origin: Option<&str>) -> Response {
     tracing::warn!(
-        target: "termul::web::origin",
+        target: "itzterm::web::origin",
         path = %bounded(&redact_canvas_path(path)),
         origin = %bounded(origin.unwrap_or("")),
         "rejected request origin"

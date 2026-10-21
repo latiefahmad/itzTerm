@@ -88,7 +88,7 @@ VERIFICATION_CHECKLIST.md
 
 # Personal notes & specs (local only)
 /ntfd/
-.termul/
+.itzterm/
 
 # Local agent-skill installs & HyperFrames video-authoring artifacts
 # (kept out of the app repo; install locally via `skills add` / hyperframes)

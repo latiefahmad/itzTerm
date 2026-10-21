@@ -447,7 +447,7 @@ struct SpawnStamp {
 ///
 /// `AcpManager` is **transport-neutral**: it holds `Vec<Arc<dyn EventSink>>`
 /// and fans every `acp:*` event out through them. It does NOT hold a Tauri
-/// `AppHandle`. The desktop app and the standalone `termul-server` binary both
+/// `AppHandle`. The desktop app and the standalone `itzterm-server` binary both
 /// construct it with a `WsRelaySink`-backed sink list (see `lib.rs`,
 /// `server_main.rs`).
 ///
@@ -465,7 +465,7 @@ pub struct AcpManager {
     /// flag so the gate also applies when persistence is absent.
     process_shutdown: AtomicBool,
     persistence: Option<Arc<SessionPersistence>>,
-    /// Host-injected `termul` MCP server (exposes the `plan` tool; one shared TCP listener across
+    /// Host-injected `itzterm` MCP server (exposes the `plan` tool; one shared TCP listener across
     /// all sessions, started EAGERLY in the constructor so the first
     /// `new_session_with_context` doesn't block a Tokio worker thread on the
     /// bind + port-publish handshake). Injects a self-spawned stdio child
@@ -484,7 +484,7 @@ impl AcpManager {
     /// Create a new manager that fans `acp:*` events out to the given sinks.
     ///
     /// Pass a `WsRelaySink`-backed list (the desktop app and the headless
-    /// `termul-server` binary both do). An empty `vec![]` is legal (used by unit tests that only
+    /// `itzterm-server` binary both do). An empty `vec![]` is legal (used by unit tests that only
     /// exercise the command channel) — `fan_out` over zero sinks is a no-op.
     #[must_use]
     pub fn new(sinks: Vec<Arc<dyn EventSink>>) -> Self {

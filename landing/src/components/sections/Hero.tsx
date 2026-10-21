@@ -4,7 +4,7 @@ export const Hero = () => {
   return (
     <section className="relative pt-40 pb-20 px-6 flex flex-col items-center justify-center text-center overflow-hidden">
       <img
-        src="/bg-termul.webp"
+        src="/bg-itzterm.webp"
         alt=""
         aria-hidden
         className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
@@ -21,7 +21,7 @@ export const Hero = () => {
           </h1>
 
           <p className="t-stagger-line t-stagger-line--3 text-lg md:text-xl max-w-2xl mb-10 text-slate-600">
-            Termul treats workspaces as first-class citizens. Organize terminals by project with persistent sessions, snapshots, and a clean tabbed interface.
+            itzTerm treats workspaces as first-class citizens. Organize terminals by project with persistent sessions, snapshots, and a clean tabbed interface.
           </p>
         </div>
 
@@ -31,8 +31,8 @@ export const Hero = () => {
 
         <div className="relative w-full max-w-5xl mx-auto t-emphasis-fade">
           <img
-            src="/termulmock.png"
-            alt="Termul application with project workspaces, multiple terminals, and file explorer"
+            src="/itztermmock.png"
+            alt="itzTerm application with project workspaces, multiple terminals, and file explorer"
             className="w-full h-auto rounded-lg shadow-2xl shadow-black/10"
             width={1024}
             height={640}

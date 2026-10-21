@@ -57,7 +57,7 @@ fn tokens_are_per_canvas_and_reused_until_revoked() {
 async fn open_canvas_mints_one_token_per_project_until_close() {
     let base = CanvasBundleBase {
         base_url: "http://127.0.0.1:4567".into(),
-        pin_tag: "termul-test".into(),
+        pin_tag: "itzterm-test".into(),
         fallback_fonts: vec!["host-fonts/a.ttf".into()],
     };
     let project = "project-open-canvas";
@@ -79,7 +79,7 @@ async fn open_canvas_mints_one_token_per_project_until_close() {
             "canvasId": canvas_id,
             "baseUrl": "http://127.0.0.1:4567",
             "canvasToken": first.canvas_token,
-            "pinTag": "termul-test",
+            "pinTag": "itzterm-test",
             "docKey": "C:/p/design.figcraft",
             "mountSeq": first.mount_seq,
             "evicted": [],
@@ -478,7 +478,7 @@ mod served_from_dev_dir {
         let token = bundle_tokens().issue(id).unwrap();
         assert!(
             same_origin_base().fallback_fonts.is_empty(),
-            "termul-server and shared-live list none"
+            "itzterm-server and shared-live list none"
         );
         for url in super::super::fallback_fonts::urls() {
             let desktop = get_from(bundle_router(), format!("/canvas/{id}/{token}/{url}")).await;

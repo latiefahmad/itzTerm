@@ -1,4 +1,4 @@
-﻿import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockTerminal } from '@/lib/test-utils/terminal'
 import { useGitStatusStore } from '@/stores/git-status-store'
 import { useTerminalStore } from '@/stores/terminal-store'
@@ -18,7 +18,7 @@ vi.mock('@/lib/git-api', () => ({ gitApi: {} }))
 vi.mock('@/lib/log-api', () => ({ logFrontendError: vi.fn() }))
 
 const ROOT = 'C:/project'
-const WORKTREE = 'C:/project/.termul/worktrees/feat'
+const WORKTREE = 'C:/project/.itzterm/worktrees/feat'
 
 let onStatus: (ptyId: string) => void
 let onBranch: (ptyId: string) => void
@@ -50,7 +50,7 @@ beforeEach(() => {
     return stopFocus
   })
   useGitStatusStore.setState({
-    paths: { 'c:/project': ROOT, 'c:/project/.termul/worktrees/feat': WORKTREE },
+    paths: { 'c:/project': ROOT, 'c:/project/.itzterm/worktrees/feat': WORKTREE },
     refreshWorkingCopy,
     refreshTracked
   })

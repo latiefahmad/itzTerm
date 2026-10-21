@@ -88,7 +88,7 @@ export function UpdatesSection({
           >
             <span className="font-medium text-foreground">Version {version} is available.</span>{' '}
             {isAurUpdater
-              ? 'Update through the AUR with: yay -S termul-manager'
+              ? 'Update through the AUR with: yay -S itzterm-manager'
               : isManualUpdateMode
                 ? 'Automatic update is not available. Download and install it from the release page.'
                 : 'A new version is ready to download.'}
@@ -110,7 +110,7 @@ export function UpdatesSection({
               </Button>
             }
           >
-            Termul could not check for updates. Check your connection, then try again.
+            itzTerm could not check for updates. Check your connection, then try again.
             <span className="mt-1 block break-words font-mono text-muted-foreground">
               {updateError}
             </span>
@@ -119,7 +119,7 @@ export function UpdatesSection({
         <SettingsCard>
           <SettingsRow
             id={rowId('check-updates')}
-            label={`Termul ${APP_VERSION}`}
+            label={`itzTerm ${APP_VERSION}`}
             description={versionDescription}
             layout="inline"
           >
@@ -137,7 +137,7 @@ export function UpdatesSection({
         </SettingsCard>
         {skippedVersion && (
           <SettingsNotice>
-            You skipped version <span className="font-mono">{skippedVersion}</span>. Termul offers
+            You skipped version <span className="font-mono">{skippedVersion}</span>. itzTerm offers
             updates again when a newer version is out.
           </SettingsNotice>
         )}
@@ -178,7 +178,7 @@ export function UpdatesSection({
             id={rowId('auto-update')}
             htmlFor="auto-update"
             label="Check for updates automatically"
-            description="Termul checks for a new version from time to time."
+            description="itzTerm checks for a new version from time to time."
             layout="inline"
           >
             <Switch

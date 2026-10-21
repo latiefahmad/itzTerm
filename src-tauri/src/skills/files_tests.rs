@@ -6,7 +6,7 @@ struct TempTree(PathBuf);
 impl TempTree {
     fn new(label: &str) -> Self {
         let dir =
-            std::env::temp_dir().join(format!("termul-skill-files-{label}-{}", std::process::id()));
+            std::env::temp_dir().join(format!("itzterm-skill-files-{label}-{}", std::process::id()));
         let _ = fs::remove_dir_all(&dir);
         fs::create_dir_all(&dir).unwrap();
         Self(dir)
@@ -48,8 +48,8 @@ fn indexes_harness_roots_outside_the_project() {
 
     let agents = write_skill(
         &home.join(".agents/skills"),
-        "termul-skill",
-        Some("termul-skill"),
+        "itzterm-skill",
+        Some("itzterm-skill"),
     );
     let opencode = write_skill(
         &config.join("opencode/skills"),
@@ -67,7 +67,7 @@ fn indexes_harness_roots_outside_the_project() {
     .unwrap();
 
     assert_eq!(
-        path_of(&entries, "termul-skill"),
+        path_of(&entries, "itzterm-skill"),
         Some(agents.to_string_lossy().as_ref())
     );
     assert_eq!(
@@ -103,8 +103,8 @@ fn project_skill_overrides_global_skill_case_insensitively() {
 }
 
 #[test]
-fn termul_skill_list_comes_first() {
-    let tree = TempTree::new("termul-first");
+fn itzterm_skill_list_comes_first() {
+    let tree = TempTree::new("itzterm-first");
     let home = tree.0.join("home");
     let project = tree.0.join("project");
     fs::create_dir_all(&project).unwrap();
@@ -115,7 +115,7 @@ fn termul_skill_list_comes_first() {
     );
     write_skill(&project.join(".opencode/skills"), "deploy", Some("deploy"));
     let harness_only = write_skill(&project.join(".opencode/skills"), "lint", Some("lint"));
-    let termul_skills = vec![AgentSkillSummary {
+    let itzterm_skills = vec![AgentSkillSummary {
         name: "Deploy".to_string(),
         description: "d".to_string(),
         scope: "global".to_string(),
@@ -123,7 +123,7 @@ fn termul_skill_list_comes_first() {
     }];
 
     let entries = list_skill_files_with_roots(
-        &termul_skills,
+        &itzterm_skills,
         Some(&home),
         None,
         Some(&project.to_string_lossy()),

@@ -1,12 +1,12 @@
 ---
-title: Install and start termul-server
-description: Run Termul on a server and open it from any browser.
+title: Install and start itzterm-server
+description: Run itzTerm on a server and open it from any browser.
 ---
 
 import { Step, Steps } from 'fumadocs-ui/components/steps'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
 
-`termul-server` is Termul without a window. It runs your agents, terminals and git on one machine and serves the Termul app to any browser that connects to it. Use it on a home server, a cloud machine, or your own computer.
+`itzterm-server` is itzTerm without a window. It runs your agents, terminals and git on one machine and serves the itzTerm app to any browser that connects to it. Use it on a home server, a cloud machine, or your own computer.
 
 ## Install the server
 
@@ -19,26 +19,26 @@ Release builds are for Linux on x64 and arm64. Download the one that matches you
 
 ```bash
 case "$(uname -m)" in
-	x86_64)        asset=termul-server ;;
-	aarch64|arm64) asset=termul-server-linux-aarch64 ;;
+	x86_64)        asset=itzterm-server ;;
+	aarch64|arm64) asset=itzterm-server-linux-aarch64 ;;
 	*) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
 esac
-curl -fL -o termul-server "https://github.com/gnoviawan/termul/releases/latest/download/$asset"
-chmod +x termul-server
+curl -fL -o itzterm-server "https://github.com/latiefahmad/itzTerm/releases/latest/download/$asset"
+chmod +x itzterm-server
 ```
 
 The builds need glibc 2.35 or newer, which Ubuntu 22.04 and later have. Distributions that use musl instead of glibc, such as Alpine, aren't supported.
 
-The link above gets the latest stable release. For the nightly build, download from `https://github.com/gnoviawan/termul/releases/download/nightly/$asset` instead.
+The link above gets the latest stable release. For the nightly build, download from `https://github.com/latiefahmad/itzTerm/releases/download/nightly/$asset` instead.
 
-Move the file to a folder on your `PATH`, such as `~/.local/bin`, so you can run `termul-server` from anywhere.
+Move the file to a folder on your `PATH`, such as `~/.local/bin`, so you can run `itzterm-server` from anywhere.
 
 </Tab>
 <Tab value="Docker">
 
-The Termul repository has a `Dockerfile` and a `docker-compose.yml`. The image is `ghcr.io/gnoviawan/termul-server`.
+The itzTerm repository has a `Dockerfile` and a `docker-compose.yml`. The image is `ghcr.io/latiefahmad/itzTerm-server`.
 
-1. Copy `docker-compose.yml` from the Termul repository into a new folder.
+1. Copy `docker-compose.yml` from the itzTerm repository into a new folder.
 2. In that folder, create the folder for your projects:
 
 	```bash
@@ -54,7 +54,7 @@ The Termul repository has a `Dockerfile` and a `docker-compose.yml`. The image i
 4. Read the access token:
 
 	```bash
-	docker compose exec termul-server cat /home/termul/.local/state/termul/web-auth-token
+	docker compose exec itzterm-server cat /home/itzterm/.local/state/itzterm/web-auth-token
 	```
 
 5. Open `http://localhost:8080/#token=<token>` in your browser, with the token in place of `<token>`.
@@ -64,10 +64,10 @@ Things to know about the container:
 
 - The server can see only the `workspace` folder. Your projects must be inside it.
 - The port is open on `127.0.0.1` only. To reach it from other devices, put an HTTPS reverse proxy in front of it. See [Put a reverse proxy in front](/docs/remote/server-options#put-a-reverse-proxy-in-front).
-- The compose file turns on remote changes (`TERMUL_SERVER_ALLOW_REMOTE_WRITES=true`), because browser traffic reaches the container from the Docker network, not from the container itself.
-- The image has no agent programs such as Claude Code or Codex. Install them into `/home/termul/.local/bin` inside the container. That folder is on the `PATH` and is kept between restarts.
-- The user inside the container has user ID 1000. If your own user ID is different, build the image with yours before the first start: `TERMUL_UID=$(id -u) TERMUL_GID=$(id -g) docker compose up -d --build`.
-- To set your own token, put `TERMUL_WEB_AUTH_TOKEN=<token>` in a `.env` file next to `docker-compose.yml`.
+- The compose file turns on remote changes (`ITZTERM_SERVER_ALLOW_REMOTE_WRITES=true`), because browser traffic reaches the container from the Docker network, not from the container itself.
+- The image has no agent programs such as Claude Code or Codex. Install them into `/home/itzterm/.local/bin` inside the container. That folder is on the `PATH` and is kept between restarts.
+- The user inside the container has user ID 1000. If your own user ID is different, build the image with yours before the first start: `ITZTERM_UID=$(id -u) ITZTERM_GID=$(id -g) docker compose up -d --build`.
+- To set your own token, put `ITZTERM_WEB_AUTH_TOKEN=<token>` in a `.env` file next to `docker-compose.yml`.
 
 To update, pull the new image and restart:
 
@@ -76,14 +76,14 @@ docker compose pull
 docker compose up -d
 ```
 
-To follow the nightly builds, set `TERMUL_IMAGE=ghcr.io/gnoviawan/termul-server:nightly` in `.env`.
+To follow the nightly builds, set `ITZTERM_IMAGE=ghcr.io/latiefahmad/itzTerm-server:nightly` in `.env`.
 
 </Tab>
 </Tabs>
 
 ## Set it up with the wizard
 
-`termul-server onboard` asks a few questions, then starts the server in the background so it keeps running after you log out of SSH.
+`itzterm-server onboard` asks a few questions, then starts the server in the background so it keeps running after you log out of SSH.
 
 <Steps>
 <Step>
@@ -93,7 +93,7 @@ To follow the nightly builds, set `TERMUL_IMAGE=ghcr.io/gnoviawan/termul-server:
 Run this in a terminal on the server:
 
 ```bash
-termul-server onboard
+itzterm-server onboard
 ```
 
 Press Enter at any question to keep the default shown in brackets.
@@ -105,11 +105,11 @@ Press Enter at any question to keep the default shown in brackets.
 
 - **Bind host.** Keep `127.0.0.1` to allow only this machine, for example behind a reverse proxy. Enter `0.0.0.0` to accept connections from other devices.
 - **Bind port.** The default is `8080`.
-- **Sessions directory** and **Projects registry file.** Where Termul keeps chat history and your project list. The defaults are in `~/.local/state/termul`.
+- **Sessions directory** and **Projects registry file.** Where itzTerm keeps chat history and your project list. The defaults are in `~/.local/state/itzterm`.
 - **Allow non-loopback write peers.** Asked only when the host is `0.0.0.0`. Answer `y` to let other devices make changes. See [Allow changes from other devices](/docs/remote/server-options#allow-changes-from-other-devices).
 - **Update channel.** `stable`, `insider`, `nightly`, or `none`. If you pick a channel, the wizard also asks how often to check, in seconds.
 
-The wizard may also offer to write a settings file, `termul-server.env`, in the state folder. Answer `y` so the background server gets the same settings.
+The wizard may also offer to write a settings file, `itzterm-server.env`, in the state folder. Answer `y` so the background server gets the same settings.
 
 </Step>
 <Step>
@@ -123,9 +123,9 @@ The wizard starts the server and prints where to find it:
 - How to read the logs and how to stop the server.
 - A command to run the same server in the foreground.
 
-On machines with systemd, the wizard installs a `termul-server` service. When you run it as root, it is a system service and you manage it with `systemctl stop termul-server` and `journalctl -u termul-server -f`. As another user, it is a user service, so add `--user` to both commands.
+On machines with systemd, the wizard installs a `itzterm-server` service. When you run it as root, it is a system service and you manage it with `systemctl stop itzterm-server` and `journalctl -u itzterm-server -f`. As another user, it is a user service, so add `--user` to both commands.
 
-On machines without systemd, the wizard starts the server as a background process. The log is `termul-server.log` and the process ID is in `termul-server.pid`, both in the state folder. A background process doesn't restart after a crash or a reboot.
+On machines without systemd, the wizard starts the server as a background process. The log is `itzterm-server.log` and the process ID is in `itzterm-server.pid`, both in the state folder. A background process doesn't restart after a crash or a reboot.
 
 </Step>
 </Steps>
@@ -135,15 +135,15 @@ On machines without systemd, the wizard starts the server as a background proces
 To try the server, run it in the foreground:
 
 ```bash
-termul-server
+itzterm-server
 ```
 
-This serves Termul at `http://localhost:8080` for browsers on the same machine. Press `Ctrl+C` to stop it.
+This serves itzTerm at `http://localhost:8080` for browsers on the same machine. Press `Ctrl+C` to stop it.
 
 To let phones and other computers connect, listen on all network interfaces:
 
 ```bash
-termul-server --host 0.0.0.0 --port 8080
+itzterm-server --host 0.0.0.0 --port 8080
 ```
 
 The first time you do this, the server creates an access token and prints the path of the file that holds it. Read the token from that file, then open `http://<server-address>:8080/#token=<token>`. See [The access token](/docs/remote/server-options#the-access-token).
@@ -156,7 +156,7 @@ A new server has no projects.
 
 1. Open the server's address in a browser.
 2. Click **+** next to **PROJECTS**, then click **New project**. You can also press `Alt+N`.
-3. Click **Browse**. Termul opens a folder picker that shows the folders on the server, not on your own device.
+3. Click **Browse**. itzTerm opens a folder picker that shows the folders on the server, not on your own device.
 4. Go to the project folder and select it, then create the project.
 
 The server saves the project in its projects file, so it is still there after the server restarts.

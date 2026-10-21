@@ -44,7 +44,7 @@ export function BrowserPanel({ browserTabId, isVisible }: BrowserPanelProps): Re
         // pane. The padding is real layout space — the ResizeObserver in
         // useBrowserWebview shrinks the native webview inside it, so the ring
         // is never painted over (spec-acp-browser-pane-agent-ui).
-        agentControlled && 'termul-agent-border p-0.5'
+        agentControlled && 'itzterm-agent-border p-0.5'
       )}
     >
       {isVisible && <BrowserControls browserTabId={browserTabId} />}

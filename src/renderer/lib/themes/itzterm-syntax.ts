@@ -1,7 +1,7 @@
 import type { ThemeSyntaxOverrides } from './types'
 
 /**
- * Termul dark syntax, matched to the Cursor editor.
+ * itzTerm dark syntax, matched to the Cursor editor.
  * Colors are the peak values sampled from that theme.
  *
  * Teal is a keyword. Peach is a declared function or type name.
@@ -11,7 +11,7 @@ import type { ThemeSyntaxOverrides } from './types'
  * Each role clears WCAG AA (4.5:1) on Void `#08090a` and Carbon `#0f1011`.
  * Neighboring roles stay at least 15° apart in OKLCH hue.
  */
-export const TERMUL_DARK_SYNTAX: ThemeSyntaxOverrides = {
+export const ITZTERM_DARK_SYNTAX: ThemeSyntaxOverrides = {
   'syntax-comment': '#a3a3a3',
   'syntax-keyword': '#95d0cd',
   'syntax-string': '#d898d8',
@@ -31,7 +31,7 @@ export const TERMUL_DARK_SYNTAX: ThemeSyntaxOverrides = {
  * Same hues as the dark palette, darkened for paper.
  * Each role clears WCAG AA on `#ffffff`.
  */
-export const TERMUL_LIGHT_SYNTAX: ThemeSyntaxOverrides = {
+export const ITZTERM_LIGHT_SYNTAX: ThemeSyntaxOverrides = {
   'syntax-comment': '#5a5a5a',
   'syntax-keyword': '#3e7875',
   'syntax-string': '#945995',

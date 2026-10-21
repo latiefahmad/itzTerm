@@ -58,7 +58,7 @@ fn project(label: &str) -> Project {
     let dir = TempDir::new(label);
     let root = dir.path().canonicalize().expect("canonical root");
     std::fs::create_dir_all(root.join("shared")).expect("shared dir");
-    let worktree = root.join(".termul").join("worktrees").join("wt");
+    let worktree = root.join(".itzterm").join("worktrees").join("wt");
     std::fs::create_dir_all(&worktree).expect("worktree dir");
     Project {
         dir,
@@ -151,7 +151,7 @@ async fn create_symlinks_links_existing_dirs_and_skips_the_rest() {
         std::fs::canonicalize(p.worktree.join("shared")).expect("link resolves"),
         p.root.join("shared")
     );
-    assert!(!p.root.join(".termul").join("escape").exists());
+    assert!(!p.root.join(".itzterm").join("escape").exists());
 }
 
 #[tokio::test]
@@ -252,7 +252,7 @@ async fn create_symlinks_refuses_rooted_and_drive_relative_names() {
         json!({
             "projectPath": s(&p.root),
             "worktreePath": s(&p.worktree),
-            "symlinkDirs": ["\\termul-rooted-escape", "C:termul-drive-escape"]
+            "symlinkDirs": ["\\itzterm-rooted-escape", "C:itzterm-drive-escape"]
         }),
         loopback(),
     )

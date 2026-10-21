@@ -151,7 +151,7 @@ export function buildSlashSections(input: SlashMenuInput): SlashSection[] {
 
   // Disk skills are the skill rows. Hide a harness command that repeats one:
   // the same name, or a re-promotion `skill:<name>`. A `skill:` command whose
-  // suffix termul did not discover stays listed.
+  // suffix itzterm did not discover stays listed.
   const commandItems: SlashItem[] = commands
     .filter((c) => !commandNamesInstalledSkill(c.name, installedSkillNames))
     .filter((c) => matches(filter, c.name, c.description))

@@ -5,7 +5,7 @@
 
 use keyring::Entry;
 
-const SERVICE_NAME: &str = "termul-ssh";
+const SERVICE_NAME: &str = "itzterm-ssh";
 
 /// Key suffix for password credentials
 const PASSWORD_SUFFIX: &str = "password";

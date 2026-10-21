@@ -25,7 +25,7 @@ vi.mock('@/lib/worktree-reconciler', async (importOriginal) => ({
 vi.mock('@/lib/log-api', () => ({ logFrontendError: mocks.log }))
 vi.mock('sonner', () => ({ toast: { success: mocks.toastSuccess, error: mocks.toastError } }))
 
-const NEW_PATH = '/work/.termul/worktrees/fix-login'
+const NEW_PATH = '/work/.itzterm/worktrees/fix-login'
 const initialProjects = useProjectStore.getState().projects
 const originalSetPick = useShellLayoutStore.getState().setWorktreePick
 const setPick = vi.fn((_projectId: string, _path: string | null) => {

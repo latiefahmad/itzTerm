@@ -24,17 +24,17 @@ fn make_ids() -> (AgentId, SessionId) {
 #[test]
 fn map_todos_preserves_order_and_maps_status_priority() {
     let todos = vec![
-        TermulPlanTodo {
+        ItzTermPlanTodo {
             content: "a".into(),
             status: Some("in_progress".into()),
             priority: Some("high".into()),
         },
-        TermulPlanTodo {
+        ItzTermPlanTodo {
             content: "b".into(),
             status: Some("completed".into()),
             priority: Some("medium".into()),
         },
-        TermulPlanTodo {
+        ItzTermPlanTodo {
             content: "c".into(),
             status: None,
             priority: None,
@@ -54,7 +54,7 @@ fn map_todos_preserves_order_and_maps_status_priority() {
 
 #[test]
 fn map_todos_unknown_status_priority_falls_back() {
-    let todos = vec![TermulPlanTodo {
+    let todos = vec![ItzTermPlanTodo {
         content: "x".into(),
         status: Some("bogus".into()),
         priority: Some("nope".into()),
@@ -70,17 +70,17 @@ fn emit_plan_update_fires_event_with_entries() {
     let sinks: Vec<Arc<dyn EventSink>> = vec![sink.clone()];
     let (agent_id, session_id) = make_ids();
     let todos = vec![
-        TermulPlanTodo {
+        ItzTermPlanTodo {
             content: "one".into(),
             status: None,
             priority: None,
         },
-        TermulPlanTodo {
+        ItzTermPlanTodo {
             content: "two".into(),
             status: None,
             priority: None,
         },
-        TermulPlanTodo {
+        ItzTermPlanTodo {
             content: "three".into(),
             status: None,
             priority: None,
@@ -157,14 +157,14 @@ fn frame_reply_serializes_ok_and_err() {
 }
 
 // ---------------------------------------------------------------------------
-// `TermulBrowserInput` deserializer matrix — replays the bug-evidence payload
+// `ItzTermBrowserInput` deserializer matrix — replays the bug-evidence payload
 // set from the 2026-10-03 live failure session verbatim (spec
 // spec-acp-browser-automation-v2 CAP-1). Flat and nested forms must both
 // yield readable args; a string `args` must fail with `invalid_params` naming
 // the expected field.
 // ---------------------------------------------------------------------------
 
-fn browser_input(payload: Value) -> Result<TermulBrowserInput, serde_json::Error> {
+fn browser_input(payload: Value) -> Result<ItzTermBrowserInput, serde_json::Error> {
     serde_json::from_value(payload)
 }
 
@@ -471,14 +471,14 @@ fn title_frame_carries_the_optional_branch_slug() {
 
 #[test]
 fn set_title_input_branch_is_optional_in_the_schema() {
-    let input: TermulSetTitleInput =
+    let input: ItzTermSetTitleInput =
         serde_json::from_value(serde_json::json!({ "title": "T" })).unwrap();
     assert_eq!(input.branch, None);
-    let with_branch: TermulSetTitleInput =
+    let with_branch: ItzTermSetTitleInput =
         serde_json::from_value(serde_json::json!({ "title": "T", "branch": "fix-it" })).unwrap();
     assert_eq!(with_branch.branch.as_deref(), Some("fix-it"));
 
-    let schema = serde_json::to_value(rmcp::schemars::schema_for!(TermulSetTitleInput)).unwrap();
+    let schema = serde_json::to_value(rmcp::schemars::schema_for!(ItzTermSetTitleInput)).unwrap();
     assert!(schema["properties"].get("branch").is_some(), "{schema}");
     let required: Vec<&str> = schema["required"]
         .as_array()

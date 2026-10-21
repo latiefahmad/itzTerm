@@ -114,7 +114,7 @@ describe('joinPath', () => {
   })
 })
 
-describe('buildFolderCrumbs for a Windows-hosted termul-server', () => {
+describe('buildFolderCrumbs for a Windows-hosted itzterm-server', () => {
   it('shows real segments for a verbatim entry under a plain root', () => {
     const root = normalizePath('C:/proj')
     const current = normalizePath('//?/C:/proj/src/lib')

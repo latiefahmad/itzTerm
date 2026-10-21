@@ -1477,8 +1477,8 @@ describe('acp-store live window + lazy-load + coalescing', () => {
     _flushCoalescedForTesting()
     const stored = useAcpStore.getState().toolCalls[sid][0]
     const text = stored.rawOutput as string
-    expect(text.length).toBe(32 * 1024 + '\n[termul: tool output truncated]'.length)
-    expect(text.endsWith('\n[termul: tool output truncated]')).toBe(true)
+    expect(text.length).toBe(32 * 1024 + '\n[itzterm: tool output truncated]'.length)
+    expect(text.endsWith('\n[itzterm: tool output truncated]')).toBe(true)
     expect(text.startsWith('x'.repeat(100))).toBe(true)
     // Clamp is logged once at warn level without the content.
     const clampCalls = vi
@@ -1689,8 +1689,8 @@ describe('acp-store live window + lazy-load + coalescing', () => {
     // Each leaf clamps at the live field bound + marker; the card keeps
     // rendering a (truncated) diff instead of holding the full payload.
     expect(diff.oldText?.length).toBeLessThan(big.length)
-    expect(diff.oldText?.endsWith('[termul: tool call content truncated]')).toBe(true)
-    expect(diff.newText.endsWith('[termul: tool call content truncated]')).toBe(true)
+    expect(diff.oldText?.endsWith('[itzterm: tool call content truncated]')).toBe(true)
+    expect(diff.newText.endsWith('[itzterm: tool call content truncated]')).toBe(true)
     // rawInput keeps small metadata fields (path still drives the open-file
     // action + label) but drops the giant body.
     const input = call.rawInput as Record<string, unknown>
@@ -1808,7 +1808,7 @@ describe('acp-store live window + lazy-load + coalescing', () => {
     // The multi-hundred-KB base64 payload never reaches the live window —
     // an explicit marker stands in its place.
     expect(msgs[0].blocks).toEqual([
-      { type: 'text', text: '[termul: oversized content block omitted]' }
+      { type: 'text', text: '[itzterm: oversized content block omitted]' }
     ])
   })
 

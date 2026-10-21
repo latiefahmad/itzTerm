@@ -18,7 +18,7 @@ vi.mock('@/lib/worktree-api', () => ({ worktreeApi: { list: mocks.list } }))
 vi.mock('@/lib/log-api', () => ({ logFrontendError: mocks.logFrontendError }))
 
 const ROOT = '/repo'
-const WT_A = '/repo/.termul/worktrees/a'
+const WT_A = '/repo/.itzterm/worktrees/a'
 
 function info(path: string, branch = 'b', name = 'n') {
   return { name, branch, path, headCommit: 'abc' }
@@ -144,10 +144,10 @@ describe('mergeWorktrees', () => {
   })
 
   it('resolves a path-derived id collision with a different path', () => {
-    const collidingId = worktreeIdForPath('/repo/.termul/worktrees/new')
+    const collidingId = worktreeIdForPath('/repo/.itzterm/worktrees/new')
     const result = mergeWorktrees({
       stored: [wt({ id: collidingId, path: WT_A })],
-      listed: [info(WT_A), info('/repo/.termul/worktrees/new')],
+      listed: [info(WT_A), info('/repo/.itzterm/worktrees/new')],
       projectPath: ROOT
     })
     const ids = result.worktrees.map((w) => w.id)
@@ -198,10 +198,10 @@ describe('reconcileProjectWorktrees', () => {
     seed({
       worktrees: [
         wt({ id: 'wt-1', path: WT_A }),
-        wt({ id: 'wt-2', path: '/repo/.termul/worktrees/b' })
+        wt({ id: 'wt-2', path: '/repo/.itzterm/worktrees/b' })
       ]
     })
-    seedPick('/repo/.termul/worktrees/b')
+    seedPick('/repo/.itzterm/worktrees/b')
     mocks.list.mockResolvedValue(ok(info(WT_A)))
 
     expect(await reconcileProjectWorktrees('p1')).toBe('updated')
@@ -212,7 +212,7 @@ describe('reconcileProjectWorktrees', () => {
 
   it('returns updated when only the pick was cleared', async () => {
     seed({ worktrees: [wt({ id: 'wt-1', path: WT_A })] })
-    seedPick('/repo/.termul/worktrees/gone')
+    seedPick('/repo/.itzterm/worktrees/gone')
     mocks.list.mockResolvedValue(ok(info(WT_A)))
     const before = useProjectStore.getState().projects
 
@@ -266,13 +266,13 @@ describe('reconcileProjectWorktrees', () => {
   ])('leaves worktrees untouched on a failed listing (%s)', async (_label, impl) => {
     const stored = [wt({ id: 'wt-1', path: WT_A })]
     seed({ worktrees: stored })
-    seedPick('/repo/.termul/worktrees/gone')
+    seedPick('/repo/.itzterm/worktrees/gone')
     mocks.list.mockImplementation(impl)
 
     expect(await reconcileProjectWorktrees('p1')).toBe('failed')
 
     expect(project().worktrees).toBe(stored)
-    expect(pick()).toBe('/repo/.termul/worktrees/gone')
+    expect(pick()).toBe('/repo/.itzterm/worktrees/gone')
     expect(project().isGitRepo).toBe(true)
   })
 
@@ -312,9 +312,9 @@ describe('reconcileProjectWorktrees', () => {
   it('commits worktrees + isGitRepo with one updateProject call and clears the pruned pick', async () => {
     seed({
       isGitRepo: false,
-      worktrees: [wt({ id: 'wt-gone', path: '/repo/.termul/worktrees/gone' })]
+      worktrees: [wt({ id: 'wt-gone', path: '/repo/.itzterm/worktrees/gone' })]
     })
-    seedPick('/repo/.termul/worktrees/gone')
+    seedPick('/repo/.itzterm/worktrees/gone')
     mocks.list.mockResolvedValue(ok(info(WT_A)))
     const listener = vi.fn()
     const unsub = useProjectStore.subscribe(listener)

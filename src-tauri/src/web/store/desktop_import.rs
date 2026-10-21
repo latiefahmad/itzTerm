@@ -1,7 +1,7 @@
 //! One-shot import of the desktop's retired plugin-store file (issue #1073).
 //!
 //! Until the desktop renderer reached the host store over the Channel carrier,
-//! it kept its state in the tauri-plugin-store file `<app data dir>/termul-data.json`:
+//! it kept its state in the tauri-plugin-store file `<app data dir>/itzterm-data.json`:
 //! one JSON object of logical key → value, every value wrapped
 //! `{"_version":1,"data":…}` by the renderer. That file stops being an
 //! authority: the first device that reaches the desktop store over the desktop
@@ -23,7 +23,7 @@
 //! (`host.desktopImported`). The pending set is read from the file at startup
 //! and lives in memory; the file stays the durable copy until the store write
 //! succeeded. Afterwards the file is renamed to
-//! `termul-data.json.imported-<unix-secs>` (a backup, never deleted). A failed
+//! `itzterm-data.json.imported-<unix-secs>` (a backup, never deleted). A failed
 //! write leaves the file and the pending set for the next request; an
 //! unreadable or corrupt file is skipped with a warning and left in place.
 
@@ -43,7 +43,7 @@ use super::{unix_ms, State, StoreError, WebStore, MAX_DATA_BYTES, STORE_VALUE_MA
 use crate::web::ws::ClientIdentity;
 
 /// The plugin-store file the desktop renderer used, under the app data dir.
-pub const DESKTOP_LEGACY_FILE: &str = "termul-data.json";
+pub const DESKTOP_LEGACY_FILE: &str = "itzterm-data.json";
 
 /// Where a desktop host keeps the retired plugin-store file.
 #[must_use]
@@ -106,7 +106,7 @@ fn read(path: &Path) -> Option<DesktopImport> {
         Err(error) if error.kind() == io::ErrorKind::NotFound => return None,
         Err(error) => {
             warn!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 "could not read the desktop plugin-store file '{}': {error}; it is left in place",
                 path.display()
             );
@@ -115,7 +115,7 @@ fn read(path: &Path) -> Option<DesktopImport> {
     };
     if length > MAX_LEGACY_FILE_BYTES {
         warn!(
-            target: "termul::web::store",
+            target: "itzterm::web::store",
             "the desktop plugin-store file '{}' is {length} bytes (max {MAX_LEGACY_FILE_BYTES}); it is skipped and left in place",
             path.display()
         );
@@ -128,7 +128,7 @@ fn read(path: &Path) -> Option<DesktopImport> {
         Ok(Value::Object(entries)) => entries,
         Ok(_) => {
             warn!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 "the desktop plugin-store file '{}' is not a JSON object; it is skipped and left in place",
                 path.display()
             );
@@ -136,7 +136,7 @@ fn read(path: &Path) -> Option<DesktopImport> {
         }
         Err(reason) => {
             warn!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 "could not parse the desktop plugin-store file '{}': {reason}; it is skipped and left in place",
                 path.display()
             );
@@ -156,7 +156,7 @@ fn read(path: &Path) -> Option<DesktopImport> {
         let bytes = serde_json::to_vec(&value).map_or(usize::MAX, |bytes| bytes.len());
         if bytes > STORE_VALUE_MAX_BYTES {
             warn!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 "skipped the desktop key '{key}': its value is {bytes} bytes (max {STORE_VALUE_MAX_BYTES})"
             );
             continue;
@@ -179,12 +179,12 @@ fn retire(path: &Path, now_ms: u64) {
     };
     match fs::rename(path, &target) {
         Ok(()) => info!(
-            target: "termul::web::store",
+            target: "itzterm::web::store",
             "desktop plugin-store file imported; it is kept as '{}'",
             target.display()
         ),
         Err(error) => warn!(
-            target: "termul::web::store",
+            target: "itzterm::web::store",
             "could not rename the imported desktop plugin-store file '{}' to '{}': {error}",
             path.display(),
             target.display()
@@ -218,7 +218,7 @@ pub(super) fn apply(
         let cost = record_bytes(key, &record) + ENTRY_OVERHEAD_BYTES;
         if cost > file_room {
             warn!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 "dropped the desktop key '{key}': the store file would exceed its size limit"
             );
             applied.dropped += 1;
@@ -249,7 +249,7 @@ pub(super) fn apply(
             || cost > file_room
         {
             warn!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 "dropped the desktop key '{full}': it does not fit the device partition budget ({partition_budget} bytes) or the store file limit"
             );
             applied.dropped += 1;
@@ -322,7 +322,7 @@ impl WebStore {
             next.persist(&self.path, &self.extra, now_ms)?;
             retire(&import.path, now_ms);
             info!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 device_id = %ClientIdentity::log_label(&identity.device_id),
                 shared = applied.shared,
                 device = applied.device,

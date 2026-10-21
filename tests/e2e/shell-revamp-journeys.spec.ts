@@ -3,10 +3,10 @@ import { E2E_TOKEN } from './helpers'
 import { chatTab, openWorkspace, selectProject } from './ui'
 
 /**
- * Shell-revamp journeys E2E on termul-server (story 30, CAP-18 / AD-15 / E6).
+ * Shell-revamp journeys E2E on itzterm-server (story 30, CAP-18 / AD-15 / E6).
  *
  * These two specs walk Journey 1 and Journey 2 of EXPERIENCE.md
- * (ux-termul-2026-10-10) on the only desktop shell: Rail | Side panel | main.
+ * (ux-itzterm-2026-10-10) on the only desktop shell: Rail | Side panel | main.
  * The suite passing is also the proof that the classic shell is gone (no
  * "Global actions" navigation).
  *
@@ -325,7 +325,7 @@ test('Journey 1: three chats on one project, side by side, next to the diff', as
       await expect(chatTab(page, CHAT_ONE)).toHaveCount(0)
       await expect(chatTab(page, CHAT_TWO)).toHaveCount(0)
 
-      // Back on termul's project: its three chat panes are restored.
+      // Back on itzterm's project: its three chat panes are restored.
       await railNav(page)
         .getByRole('button', { name: /^Switch project/ })
         .click()

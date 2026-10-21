@@ -47,7 +47,7 @@ export const worktreeApi = {
    * Create a new worktree.
    * If isNewBranch is true, creates a new branch from the startRef (or HEAD).
    * If branch exists, checks it out in the new worktree.
-   * targetPath defaults to `<project-path>/.termul/worktrees/<name>/` when not provided.
+   * targetPath defaults to `<project-path>/.itzterm/worktrees/<name>/` when not provided.
    *
    * When `progressId` is set, the backend streams git's stderr lines live:
    * Tauri emits `acp:worktree_progress` events (the progress store's listener
@@ -142,7 +142,7 @@ export const worktreeApi = {
       : webServerWorktree.checkDirty(worktreePath),
 
   /**
-   * Remove all Termul-managed worktrees for a project.
+   * Remove all itzTerm-managed worktrees for a project.
    * Used during project cascade delete. Reports per-worktree results.
    * Accepts a typed Worktree array; serializes to JSON internally.
    *
@@ -204,7 +204,7 @@ export const worktreeApi = {
       : webServerWorktree.ensureSymlinks(projectPath, worktreePath, symlinkDirs),
 
   /**
-   * Archive a worktree by moving it to `.termul/archives/<name>-<timestamp>/`.
+   * Archive a worktree by moving it to `.itzterm/archives/<name>-<timestamp>/`.
    * The worktree is recoverable until the 30-day retention expires.
    *
    * **Web:** returns `WEB_UNSUPPORTED`.

@@ -1,22 +1,22 @@
 <div align="center">
 
-# 🖥️ Termul Manager
+# 🖥️ itzTerm
 
 **A modern, project-aware terminal manager built with Tauri**
 
-Termul treats workspaces as first-class citizens, allowing you to organize terminals by project with persistent sessions, snapshots, and a clean tabbed interface. Each project also gets ACP agent chats and Git and worktree tools, and the app adds SSH sessions and remote access from your phone.
+itzTerm treats workspaces as first-class citizens, allowing you to organize terminals by project with persistent sessions, snapshots, and a clean tabbed interface. Each project also gets ACP agent chats and Git and worktree tools, and the app adds SSH sessions and remote access from your phone.
 
-[![GitHub Stars](https://img.shields.io/github/stars/gnoviawan/termul?style=social)](https://github.com/gnoviawan/termul/stargazers)
-[![GitHub Issues](https://img.shields.io/github/issues/gnoviawan/termul)](https://github.com/gnoviawan/termul/issues)
-[![License](https://img.shields.io/github/license/gnoviawan/termul)](LICENSE)
-[![Latest Release](https://img.shields.io/github/v/release/gnoviawan/termul?include_prereleases)](https://github.com/gnoviawan/termul/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/latiefahmad/itzTerm?style=social)](https://github.com/latiefahmad/itzTerm/stargazers)
+[![GitHub Issues](https://img.shields.io/github/issues/latiefahmad/itzTerm)](https://github.com/latiefahmad/itzTerm/issues)
+[![License](https://img.shields.io/github/license/latiefahmad/itzTerm)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/latiefahmad/itzTerm?include_prereleases)](https://github.com/latiefahmad/itzTerm/releases)
 
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://github.com/gnoviawan/termul)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://github.com/latiefahmad/itzTerm)
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-FFC131?logo=tauri&logoColor=white)](https://tauri.app)
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
-[Getting Started](#-getting-started) · [Features](#-features) · [Documentation](#-documentation) · [Contributing](CONTRIBUTING.md) · [Report Bug](https://github.com/gnoviawan/termul/issues/new?template=bug_report.md) · [Request Feature](https://github.com/gnoviawan/termul/issues/new?template=feature_request.md)
+[Getting Started](#-getting-started) · [Features](#-features) · [Documentation](#-documentation) · [Contributing](CONTRIBUTING.md) · [Report Bug](https://github.com/latiefahmad/itzTerm/issues/new?template=bug_report.md) · [Request Feature](https://github.com/latiefahmad/itzTerm/issues/new?template=feature_request.md)
 
 </div>
 
@@ -38,7 +38,7 @@ Termul treats workspaces as first-class citizens, allowing you to organize termi
 | Feature                | Description                                                                                                                                                                                 |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Agent Chat**         | Chat with ACP agents such as Claude Agent, Codex, Gemini CLI, Cursor, and OpenCode in any pane, with a model picker, slash commands, `@` file mentions, permission prompts, and a plan view |
-| **Saved Chats**        | Termul saves chats per project and lists them in the sidebar. Reopen a chat when its agent can reload a past session                                                                        |
+| **Saved Chats**        | itzTerm saves chats per project and lists them in the sidebar. Reopen a chat when its agent can reload a past session                                                                        |
 | **Agent Launcher**     | Start a chat from a prompt in the active pane (`Ctrl+T`), pick the agent and model, and optionally isolate the chat in a new Git worktree                                                   |
 | **Custom ACP Agents**  | Add your own ACP agents in Settings, or paste a Zed-style `agent_servers` config                                                                                                            |
 | **Terminal AI Assist** | Right-click selected terminal output and choose **Explain with AI** or **Fix Command with AI**. Suggested commands insert at the prompt without running                                     |
@@ -61,7 +61,7 @@ Termul treats workspaces as first-class citizens, allowing you to organize termi
 | Feature                   | Description                                                                                                                                                                |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Saved Hosts**           | Save hosts with password, key file, or SSH agent authentication, or import them from `~/.ssh/config`. Passwords and passphrases go to the OS keychain                      |
-| **SSH Sessions**          | Each session tab is one connection, and its remote shell runs as a regular Termul terminal. Termul asks you to confirm a new or changed host key by its SHA256 fingerprint |
+| **SSH Sessions**          | Each session tab is one connection, and its remote shell runs as a regular itzTerm terminal. itzTerm asks you to confirm a new or changed host key by its SHA256 fingerprint |
 | **SFTP Browser & Editor** | Browse, upload, download, rename, and delete remote files, and edit them in place in a built-in editor                                                                     |
 
 ### 📱 Remote & Mobile
@@ -69,7 +69,7 @@ Termul treats workspaces as first-class citizens, allowing you to organize termi
 | Feature             | Description                                                                                                                                                                                               |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Remote Access**   | Turn on remote access from the desktop status bar to open a cloudflared quick tunnel, then scan the QR code to drive your live agent chats from a phone. Requires `cloudflared` on your `PATH`            |
-| **termul-server**   | Standalone Linux server that serves the Termul web client from a headless host, with token auth and opt-in self-update. See [Installing termul-server](docs/deployment-guide.md#installing-termul-server) |
+| **itzterm-server**   | Standalone Linux server that serves the itzTerm web client from a headless host, with token auth and opt-in self-update. See [Installing itzterm-server](docs/deployment-guide.md#installing-itzterm-server) |
 | **Mobile UI & PWA** | Phone-width layout with a chat drawer, a file explorer, and extra terminal keys. Install the web client as a PWA over HTTPS or `localhost`                                                                |
 
 ### 📝 Editor & File Management
@@ -167,17 +167,17 @@ Termul treats workspaces as first-class citizens, allowing you to organize termi
 ### Homebrew (macOS)
 
 ```bash
-brew tap gnoviawan/termul
-brew install --cask termul
+brew tap latiefahmad/itzTerm
+brew install --cask itzterm
 ```
 
 ### curl (macOS/Linux)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/gnoviawan/termul/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/latiefahmad/itzTerm/main/scripts/install.sh | bash
 ```
 
-Windows users should install the `.exe` or `.msi` from [GitHub Releases](https://github.com/gnoviawan/termul/releases). Manual DMG downloads in a browser may still hit Gatekeeper, so macOS users should prefer Homebrew or curl.
+Windows users should install the `.exe` or `.msi` from [GitHub Releases](https://github.com/latiefahmad/itzTerm/releases). Manual DMG downloads in a browser may still hit Gatekeeper, so macOS users should prefer Homebrew or curl.
 
 ## 🚀 Getting Started
 
@@ -244,8 +244,8 @@ rustc --version && cargo --version
 
 ```bash
 # Clone the repository
-git clone https://github.com/gnoviawan/termul.git
-cd termul
+git clone https://github.com/latiefahmad/itzTerm.git
+cd itzterm
 
 # Install dependencies
 bun install
@@ -394,13 +394,13 @@ Design and decisions: [`docs/ssh-native.md`](docs/ssh-native.md).
 - SSH runs natively on [`russh`](https://crates.io/crates/russh) (a Rust SSH library; its crypto comes from `aws-lc-rs`, which the app already builds): no system `ssh`, OpenSSL or Perl is needed on any platform. Each session tab owns one connection; the shell, the SFTP browser and port forwards are channels on it.
 - The remote shell is adopted by `PtyManager` as a regular terminal (`pty/manager/external.rs`), so xterm, scrollback replay, claims, resize and kill work as for local terminals.
 - SSH passwords and key passphrases are stored through the OS keychain, never in `ssh-profiles.json`. A secret that worked stays in process memory only while a session to that host is open (so a second tab does not ask again); SSH agent authentication avoids it entirely.
-- Host keys are never accepted silently: a first-seen or changed key is shown with its SHA256 fingerprint and must be confirmed. Trust is written to `~/.ssh/known_hosts_termul`; `~/.ssh/known_hosts` is read but never modified.
+- Host keys are never accepted silently: a first-seen or changed key is shown with its SHA256 fingerprint and must be confirmed. Trust is written to `~/.ssh/known_hosts_itzterm`; `~/.ssh/known_hosts` is read but never modified.
 - Local port forwarding uses `direct-tcpip` channels on the session's connection; remote/reverse forwarding is not supported yet.
-- Real-server tests are opt-in: see `ssh::connect::tests::real_server_auth_matrix` and `ssh::session::tests::real_server_shell_round_trip` (`cargo test --lib -- --ignored real_server` with the `TERMUL_SSH_TEST_*` variables).
+- Real-server tests are opt-in: see `ssh::connect::tests::real_server_auth_matrix` and `ssh::session::tests::real_server_shell_round_trip` (`cargo test --lib -- --ignored real_server` with the `ITZTERM_SSH_TEST_*` variables).
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/chart?repos=gnoviawan/termul&type=date&legend=top-left)](https://www.star-history.com/?type=date&repos=gnoviawan%2Ftermul)
+[![Star History Chart](https://api.star-history.com/chart?repos=latiefahmad/itzTerm&type=date&legend=top-left)](https://www.star-history.com/?type=date&repos=gnoviawan%2Fitzterm)
 
 ## 🤝 Contributing
 

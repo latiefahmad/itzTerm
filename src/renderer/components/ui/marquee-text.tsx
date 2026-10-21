@@ -67,11 +67,11 @@ export function MarqueeText({ text, className, ...props }: MarqueeTextProps): Re
         <span
           ref={runnerRef}
           data-slot="marquee-text-runner"
-          className="termul-marquee inline-block"
+          className="itzterm-marquee inline-block"
           style={
             {
-              '--termul-marquee-distance': `${overflow}px`,
-              '--termul-marquee-duration': `${duration}ms`
+              '--itzterm-marquee-distance': `${overflow}px`,
+              '--itzterm-marquee-duration': `${duration}ms`
             } as CSSProperties
           }
         >

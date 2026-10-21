@@ -4,11 +4,11 @@ on:
   workflow_call:
     inputs:
       release_tag:
-        description: GitHub release tag whose termul-server assets go into the image (v0.5.0, nightly)
+        description: GitHub release tag whose itzterm-server assets go into the image (v0.5.0, nightly)
         required: true
         type: string
       image_tags:
-        description: Newline-separated tags to push to ghcr.io/<owner>/termul-server
+        description: Newline-separated tags to push to ghcr.io/<owner>/itzterm-server
         required: true
         type: string
 
@@ -53,7 +53,7 @@ jobs:
           IMAGE_TAGS: ${{ inputs.image_tags }}
           OWNER: ${{ github.repository_owner }}
         run: |
-          image="ghcr.io/${OWNER,,}/termul-server"
+          image="ghcr.io/${OWNER,,}/itzterm-server"
           tags=()
           # Docker tags cannot contain "+", so SemVer build metadata becomes "-".
           while IFS= read -r tag; do
@@ -61,7 +61,7 @@ jobs:
           done <<< "$IMAGE_TAGS"
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --build-arg TERMUL_RELEASE="$RELEASE_TAG" \
+            --build-arg ITZTERM_RELEASE="$RELEASE_TAG" \
             "${tags[@]}" \
             --provenance=mode=max \
             --sbom=true \

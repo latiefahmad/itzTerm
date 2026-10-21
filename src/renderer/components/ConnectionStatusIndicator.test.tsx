@@ -329,7 +329,7 @@ describe('ConnectionStatusIndicator labelled status mode', () => {
 describe('formatConnectedSummary', () => {
   it('names the host after the status', () => {
     expect(formatConnectedSummary('127.0.0.1:8199')).toBe('Connected · 127.0.0.1:8199')
-    expect(formatConnectedSummary('termul.example.com')).toBe('Connected · termul.example.com')
+    expect(formatConnectedSummary('itzterm.example.com')).toBe('Connected · itzterm.example.com')
   })
 
   it.each(['', '   '])('falls back to a plain Connected for the empty host %j', (host) => {

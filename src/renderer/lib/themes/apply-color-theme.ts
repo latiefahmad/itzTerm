@@ -17,10 +17,10 @@ import {
   UI_CONTRAST_MIN
 } from './color-utils'
 import { deriveSurfaces } from './derive-surfaces'
+import { surfacesFromChrome } from './itzterm-dark-chrome'
 import { resolveSyntaxColors } from './resolve-syntax'
 import { fillInkComponents, solidFillComponents } from './solid-fills'
 import { statusBarCssVars } from './status-bar-fills'
-import { surfacesFromChrome } from './termul-dark-chrome'
 import {
   COLOR_THEME_CHANGED_EVENT,
   type ColorThemeChangedDetail,
@@ -315,7 +315,7 @@ function dispatchThemeChanged(detail: ColorThemeChangedDetail): void {
   window.dispatchEvent(new CustomEvent(COLOR_THEME_CHANGED_EVENT, { detail }))
 }
 
-const THEME_TRANSITION_STYLE_ID = 'termul-disable-theme-transitions'
+const THEME_TRANSITION_STYLE_ID = 'itzterm-disable-theme-transitions'
 
 /**
  * Theme swaps restyle fill and shadow on every primary button at once.

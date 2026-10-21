@@ -27,25 +27,25 @@ fn off_genuinely_disables_logging() {
 
 #[test]
 fn module_scoped_directive_keeps_global_at_floor() {
-    // `termul_manager=debug` must NOT raise other crates: global stays at
+    // `itzterm_manager=debug` must NOT raise other crates: global stays at
     // the floor, the module gets its own override.
-    let d = parse_directives("termul_manager=debug");
+    let d = parse_directives("itzterm_manager=debug");
     assert_eq!(d.global, default_floor());
     assert_eq!(
         d.per_module,
-        vec![("termul_manager".to_string(), LevelFilter::Debug)]
+        vec![("itzterm_manager".to_string(), LevelFilter::Debug)]
     );
 }
 
 #[test]
 fn multiple_modules_are_scoped_independently() {
-    let d = parse_directives("hyper=warn,termul_manager=trace");
+    let d = parse_directives("hyper=warn,itzterm_manager=trace");
     assert_eq!(d.global, default_floor());
     assert_eq!(
         d.per_module,
         vec![
             ("hyper".to_string(), LevelFilter::Warn),
-            ("termul_manager".to_string(), LevelFilter::Trace),
+            ("itzterm_manager".to_string(), LevelFilter::Trace),
         ]
     );
 }
@@ -60,17 +60,17 @@ fn bare_module_name_without_level_is_ignored() {
 
 #[test]
 fn global_level_and_module_override_combine() {
-    let d = parse_directives("info,termul_manager=trace");
+    let d = parse_directives("info,itzterm_manager=trace");
     assert_eq!(d.global, LevelFilter::Info);
     assert_eq!(
         d.per_module,
-        vec![("termul_manager".to_string(), LevelFilter::Trace)]
+        vec![("itzterm_manager".to_string(), LevelFilter::Trace)]
     );
 }
 
 #[test]
 fn unrecognized_level_tokens_are_ignored() {
-    let d = parse_directives("bogus,termul_manager=nonsense");
+    let d = parse_directives("bogus,itzterm_manager=nonsense");
     assert_eq!(d.global, default_floor());
     assert!(d.per_module.is_empty());
 }

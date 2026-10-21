@@ -163,7 +163,7 @@ async fn a_new_serve_start_changes_the_epoch_the_next_frame_carries() {
 
 #[tokio::test(start_paused = true)]
 async fn the_chat_history_state_is_the_persisted_index() {
-    let root = std::env::temp_dir().join(format!("termul-watch-hub-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-watch-hub-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&root).unwrap();
     let persistence = SessionPersistence::open(root.join("sessions")).await.unwrap();
     persistence

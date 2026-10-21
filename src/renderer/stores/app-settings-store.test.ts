@@ -101,10 +101,10 @@ describe('app-settings-store', () => {
     it('should update terminalUrlOpenMode', () => {
       const { updateSetting } = useAppSettingsStore.getState()
 
-      updateSetting('terminalUrlOpenMode', 'termul')
+      updateSetting('terminalUrlOpenMode', 'itzterm')
 
       const { settings } = useAppSettingsStore.getState()
-      expect(settings.terminalUrlOpenMode).toBe('termul')
+      expect(settings.terminalUrlOpenMode).toBe('itzterm')
     })
   })
 
@@ -131,7 +131,7 @@ describe('app-settings-store', () => {
         terminalRenderer: 'auto' as const,
         defaultProjectColor: 'blue',
         confirmTerminalClose: true,
-        terminalUrlOpenMode: 'termul' as const,
+        terminalUrlOpenMode: 'itzterm' as const,
         remoteBindMode: 'localhost' as const,
         colorTheme: 'dracula',
         appearanceMode: 'dark' as const,
@@ -167,7 +167,7 @@ describe('app-settings-store', () => {
           terminalRenderer: 'dom' as const,
           defaultProjectColor: 'red',
           confirmTerminalClose: false,
-          terminalUrlOpenMode: 'termul',
+          terminalUrlOpenMode: 'itzterm',
           remoteBindMode: 'all' as const,
           colorTheme: 'nord',
           appearanceMode: 'light' as const,
@@ -240,11 +240,11 @@ describe('app-settings-store', () => {
     it('useTerminalUrlOpenMode should select the terminal URL mode', () => {
       useAppSettingsStore.setState((state) => ({
         ...state,
-        settings: { ...state.settings, terminalUrlOpenMode: 'termul' }
+        settings: { ...state.settings, terminalUrlOpenMode: 'itzterm' }
       }))
 
       const { result } = renderHook(() => useTerminalUrlOpenMode())
-      expect(result.current).toBe('termul')
+      expect(result.current).toBe('itzterm')
     })
 
     it('useColorTheme should select the app color theme', () => {

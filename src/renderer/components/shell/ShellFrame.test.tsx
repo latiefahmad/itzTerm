@@ -225,7 +225,7 @@ describe('ShellFrame', () => {
     const observer = renderHook(() => useNativeWebviewOccluded())
     const { rerenderFrame } = renderFrame({ isShortcutMenuOpen: true })
 
-    act(() => useThemePickerStore.getState().open('termul'))
+    act(() => useThemePickerStore.getState().open('itzterm'))
     expect(observer.result.current).toBe(true)
 
     // Shortcuts closes first: the theme picker still occludes.

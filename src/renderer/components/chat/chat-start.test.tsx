@@ -6,10 +6,10 @@ import { ChatEmptyState } from './ChatEmptyState'
 import { CHAT_STARTERS, ChatStarters, ChatStartHero } from './chat-start'
 
 describe('ChatStartHero (shared by the launcher and the empty chat)', () => {
-  it('shows the Termul mark and the project question', () => {
-    render(<ChatStartHero projectLabel="termul-new" headingLevel={2} />)
+  it('shows the itzTerm mark and the project question', () => {
+    render(<ChatStartHero projectLabel="itzterm-new" headingLevel={2} />)
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'What should we do in termul-new?'
+      'What should we do in itzterm-new?'
     )
   })
 })
@@ -33,7 +33,7 @@ describe('ChatStarters', () => {
 describe('ChatEmptyState', () => {
   beforeEach(() => {
     useProjectStore.setState({
-      projects: [{ id: 'p1', name: 'termul-new' }] as never
+      projects: [{ id: 'p1', name: 'itzterm-new' }] as never
     })
     useAcpStore.setState((s) => ({
       sessions: { ...s.sessions, 's-1': { id: 's-1', projectId: 'p1' } as never }
@@ -43,7 +43,7 @@ describe('ChatEmptyState', () => {
   it('uses the same hero as the launcher, named for the chat project', () => {
     render(<ChatEmptyState sessionId="s-1" />)
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
-      'What should we do in termul-new?'
+      'What should we do in itzterm-new?'
     )
     // No agent glyph tile and no starter cards: the starters live under the composer.
     expect(screen.queryByRole('group', { name: 'Starters' })).toBeNull()

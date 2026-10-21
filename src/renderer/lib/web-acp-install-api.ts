@@ -7,7 +7,7 @@
  * `IpcResult { success: false, code: 'NETWORK_ERROR' }` so the renderer never
  * sees a thrown exception from the network layer.
  *
- * Route (same-origin under `termul-server`):
+ * Route (same-origin under `itzterm-server`):
  * - `POST /acp/install` — install (body `{ agentId }`).
  *
  * The `IpcBody<T>` shape the HTTP route returns matches the renderer-side

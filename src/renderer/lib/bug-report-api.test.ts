@@ -61,7 +61,7 @@ describe('bugReportApi transport parity', () => {
   it('desktop: submitBugReport invokes submit_bug_report with {title, body}', async () => {
     const submitted = {
       kind: 'submitted',
-      issueUrl: 'https://github.com/gnoviawan/termul/issues/1'
+      issueUrl: 'https://github.com/latiefahmad/itzTerm/issues/1'
     }
     mocks.invokeIpc.mockResolvedValueOnce({ success: true, data: submitted })
 
@@ -136,7 +136,9 @@ describe('buildIssueUrl', () => {
 
     expect(url.length).toBeLessThanOrEqual(ISSUE_URL_MAX_CHARS)
     const parsed = new URL(url)
-    expect(parsed.origin + parsed.pathname).toBe('https://github.com/gnoviawan/termul/issues/new')
+    expect(parsed.origin + parsed.pathname).toBe(
+      'https://github.com/latiefahmad/itzTerm/issues/new'
+    )
     expect(parsed.searchParams.get('title')).toBe('Tiny bug')
     expect(parsed.searchParams.get('body')).toBe(body)
     expect(parsed.searchParams.has('labels')).toBe(false)
@@ -197,7 +199,7 @@ describe('buildIssueMarkdown', () => {
     expect(markdown).toContain('run-1234')
     expect(markdown).toContain('2026-10-19T12:00:00Z')
     expect(markdown).toContain('<details>')
-    expect(markdown).toContain('<summary>termul.log tail</summary>')
+    expect(markdown).toContain('<summary>itzterm.log tail</summary>')
     expect(markdown).toContain('```text')
     expect(markdown).toContain('line one\nline two')
     expect(markdown).toContain('</details>')
@@ -212,7 +214,7 @@ describe('buildIssueMarkdown', () => {
 
   it('marks a truncated tail in the details summary', () => {
     const markdown = buildIssueMarkdown({ ...context, logTruncated: true }, 'T', 'D')
-    expect(markdown).toMatch(/<summary>termul\.log tail \(truncated/)
+    expect(markdown).toMatch(/<summary>itzterm\.log tail \(truncated/)
   })
 
   it('adds the screenshots note only when screenshots exist', () => {
@@ -284,7 +286,7 @@ describe('openBugReportFallback', () => {
     expect(mocks.copyText).toHaveBeenCalledWith(markdown)
     expect(mocks.openUrlWithSystemBrowser).toHaveBeenCalledTimes(1)
     const url = mocks.openUrlWithSystemBrowser.mock.calls[0][0] as string
-    expect(url).toContain('https://github.com/gnoviawan/termul/issues/new?title=')
+    expect(url).toContain('https://github.com/latiefahmad/itzTerm/issues/new?title=')
     expect(url.length).toBeLessThanOrEqual(ISSUE_URL_MAX_CHARS)
     expect(outcome).toEqual({ copied: true, opened: true })
   })

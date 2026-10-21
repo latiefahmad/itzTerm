@@ -153,7 +153,7 @@ fn agent_config_accepts_conforming_payload() {
 fn resolve_executable_in_path_finds_executable_in_later_segment() {
     use std::os::unix::fs::PermissionsExt;
 
-    let base = std::env::temp_dir().join(format!("termul-acp-path-{}", uuid::Uuid::new_v4()));
+    let base = std::env::temp_dir().join(format!("itzterm-acp-path-{}", uuid::Uuid::new_v4()));
     let empty_dir = base.join("empty");
     let bin_dir = base.join("bin");
     std::fs::create_dir_all(&empty_dir).unwrap();
@@ -221,7 +221,7 @@ fn agent_config_builds_stdio_server() {
 #[test]
 fn agent_config_rewrites_windows_cmd_shim_and_orders_args() {
     // Simulate an npm-installed agent that exists only as a `.cmd` shim.
-    let dir = std::env::temp_dir().join("termul-test-acp-cmd-shim");
+    let dir = std::env::temp_dir().join("itzterm-test-acp-cmd-shim");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("node.exe"), b"MZ").unwrap();
@@ -271,7 +271,7 @@ fn agent_config_rewrites_windows_cmd_shim_and_orders_args() {
 #[cfg(unix)]
 #[test]
 fn to_mcp_server_injects_shim_env() {
-    let shim_dir = std::path::PathBuf::from("/tmp/termul-acp-shim/agent-x");
+    let shim_dir = std::path::PathBuf::from("/tmp/itzterm-acp-shim/agent-x");
     let config = AgentConfig {
         config_id: None,
         name: "test-agent".to_string(),
@@ -289,7 +289,7 @@ fn to_mcp_server_injects_shim_env() {
                 .find(|v| v.name == "PATH")
                 .expect("PATH env var present");
             assert!(
-                path.value.starts_with("/tmp/termul-acp-shim/agent-x:"),
+                path.value.starts_with("/tmp/itzterm-acp-shim/agent-x:"),
                 "shim dir must be FIRST on PATH, got: {}",
                 path.value
             );
@@ -298,7 +298,7 @@ fn to_mcp_server_injects_shim_env() {
                 .iter()
                 .find(|v| v.name == "BROWSER")
                 .expect("BROWSER env var present");
-            assert_eq!(browser.value, "/tmp/termul-acp-shim/agent-x/xdg-open");
+            assert_eq!(browser.value, "/tmp/itzterm-acp-shim/agent-x/xdg-open");
         }
         _ => panic!("expected stdio server"),
     }

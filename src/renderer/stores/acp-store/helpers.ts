@@ -601,14 +601,14 @@ export function dropPlanForSession(
 }
 
 /**
- * Parse the LAST ```termul-plan fence out of a markdown text blob. Returns
+ * Parse the LAST ```itzterm-plan fence out of a markdown text blob. Returns
  * the parsed `PlanEntry[]` when the JSON is a valid array, or `null` when
  * there is no fence or the JSON is malformed. Last-fence-wins matches the
  * snapshot contract: each assistant message carries at most one renderer-
  * authored snapshot, and a rehydrate must surface the most recent one.
  */
-export function parseTermulPlanFence(text: string | undefined): PlanEntry[] | null {
-  const json = extractTermulPlanFenceJson(text)
+export function parseItzTermPlanFence(text: string | undefined): PlanEntry[] | null {
+  const json = extractItzTermPlanFenceJson(text)
   if (json === null) return null
   try {
     const parsed = JSON.parse(json)
@@ -630,14 +630,14 @@ export function parseTermulPlanFence(text: string | undefined): PlanEntry[] | nu
 }
 
 /**
- * Extract the raw JSON string from the LAST ```termul-plan fence in the text.
+ * Extract the raw JSON string from the LAST ```itzterm-plan fence in the text.
  * Returns `null` when no fence is present. Used by the rehydrate path to
  * distinguish "no fence" (skip silently) from "malformed fence JSON" (warn).
  */
-export function extractTermulPlanFenceJson(text: string | undefined): string | null {
+export function extractItzTermPlanFenceJson(text: string | undefined): string | null {
   if (typeof text !== 'string' || text.length === 0) return null
   // \r? handles both LF and CRLF line endings (Windows host/agent normalization).
-  const fence = /```termul-plan\r?\n([\s\S]*?)\r?\n```/g
+  const fence = /```itzterm-plan\r?\n([\s\S]*?)\r?\n```/g
   let lastJson: string | null = null
   for (let match = fence.exec(text); match !== null; match = fence.exec(text)) {
     lastJson = match[1]
@@ -646,7 +646,7 @@ export function extractTermulPlanFenceJson(text: string | undefined): string | n
 }
 
 /**
- * Scan assistant messages in reverse for a `termul-plan` fence (last fence
+ * Scan assistant messages in reverse for a `itzterm-plan` fence (last fence
  * wins). Returns the parsed plan, or `null` when no fence is present or the
  * JSON is malformed. Scans ALL assistant messages — if the last message has
  * no fence (e.g. the turn was interrupted before `_onPromptComplete` ran),
@@ -665,8 +665,8 @@ export function scanPlanFenceFromMessages(messages: ChatMessage[]): PlanEntry[] 
       // malformed, treat it as terminal: return null rather than continuing
       // to older fences (last-fence-wins means a malformed newest fence
       // supersedes any older valid plan).
-      if (extractTermulPlanFenceJson(block.text) !== null) {
-        const parsed = parseTermulPlanFence(block.text)
+      if (extractItzTermPlanFenceJson(block.text) !== null) {
+        const parsed = parseItzTermPlanFence(block.text)
         return parsed
       }
     }
@@ -677,19 +677,19 @@ export function scanPlanFenceFromMessages(messages: ChatMessage[]): PlanEntry[] 
 }
 
 /**
- * Check whether a text block IS a termul-plan fence (the entire text is the
+ * Check whether a text block IS a itzterm-plan fence (the entire text is the
  * fence, not just contains one). Used by `appendPlanSnapshot` to decide which
  * blocks to replace — only drop blocks that ARE fences, preserving assistant
  * prose that merely quotes or references the fence format.
  */
-export function isTermulPlanFenceBlock(text: string | undefined): boolean {
+export function isItzTermPlanFenceBlock(text: string | undefined): boolean {
   if (typeof text !== 'string' || text.length === 0) return false
   // Full-string match (anchored): the entire block must be the fence.
-  return /^```termul-plan\r?\n([\s\S]*?)\r?\n```$/.test(text)
+  return /^```itzterm-plan\r?\n([\s\S]*?)\r?\n```$/.test(text)
 }
 
 /**
- * Append a `termul-plan` fence `text` block carrying the live plan to the
+ * Append a `itzterm-plan` fence `text` block carrying the live plan to the
  * last assistant message's `blocks`. The snapshot is a full deterministic
  * replace of any prior snapshot block on the same message (one fence per
  * assistant message, last write wins). Returns the messages map unchanged
@@ -715,17 +715,17 @@ export function appendPlanSnapshot(
   }
   if (lastAgentIdx < 0) return messages
   const target = list[lastAgentIdx]
-  // Replace any prior termul-plan fence block on the same message so the
+  // Replace any prior itzterm-plan fence block on the same message so the
   // snapshot is a full deterministic replace (one fence per assistant message).
   // Only drop blocks that ARE fences (full-string match), preserving assistant
   // prose that merely contains or quotes the fence format.
   const filteredBlocks = target.blocks.filter(
-    (b) => b.type !== 'text' || !isTermulPlanFenceBlock(b.text)
+    (b) => b.type !== 'text' || !isItzTermPlanFenceBlock(b.text)
   )
   // CommonMark requires the opening ``` of a fenced code block to be at the
   // start of a line. `blocksToText` joins text blocks with '', so a preceding
   // prose block that does not end in '\n' would glue the fence opener onto the
-  // prose (e.g. "working on it```termul-plan") and Streamdown would not recognize
+  // prose (e.g. "working on it```itzterm-plan") and Streamdown would not recognize
   // the fence — the snapshot would render as plain text instead of a PlanPanel.
   // `blocksToText` skips non-text blocks, so the block that ends up immediately
   // before the fence in the joined text is the LAST non-empty text block —
@@ -747,7 +747,7 @@ export function appendPlanSnapshot(
   })
   const fenceBlock: ContentBlock = {
     type: 'text',
-    text: `\`\`\`termul-plan\n${JSON.stringify(plan)}\n\`\`\``
+    text: `\`\`\`itzterm-plan\n${JSON.stringify(plan)}\n\`\`\``
   }
   const updatedMessage: ChatMessage = {
     ...target,

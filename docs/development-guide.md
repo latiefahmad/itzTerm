@@ -1,10 +1,10 @@
-# Termul Manager - Development Guide
+# itzTerm - Development Guide
 
 **Date:** 2026-05-09
 
 ## Overview
 
-Termul Manager is developed as a Tauri-first desktop application. Day-to-day development primarily happens in the TypeScript renderer while native desktop runtime concerns live in the Rust `src-tauri/` workspace.
+itzTerm is developed as a Tauri-first desktop application. Day-to-day development primarily happens in the TypeScript renderer while native desktop runtime concerns live in the Rust `src-tauri/` workspace.
 
 ## Prerequisites
 
@@ -93,9 +93,9 @@ bun run build:tauri --no-bundle
 
 To install the desktop binary with cargo, enable the feature the same way: `cargo install --path src-tauri --features custom-protocol`.
 
-A release-profile build that lacks `custom-protocol` fails to compile the desktop binary and prints these fixes: `src-tauri/build.rs` sets a cfg, and a `compile_error!` in the desktop entry point (`src-tauri/src/main.rs`) enforces it. The check reads Tauri's own computed dev state, so it passes whenever `tauri/custom-protocol` is on, however it was enabled. Because the error lives in the desktop entry point, it blocks only the desktop binary, whatever features are on: debug-profile builds, the library, and the `termul-server` binary (`cargo build --release --bin termul-server --features standalone-server`) are never blocked.
+A release-profile build that lacks `custom-protocol` fails to compile the desktop binary and prints these fixes: `src-tauri/build.rs` sets a cfg, and a `compile_error!` in the desktop entry point (`src-tauri/src/main.rs`) enforces it. The check reads Tauri's own computed dev state, so it passes whenever `tauri/custom-protocol` is on, however it was enabled. Because the error lives in the desktop entry point, it blocks only the desktop binary, whatever features are on: debug-profile builds, the library, and the `itzterm-server` binary (`cargo build --release --bin itzterm-server --features standalone-server`) are never blocked.
 
-For `cargo test --release` and `cargo clippy --release`, which compile the desktop entry point but never ship it, set `TERMUL_ALLOW_RELEASE_WITHOUT_CUSTOM_PROTOCOL=1` (or `true`) to skip the check. Never use the override for a command that installs or distributes a binary (`cargo build`, `cargo install`): a binary built under it loads `devUrl`.
+For `cargo test --release` and `cargo clippy --release`, which compile the desktop entry point but never ship it, set `ITZTERM_ALLOW_RELEASE_WITHOUT_CUSTOM_PROTOCOL=1` (or `true`) to skip the check. Never use the override for a command that installs or distributes a binary (`cargo build`, `cargo install`): a binary built under it loads `devUrl`.
 
 ## Quality Checks
 
@@ -120,11 +120,11 @@ bun run test:watch
 
 ### Web end-to-end suite
 
-`tests/e2e` holds Playwright specs that drive a release `termul-server` and the built web client against a fake ACP agent (`tests/e2e/fake-longrun-agent.ts`). The suite starts its own server on `127.0.0.1:8188`, so it needs two builds first:
+`tests/e2e` holds Playwright specs that drive a release `itzterm-server` and the built web client against a fake ACP agent (`tests/e2e/fake-longrun-agent.ts`). The suite starts its own server on `127.0.0.1:8188`, so it needs two builds first:
 
 ```bash
 bun run build:web
-cargo build --release --bin termul-server --features standalone-server   # run in src-tauri
+cargo build --release --bin itzterm-server --features standalone-server   # run in src-tauri
 bun run playwright install chromium
 bun run test:e2e
 ```
@@ -203,13 +203,13 @@ Browser tab work spans:
 
 The app keeps its state in the host store on every surface; the desktop reaches it
 over its Tauri channel connection, and the store file is `store.json` in the app data
-directory (`termul-server`: its state directory). Keys are logical, for example
+directory (`itzterm-server`: its state directory). Keys are logical, for example
 `projects`, `terminals/{projectId}`, `snapshots/{projectId}` and `window-state`; the
 host scopes them per device or shares them (see `docs/api-contracts.md`).
 
-- `termul-data.json` — retired plugin-store file. The host imports it once on the
-  first start after the upgrade and renames it to `termul-data.json.imported-<unix time>`.
-- `termul-sessions.json` — retired plugin-store file of the session auto-save, read only by the
+- `itzterm-data.json` — retired plugin-store file. The host imports it once on the
+  first start after the upgrade and renames it to `itzterm-data.json.imported-<unix time>`.
+- `itzterm-sessions.json` — retired plugin-store file of the session auto-save, read only by the
   one-shot migration into the host store.
 - Small device-local files (what's new, update channel, backup and rollback records) stay in their
   own plugin-store files.
@@ -235,7 +235,7 @@ The file explorer and editor support live file watching through the filesystem A
 - `cargo clippy --all-targets -- -D warnings`
 - frontend Tauri build verification
 
-`.github/workflows/e2e.yml` builds `dist-web/` and a release `termul-server`, then runs the Playwright suite. It runs the ACP lifecycle specs on a pull request that changes ACP, relay, protocol or e2e files, and daily. A manual dispatch takes a `specs` input to run other specs. The job uploads Playwright traces when it fails.
+`.github/workflows/e2e.yml` builds `dist-web/` and a release `itzterm-server`, then runs the Playwright suite. It runs the ACP lifecycle specs on a pull request that changes ACP, relay, protocol or e2e files, and daily. A manual dispatch takes a `specs` input to run other specs. The job uploads Playwright traces when it fails.
 
 ### Releases
 

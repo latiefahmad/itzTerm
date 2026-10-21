@@ -5,7 +5,7 @@
  * Account, through the ACP transport (Tauri `invoke` on desktop, `/ws` on
  * web). Adding, signing in, renaming and removing an Account run a browser
  * login or delete login state on the host, so they are desktop-only; the web
- * client manages Accounts with `termul-server claude account` on the host.
+ * client manages Accounts with `itzterm-server claude account` on the host.
  */
 
 import type {

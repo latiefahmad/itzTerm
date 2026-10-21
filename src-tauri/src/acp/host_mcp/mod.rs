@@ -1,6 +1,6 @@
 //! Host-injected `plan` MCP tool — first-class plan UI for every ACP agent.
 //!
-//! Termul auto-injects a host-side MCP server into every `session/new`
+//! itzTerm auto-injects a host-side MCP server into every `session/new`
 //! `mcp_servers` list (see `AcpManager::new_session_with_context`). The agent
 //! discovers it like any MCP tool and calls it instead of a built-in todo
 //! tool. When called, the host updates a per-session plan cache and emits a
@@ -61,24 +61,24 @@ pub fn is_child_invocation() -> bool {
 }
 
 /// Env vars set on the injected `McpServer::Stdio` (carrying connection info
-/// to the child). Prefixed `TERMUL_PLAN_` to avoid collisions with agent env.
-pub const ENV_PORT: &str = "TERMUL_PLAN_PORT";
-pub const ENV_TOKEN: &str = "TERMUL_PLAN_TOKEN";
-pub const ENV_SESSION_ID: &str = "TERMUL_PLAN_SESSION_ID";
-pub const ENV_AGENT_ID: &str = "TERMUL_PLAN_AGENT_ID";
+/// to the child). Prefixed `ITZTERM_PLAN_` to avoid collisions with agent env.
+pub const ENV_PORT: &str = "ITZTERM_PLAN_PORT";
+pub const ENV_TOKEN: &str = "ITZTERM_PLAN_TOKEN";
+pub const ENV_SESSION_ID: &str = "ITZTERM_PLAN_SESSION_ID";
+pub const ENV_AGENT_ID: &str = "ITZTERM_PLAN_AGENT_ID";
 
 /// Server `instructions` returned in the child's MCP `initialize` result.
-/// Agents that connect the injected `termul` server surface this guidance in
+/// Agents that connect the injected `itzterm` server surface this guidance in
 /// model context, so it doubles as the advertisement for the chat renderer's
 /// markdown affordances: inline images (`![alt](path)`) and file references
-/// that open in Termul's built-in editor (`[label](path)` and bare paths).
+/// that open in itzTerm's built-in editor (`[label](path)` and bare paths).
 /// Keep it static and surface-honest — where a URL form is unreadable the
 /// renderer's existing fallbacks apply (alt chip / plain text).
-pub const TERMUL_CHAT_INSTRUCTIONS: &str = "Termul renders your markdown replies in a rich chat UI. \
+pub const ITZTERM_CHAT_INSTRUCTIONS: &str = "itzTerm renders your markdown replies in a rich chat UI. \
 Embed images inline with `![alt](path)` — https URLs render everywhere; paths relative to the \
 session working directory, absolute paths, and `file://` URLs render in the desktop app and \
 fall back to alt text elsewhere (use this for generated charts, screenshots, diagrams). \
-Reference files as markdown links `[label](path)`: Termul renders them as buttons that open \
+Reference files as markdown links `[label](path)`: itzTerm renders them as buttons that open \
 the file in its built-in editor — absolute and cwd-relative paths inside the session workspace \
 roots work, a `:line` suffix (or `#L<line>` on the link target) positions the cursor, and \
 bare multi-segment file paths in prose become open-in-editor links too.";
@@ -88,7 +88,7 @@ bare multi-segment file paths in prose become open-in-editor links too.";
 #[must_use]
 pub fn session_instructions() -> String {
     format!(
-        "{TERMUL_CHAT_INSTRUCTIONS}\n\n{}",
+        "{ITZTERM_CHAT_INSTRUCTIONS}\n\n{}",
         canvas_tools::instructions()
     )
 }
@@ -96,15 +96,15 @@ pub fn session_instructions() -> String {
 /// Input the agent sends to `plan` (the `arguments` of `tools/call`).
 /// Also re-used as the parent–child TCP frame body (one todo per plan entry).
 #[derive(Debug, Clone, Deserialize, Serialize, schemars::JsonSchema)]
-pub struct TermulPlanInput {
+pub struct ItzTermPlanInput {
     /// The complete list of plan entries — each update is a FULL REPLACE
     /// (matches the ACP `plan_update` semantics the renderer already enforces).
-    pub todos: Vec<TermulPlanTodo>,
+    pub todos: Vec<ItzTermPlanTodo>,
 }
 
 /// Input the agent sends to `set_session_title`.
 #[derive(Debug, Clone, Deserialize, Serialize, schemars::JsonSchema)]
-pub struct TermulSetTitleInput {
+pub struct ItzTermSetTitleInput {
     /// Concise title for the current chat session.
     pub title: String,
     /// Optional short kebab-case slug naming this chat's git branch (for
@@ -117,7 +117,7 @@ pub struct TermulSetTitleInput {
 /// One todo item. `status`/`priority` are optional strings (the agent may omit
 /// them); the host maps unknown/absent values to ACP defaults.
 #[derive(Debug, Clone, Deserialize, Serialize, schemars::JsonSchema)]
-pub struct TermulPlanTodo {
+pub struct ItzTermPlanTodo {
     /// Human-readable description of the task.
     pub content: String,
     /// Optional status: `"pending"` | `"in_progress"` | `"completed"`.
@@ -155,7 +155,7 @@ pub enum FrameKind {
 
 /// One option the agent offers in an `ask_user` question.
 #[derive(Debug, Clone, Deserialize, Serialize, schemars::JsonSchema)]
-pub struct TermulAskUserOption {
+pub struct ItzTermAskUserOption {
     /// Text shown on the choice and returned in `answers` when picked.
     pub label: String,
     /// Optional context shown under the label.
@@ -166,12 +166,12 @@ pub struct TermulAskUserOption {
 /// Input the agent sends to `ask_user`. The answer returns as the tool result
 /// `{"answers": [...], "free_text": "..." | null, "cancelled": bool}`.
 #[derive(Debug, Clone, Deserialize, Serialize, schemars::JsonSchema)]
-pub struct TermulAskUserInput {
+pub struct ItzTermAskUserInput {
     /// The question to put to the user.
     pub question: String,
     /// Choices the user can pick from. May be empty when only free text fits.
     #[serde(default)]
-    pub options: Vec<TermulAskUserOption>,
+    pub options: Vec<ItzTermAskUserOption>,
     /// Allow more than one option to be picked.
     #[serde(default)]
     pub multi_select: bool,
@@ -200,7 +200,7 @@ fn default_allow_free_text() -> bool {
 /// context); one nested under `args` is hoisted to it when the top-level
 /// field is absent.
 #[derive(Debug, Clone, Serialize, schemars::JsonSchema)]
-pub struct TermulBrowserInput {
+pub struct ItzTermBrowserInput {
     /// Action verb: navigate | snapshot | screenshot | click | fill | type |
     /// press | scroll | hover | wait | new_tab | list_tabs | close_tab |
     /// back | forward | reload.
@@ -250,7 +250,7 @@ fn non_object_args_error(action: &str, expected: &str, kind: &str) -> String {
     format!("invalid_params: 'args' must be a JSON object, not {kind} — {action} needs {expected}")
 }
 
-impl<'de> Deserialize<'de> for TermulBrowserInput {
+impl<'de> Deserialize<'de> for ItzTermBrowserInput {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,
@@ -347,7 +347,7 @@ impl<'de> Deserialize<'de> for TermulBrowserInput {
         } else {
             serde_json::Value::Object(args)
         };
-        Ok(TermulBrowserInput {
+        Ok(ItzTermBrowserInput {
             action,
             args,
             element,
@@ -366,7 +366,7 @@ pub struct FrameRequest {
     #[serde(default)]
     pub kind: FrameKind,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub todos: Vec<TermulPlanTodo>,
+    pub todos: Vec<ItzTermPlanTodo>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     /// Branch slug from `set_session_title` (story 16). Only meaningful on a
@@ -381,7 +381,7 @@ pub struct FrameRequest {
     pub browser_element: Option<String>,
     /// The question of an `AskUser` frame.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub ask: Option<TermulAskUserInput>,
+    pub ask: Option<ItzTermAskUserInput>,
     /// figcraft method of a `Canvas` frame (`engine.execute`, `node.get`, …).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub canvas_method: Option<String>,
@@ -452,7 +452,7 @@ impl FrameReply {
 /// Unknown `status`/`priority` strings fall back to `Pending`/`Low` (the ACP
 /// enums are `#[non_exhaustive]`; only the three named variants are produced).
 #[must_use]
-pub fn map_todos_to_plan_entries(todos: &[TermulPlanTodo]) -> Vec<PlanEntry> {
+pub fn map_todos_to_plan_entries(todos: &[ItzTermPlanTodo]) -> Vec<PlanEntry> {
     todos
         .iter()
         .map(|todo| {
@@ -520,7 +520,7 @@ impl PlanStore {
 /// = clear contract: passing `entries: vec![]` emits a `Plan` with an empty
 /// list, which the renderer's `_onPlanUpdate` maps to `dropPlanForSession`.
 ///
-/// `agent_id` is the Termul-side `AgentId` (used for the wire event payload);
+/// `agent_id` is the itzTerm-side `AgentId` (used for the wire event payload);
 /// the renderer keys plan state by `session_id`.
 pub fn emit_plan_update(
     sinks: &[Arc<dyn EventSink>],

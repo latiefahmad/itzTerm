@@ -62,7 +62,7 @@ export interface ChatHistoryEntries {
 
 /**
  * The chat history derivation shared by the desktop `ChatHistoryTab` and the
- * mobile Recents list: ADR 0002 scoping, Termul-created sessions only, query
+ * mobile Recents list: ADR 0002 scoping, itzTerm-created sessions only, query
  * filter, newest-first sort, the settled-count announcement, the lazy window
  * with its sentinel observer, recency groups, and the open/delete actions.
  */
@@ -121,8 +121,8 @@ export function useChatHistoryEntries({
     [sessionIndex, activeProjectId, activeCwd, worktreePaths, unassignedIds]
   )
 
-  // Termul-created sessions only. The host-owned `discovered` flag is `false`
-  // for sessions Termul created (`register_session`) and `true` for external
+  // itzTerm-created sessions only. The host-owned `discovered` flag is `false`
+  // for sessions itzTerm created (`register_session`) and `true` for external
   // `session/list` mirrors — filter hides CLI/other-client chats.
   const mergedEntries = useMemo(() => {
     const entries: ChatHistorySidebarEntry[] = scopedIndex

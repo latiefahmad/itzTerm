@@ -2,7 +2,7 @@ import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { AlertCircle, Columns3, Search, Square } from './index'
 
-describe('Termul functional icons', () => {
+describe('itzTerm functional icons', () => {
   it('inherits the UI color and accepts size and stroke overrides', () => {
     const { container } = render(
       <>
@@ -26,7 +26,7 @@ describe('Termul functional icons', () => {
     const { container } = render(<Square size={10} fill="currentColor" strokeWidth={0} />)
     const square = container.querySelector('svg')
 
-    expect(square).toHaveAttribute('data-termul-icon', 'Square')
+    expect(square).toHaveAttribute('data-itzterm-icon', 'Square')
     expect(square).toHaveAttribute('width', '10')
     expect(square).toHaveAttribute('fill', 'currentColor')
     expect(square).toHaveAttribute('stroke-width', '0')
@@ -37,7 +37,7 @@ describe('Termul functional icons', () => {
     const { container } = render(<Columns3 size={16} />)
     const icon = container.querySelector('svg')
 
-    expect(icon).toHaveAttribute('data-termul-icon', 'Columns3')
+    expect(icon).toHaveAttribute('data-itzterm-icon', 'Columns3')
     expect(icon).toHaveAttribute('width', '16')
   })
 })

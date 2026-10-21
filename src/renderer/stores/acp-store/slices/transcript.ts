@@ -214,7 +214,7 @@ function sealPendingTextDeltas(): void {
 const MAX_LIVE_RAW_OUTPUT_CHARS = 32 * 1024
 
 /** Suffix appended to a clamped `rawOutput` (no content follows it). */
-const RAW_OUTPUT_TRUNCATION_MARKER = '\n[termul: tool output truncated]'
+const RAW_OUTPUT_TRUNCATION_MARKER = '\n[itzterm: tool output truncated]'
 
 /**
  * Tool-call ids whose oversized fields were already clamp-logged (CAP-2/F-2).
@@ -345,12 +345,12 @@ const MAX_LIVE_TOOL_CALL_TITLE_CHARS = 1024
 const MAX_LIVE_TOOL_CALL_LOCATIONS = 32
 
 /** Marker text appended to a clamped diff/text leaf. */
-const FIELD_TRUNCATION_MARKER = '\n[termul: tool call content truncated]'
+const FIELD_TRUNCATION_MARKER = '\n[itzterm: tool call content truncated]'
 
 /** Marker substituted for a non-text/unknown content item over the field bound. */
 const OMITTED_CONTENT_ITEM: ToolCallContent = {
   type: 'content',
-  content: { type: 'text', text: '[termul: oversized tool call content item omitted]' }
+  content: { type: 'text', text: '[itzterm: oversized tool call content item omitted]' }
 }
 
 function clampLiveFieldText(text: string): string {
@@ -380,7 +380,7 @@ function boundTerminalStream(stream: TerminalStreamFields): TerminalStreamFields
 function clampLiveContentBlock(block: ContentBlock): ContentBlock {
   if (block?.type === 'text') return block
   if (serializedLength(block) <= MAX_LIVE_TOOL_CALL_FIELD_CHARS) return block
-  return { type: 'text', text: '[termul: oversized content block omitted]' }
+  return { type: 'text', text: '[itzterm: oversized content block omitted]' }
 }
 
 /**

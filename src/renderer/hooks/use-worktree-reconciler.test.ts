@@ -13,8 +13,8 @@ const mocks = vi.hoisted(() => ({
     isGitRepo: true as boolean,
     symlinkDirs: undefined as string[] | undefined,
     worktrees: [
-      { id: 'wt-1', name: 'a', branch: 'a', path: '/test/project/.termul/worktrees/a' },
-      { id: 'wt-2', name: 'b', branch: 'b', path: '/test/project/.termul/worktrees/b' }
+      { id: 'wt-1', name: 'a', branch: 'a', path: '/test/project/.itzterm/worktrees/a' },
+      { id: 'wt-2', name: 'b', branch: 'b', path: '/test/project/.itzterm/worktrees/b' }
     ]
   }
 }))
@@ -86,12 +86,12 @@ describe('useWorktreeReconciler', () => {
     expect(mocks.ensureSymlinks).toHaveBeenCalledTimes(2)
     expect(mocks.ensureSymlinks).toHaveBeenCalledWith(
       '/test/project',
-      '/test/project/.termul/worktrees/a',
+      '/test/project/.itzterm/worktrees/a',
       ['node_modules']
     )
     expect(mocks.ensureSymlinks).toHaveBeenCalledWith(
       '/test/project',
-      '/test/project/.termul/worktrees/b',
+      '/test/project/.itzterm/worktrees/b',
       ['node_modules']
     )
   })

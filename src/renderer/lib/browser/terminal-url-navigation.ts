@@ -20,7 +20,7 @@ export async function openTerminalUrlInDedicatedBrowser(url: string): Promise<vo
 export async function openTerminalUrl(url: string): Promise<void> {
   const { terminalUrlOpenMode } = useAppSettingsStore.getState().settings
 
-  if (terminalUrlOpenMode === 'termul') {
+  if (terminalUrlOpenMode === 'itzterm') {
     await openTerminalUrlInDedicatedBrowser(url)
     return
   }

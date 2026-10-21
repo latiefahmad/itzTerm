@@ -221,7 +221,7 @@ async fn legacy_initialize_still_lists_tools() {
 
 /// The `initialize` result must carry `instructions` advertising the chat
 /// renderer's markdown affordances and the design canvas: this is the channel
-/// that tells agents images embed inline, file links open in Termul's editor,
+/// that tells agents images embed inline, file links open in itzTerm's editor,
 /// and the canvas tools draw on the project's canvas.
 #[tokio::test]
 async fn initialize_advertises_the_chat_and_canvas_instructions() {
@@ -246,7 +246,7 @@ async fn initialize_advertises_the_chat_and_canvas_instructions() {
             .as_str()
             .unwrap_or_default();
         assert!(
-            instructions.starts_with(crate::acp::host_mcp::TERMUL_CHAT_INSTRUCTIONS),
+            instructions.starts_with(crate::acp::host_mcp::ITZTERM_CHAT_INSTRUCTIONS),
             "{instructions}"
         );
         for needle in [
@@ -256,7 +256,7 @@ async fn initialize_advertises_the_chat_and_canvas_instructions() {
             "Do not create or edit .figcraft, .pen or .op files",
             "do not look for other design tools",
             "CANVAS_CLOSED",
-            "Canvas button in Termul's left rail",
+            "Canvas button in itzTerm's left rail",
         ] {
             assert!(instructions.contains(needle), "missing {needle:?}");
         }
@@ -566,13 +566,13 @@ async fn tools_list_carries_figcraft_tools_by_name_with_the_canvas_tag() {
             .expect("export is listed");
         assert_eq!(
             export["annotations"]["readOnlyHint"], false,
-            "Termul's export writes files"
+            "itzTerm's export writes files"
         );
         assert_eq!(export["annotations"]["destructiveHint"], true);
         let description = export["description"].as_str().unwrap_or_default();
         assert!(
             !description.contains("absolute path"),
-            "Termul refuses absolute paths: {description}"
+            "itzTerm refuses absolute paths: {description}"
         );
         assert!(
             description.contains("relative to the project"),

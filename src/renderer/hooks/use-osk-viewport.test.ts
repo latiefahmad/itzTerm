@@ -218,7 +218,7 @@ describe('useOskViewport', () => {
     expect(result.current.offsetTop).toBe(0)
   })
 
-  it('detects iOS scroll OSK and mirrors --termul-keyboard-height to documentElement', async () => {
+  it('detects iOS scroll OSK and mirrors --itzterm-keyboard-height to documentElement', async () => {
     // iOS: the layout viewport (innerHeight) does NOT shrink when the OSK
     // opens — only the visual viewport does. Align the stub's starting height
     // with innerHeight so the keyboardHeight assertions are exact (jsdom's
@@ -241,7 +241,7 @@ describe('useOskViewport', () => {
     expect(result.current.height).toBe(layoutViewportHeight - 300)
     expect(result.current.offsetTop).toBe(300)
 
-    const cssVar = document.documentElement.style.getPropertyValue('--termul-keyboard-height')
+    const cssVar = document.documentElement.style.getPropertyValue('--itzterm-keyboard-height')
     expect(cssVar).toBe('300px')
   })
 
@@ -288,7 +288,7 @@ describe('useOskViewport', () => {
     expect(result.current.keyboardHeight).toBe(0)
     expect(result.current.isOskOpen).toBe(false)
     expect(result.current.offsetTop).toBe(0)
-    const cssVar = document.documentElement.style.getPropertyValue('--termul-keyboard-height')
+    const cssVar = document.documentElement.style.getPropertyValue('--itzterm-keyboard-height')
     expect(cssVar).toBe('0px')
 
     // Keyboard closes: both viewports restore together; still no spacer.
@@ -344,7 +344,7 @@ describe('useOskViewport', () => {
     expect(rafCalls).toBeLessThan(5)
   })
 
-  it('restores --termul-keyboard-height to 0px when OSK closes', async () => {
+  it('restores --itzterm-keyboard-height to 0px when OSK closes', async () => {
     const layoutViewportHeight = window.innerHeight
     const vv = installVisualViewport({ height: layoutViewportHeight, offsetTop: 0 })
     const { result } = renderHook(() => useOskViewport())
@@ -354,7 +354,7 @@ describe('useOskViewport', () => {
       vv.fireResize()
     })
     await waitFor(() =>
-      expect(document.documentElement.style.getPropertyValue('--termul-keyboard-height')).toBe(
+      expect(document.documentElement.style.getPropertyValue('--itzterm-keyboard-height')).toBe(
         '300px'
       )
     )
@@ -364,6 +364,6 @@ describe('useOskViewport', () => {
       vv.fireResize()
     })
     await waitFor(() => expect(result.current.isOskOpen).toBe(false))
-    expect(document.documentElement.style.getPropertyValue('--termul-keyboard-height')).toBe('0px')
+    expect(document.documentElement.style.getPropertyValue('--itzterm-keyboard-height')).toBe('0px')
   })
 })

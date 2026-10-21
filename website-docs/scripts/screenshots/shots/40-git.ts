@@ -8,7 +8,7 @@ import { openApp } from '../ui'
 
 const shop = join(DEMO_WORKSPACE_ROOT, 'acme-shop')
 const remote = join(DEMO_WORKSPACE_ROOT, '.remotes', 'acme-shop.git')
-const worktrees = join(shop, '.termul', 'worktrees')
+const worktrees = join(shop, '.itzterm', 'worktrees')
 
 function git(cmd: string, cwd = shop): string {
   return execSync(`git -c user.email=dev@acme.test -c user.name="Acme Dev" ${cmd}`, {
@@ -27,7 +27,7 @@ function commitFile(cwd: string, file: string, body: string, message: string): v
 // The demo workspace is rebuilt for every capture run, so this runs once.
 function ensureFixtures(): void {
   if (existsSync(remote)) return
-  appendFileSync(join(shop, '.git', 'info', 'exclude'), '.termul/\n')
+  appendFileSync(join(shop, '.git', 'info', 'exclude'), '.itzterm/\n')
   git('tag v0.1.0 HEAD~1')
 
   const timeout = join(worktrees, 'checkout-timeout')

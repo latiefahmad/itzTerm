@@ -18,7 +18,7 @@ fn temp_dir(label: &str) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let path = std::env::temp_dir().join(format!("termul-log-integrity-{label}-{nanos}"));
+    let path = std::env::temp_dir().join(format!("itzterm-log-integrity-{label}-{nanos}"));
     std::fs::create_dir_all(&path).unwrap();
     path
 }

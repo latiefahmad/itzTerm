@@ -94,7 +94,7 @@ pub async fn bound(request: Request, next: Next) -> Response {
                 class
             };
             tracing::warn!(
-                target: "termul::web::route_deadline",
+                target: "itzterm::web::route_deadline",
                 path = %redact_canvas_path(&path),
                 class = ?class,
                 deadline_secs = class.deadline().as_secs(),

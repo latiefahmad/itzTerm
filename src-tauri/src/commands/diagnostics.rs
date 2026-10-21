@@ -16,7 +16,7 @@ use super::IpcResult;
 use crate::diagnostics::{BugReportContext, BugReportSubmitResult};
 
 /// `collect_bug_report_context` — resolve the app's active log file
-/// (`<app_log_dir>/termul.log`) and return the bounded, redacted diagnostics
+/// (`<app_log_dir>/itzterm.log`) and return the bounded, redacted diagnostics
 /// bundle. Never fails at the service level: a missing or unreadable log
 /// arrives as `logAvailable: false` with an empty tail. The file read runs
 /// on the blocking pool, off the async runtime.

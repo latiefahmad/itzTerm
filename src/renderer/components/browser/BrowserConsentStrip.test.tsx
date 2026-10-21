@@ -396,16 +396,16 @@ describe('BrowserPanel agent border', () => {
     useBrowserSessionStore.getState().createTab(TAB_ID, 'https://example.com')
     const { container, rerender } = render(<BrowserPanel browserTabId={TAB_ID} isVisible />)
     const root = container.firstElementChild as HTMLElement
-    expect(root.className).not.toContain('termul-agent-border')
+    expect(root.className).not.toContain('itzterm-agent-border')
 
     useBrowserSessionStore.getState().setAgentControlled(TAB_ID, true)
     rerender(<BrowserPanel browserTabId={TAB_ID} isVisible />)
-    expect(root.className).toContain('termul-agent-border')
+    expect(root.className).toContain('itzterm-agent-border')
     expect(root.className).toContain('p-0.5')
 
     useBrowserSessionStore.getState().setAgentControlled(TAB_ID, false)
     rerender(<BrowserPanel browserTabId={TAB_ID} isVisible />)
-    expect(root.className).not.toContain('termul-agent-border')
+    expect(root.className).not.toContain('itzterm-agent-border')
   })
 })
 
@@ -413,14 +413,14 @@ describe('agent border CSS', () => {
   const css = readFileSync(join(__dirname, '../../index.css'), 'utf8')
 
   it('defines the animated gradient ring', () => {
-    expect(css).toContain('.termul-agent-border')
-    expect(css).toContain('@keyframes termul-agent-border-pan')
-    expect(css).toMatch(/\.termul-agent-border \{[^}]*animation: termul-agent-border-pan/)
+    expect(css).toContain('.itzterm-agent-border')
+    expect(css).toContain('@keyframes itzterm-agent-border-pan')
+    expect(css).toMatch(/\.itzterm-agent-border \{[^}]*animation: itzterm-agent-border-pan/)
   })
 
   it('disables the animation under prefers-reduced-motion', () => {
     expect(css).toMatch(
-      /@media \(prefers-reduced-motion: reduce\) \{\s*\.termul-agent-border \{\s*animation: none;?\s*}\s*}/
+      /@media \(prefers-reduced-motion: reduce\) \{\s*\.itzterm-agent-border \{\s*animation: none;?\s*}\s*}/
     )
   })
 })

@@ -212,7 +212,7 @@ export function ProviderSettings(): React.JSX.Element {
               Keep work and personal apart
             </span>
             <span className="text-2xs leading-relaxed text-muted-foreground">
-              Add another Claude account and choose it per project. When one hits its limit, Termul
+              Add another Claude account and choose it per project. When one hits its limit, itzTerm
               can offer to switch.
             </span>
           </div>
@@ -235,7 +235,7 @@ export function ProviderSettings(): React.JSX.Element {
               <Monitor size={12} className="shrink-0" />
               To add or sign in to an account, use the desktop app, or run
               <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-3xs text-secondary-foreground">
-                termul-server claude account
+                itzterm-server claude account
               </code>
               on the host.
             </>

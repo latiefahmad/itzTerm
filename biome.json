@@ -14,7 +14,7 @@
       "!**/node_modules",
       "!**/landing",
       "!**/src-tauri",
-      "!**/.termul",
+      "!**/.itzterm",
       "!**/.worktrees",
       "!**/_bmad",
       "!**/_bmad-output",

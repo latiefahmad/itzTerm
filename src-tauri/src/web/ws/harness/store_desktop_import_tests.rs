@@ -20,7 +20,7 @@ struct Fixture {
 impl Fixture {
     fn new(label: &str) -> Self {
         let dir = std::env::temp_dir().join(format!(
-            "termul-harness-desktop-import-{label}-{}-{}",
+            "itzterm-harness-desktop-import-{label}-{}-{}",
             std::process::id(),
             uuid::Uuid::new_v4()
         ));

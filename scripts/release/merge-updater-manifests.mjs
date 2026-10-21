@@ -17,7 +17,7 @@ export const requiredPlatformKeys = [
   'darwin-aarch64-app',
   'darwin-x86_64',
   'darwin-x86_64-app',
-  // Standalone `termul-server` binaries (linux x64 and arm64). Each channel's
+  // Standalone `itzterm-server` binaries (linux x64 and arm64). Each channel's
   // manifest covers both the desktop targets and both server targets so a
   // single manifest drives both updaters.
   'linux-x86_64-server',
@@ -49,7 +49,7 @@ function releaseUrlAssetName(url, tag, description) {
   } catch {
     throw new Error(`${description} must be a valid URL`)
   }
-  const expectedPrefix = `/gnoviawan/termul/releases/download/${encodeURIComponent(tag)}/`
+  const expectedPrefix = `/latiefahmad/itzTerm/releases/download/${encodeURIComponent(tag)}/`
   if (
     parsed.protocol !== 'https:' ||
     parsed.hostname !== 'github.com' ||

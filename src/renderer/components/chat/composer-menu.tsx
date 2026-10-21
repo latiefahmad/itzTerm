@@ -8,7 +8,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { Check, type TermulIcon } from '@/components/icons'
+import { Check, type ItzTermIcon } from '@/components/icons'
 import {
   MENU_ACTIVE_ROW_CLASS,
   MENU_LABEL_CLASS,
@@ -22,7 +22,7 @@ export interface ComposerMenuItem {
   label: string
   hint?: string | null
   description?: string | null
-  icon?: TermulIcon
+  icon?: ItzTermIcon
   /** Override the default muted icon color (e.g. skill rows use `text-primary`
    * to match the accent `SkillChip`). Resolved via `cn`, so later classes win. */
   iconClassName?: string

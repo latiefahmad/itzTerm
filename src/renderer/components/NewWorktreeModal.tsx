@@ -170,7 +170,7 @@ export function NewWorktreeModal({ isOpen, onClose, projectId }: NewWorktreeModa
     if (!worktreeName.trim()) return 'Name is required'
 
     // Check for path length (Windows MAX_PATH = 260)
-    const targetPath = `${projectPath}/.termul/worktrees/${worktreeName}/`
+    const targetPath = `${projectPath}/.itzterm/worktrees/${worktreeName}/`
     if (targetPath.length > 240) return 'Path too long'
 
     return null
@@ -362,7 +362,7 @@ export function NewWorktreeModal({ isOpen, onClose, projectId }: NewWorktreeModa
 
   // Path preview
   const pathPreview = projectPath
-    ? `${projectPath}/.termul/worktrees/${worktreeName || '<name>'}/`
+    ? `${projectPath}/.itzterm/worktrees/${worktreeName || '<name>'}/`
     : '<select a project>'
 
   if (!project) return null

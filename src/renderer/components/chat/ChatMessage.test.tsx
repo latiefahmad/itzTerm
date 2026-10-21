@@ -78,8 +78,8 @@ vi.mock('streamdown', async () => {
     const url = 'https://example.com/docs'
     const markdown = typeof children === 'string' ? children : ''
     const CustomTable = components?.table as React.ElementType | undefined
-    const CustomFilePath = components?.['termul-file-path'] as React.ElementType | undefined
-    const CustomImage = components?.['termul-image'] as React.ElementType | undefined
+    const CustomFilePath = components?.['itzterm-file-path'] as React.ElementType | undefined
+    const CustomImage = components?.['itzterm-image'] as React.ElementType | undefined
     const semanticFixture = markdown.startsWith('# Compact heading')
     const animatedConfig = animated === false || animated === true ? undefined : animated
     const animatedName =
@@ -298,7 +298,7 @@ describe('ChatMessage', () => {
     expect(screen.getByTestId('streamdown')).toHaveAttribute('data-mode', 'static')
   })
 
-  it('wires the termul-plan renderer only for non-streaming (historical) messages', () => {
+  it('wires the itzterm-plan renderer only for non-streaming (historical) messages', () => {
     // Streaming message: the sticky PlanPanel covers the live turn; the
     // inline renderer is deliberately absent so no duplicate plan UI shows.
     const { unmount: unmountStreaming } = render(
@@ -307,12 +307,12 @@ describe('ChatMessage', () => {
     expect(screen.getByTestId('streamdown')).toHaveAttribute('data-renderer-languages', '')
     unmountStreaming()
 
-    // Historical message: the termul-plan renderer is attached so a
+    // Historical message: the itzterm-plan renderer is attached so a
     // persisted snapshot fence renders an inline read-only PlanPanel.
     render(<ChatMessage message={agentMessage(false)} isLast />)
     expect(screen.getByTestId('streamdown')).toHaveAttribute(
       'data-renderer-languages',
-      'termul-plan'
+      'itzterm-plan'
     )
   })
 
@@ -335,15 +335,15 @@ describe('ChatMessage', () => {
     expect(container.querySelector('.animate-caret-blink')).toBeInTheDocument()
   })
 
-  it('forwards termul allowedTags, remark plugins, and component overrides to Streamdown', () => {
+  it('forwards itzterm allowedTags, remark plugins, and component overrides to Streamdown', () => {
     const { unmount } = render(<ChatMessage message={agentMessage(false)} isLast />)
     const bare = screen.getByTestId('streamdown')
     // Sanitizer-safe custom tags (hast property names) reach Streamdown.
     expect(bare).toHaveAttribute(
       'data-allowed-tags',
       JSON.stringify({
-        'termul-file-path': ['dataPath'],
-        'termul-image': ['dataUrl', 'dataAlt']
+        'itzterm-file-path': ['dataPath'],
+        'itzterm-image': ['dataUrl', 'dataAlt']
       })
     )
     // The image rewrite is always on; the file-path plugin waits for a context.
@@ -368,7 +368,7 @@ describe('ChatMessage', () => {
     }
     const { container } = render(<ChatMessage message={message} isLast />)
 
-    expect(screen.getByTestId('termul-image-alt')).toHaveTextContent('chart')
+    expect(screen.getByTestId('itzterm-image-alt')).toHaveTextContent('chart')
     expect(container.querySelector('img')).toBeNull()
   })
 
@@ -432,7 +432,7 @@ describe('ChatMessage', () => {
     )
 
     expect(container.querySelector('img')).toBeNull()
-    expect(container.querySelector('svg[data-termul-icon="ImageIcon"]')).not.toBeNull()
+    expect(container.querySelector('svg[data-itzterm-icon="ImageIcon"]')).not.toBeNull()
   })
 
   describe('user message with inline skill chips', () => {
@@ -458,7 +458,7 @@ describe('ChatMessage', () => {
       // the chip-specific marker.
       expect(screen.getByText('git-worktree')).toBeInTheDocument()
       expect(screen.getByText('release-version')).toBeInTheDocument()
-      expect(container.querySelector('svg[data-termul-icon="Sparkles"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="Sparkles"]')).not.toBeNull()
       // The plain text segments render too (regex tolerates the surrounding
       // whitespace the segment carries next to the chips).
       expect(screen.getByText(/use this/)).toBeInTheDocument()
@@ -491,8 +491,8 @@ describe('ChatMessage', () => {
         </TooltipProvider>
       )
       expect(screen.getByText('src/renderer/components/')).toBeInTheDocument()
-      expect(container.querySelector('svg[data-termul-icon="Folder"]')).not.toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="File"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="Folder"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="File"]')).toBeNull()
     })
 
     it('renders plain user text verbatim (no chip parsing) when there are no tokens', () => {
@@ -503,7 +503,7 @@ describe('ChatMessage', () => {
       )
       expect(screen.getByText('just plain text')).toBeInTheDocument()
       // No chip rendered: the chip's Sparkles icon is absent.
-      expect(container.querySelector('svg[data-termul-icon="Sparkles"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="Sparkles"]')).toBeNull()
     })
   })
 
@@ -528,7 +528,7 @@ describe('ChatMessage', () => {
       // The file chip name renders as a visible inline pill; the File icon is
       // the chip-specific marker.
       expect(screen.getByText('auth.ts')).toBeInTheDocument()
-      expect(container.querySelector('svg[data-termul-icon="File"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="File"]')).not.toBeNull()
       // The plain text segments render too.
       expect(screen.getByText(/fix this/)).toBeInTheDocument()
       expect(screen.getByText(/bug/)).toBeInTheDocument()
@@ -542,7 +542,7 @@ describe('ChatMessage', () => {
       )
       expect(screen.getByText('just plain text')).toBeInTheDocument()
       // No file chip rendered: the File icon is absent.
-      expect(container.querySelector('svg[data-termul-icon="File"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="File"]')).toBeNull()
     })
 
     it('renders file + skill chips together (both inline, visually distinct)', () => {
@@ -555,8 +555,8 @@ describe('ChatMessage', () => {
       expect(screen.getByText('git-worktree')).toBeInTheDocument()
       expect(screen.getByText('auth.ts')).toBeInTheDocument()
       // Both icons present — skill (Sparkles) + file (File).
-      expect(container.querySelector('svg[data-termul-icon="Sparkles"]')).not.toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="File"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="Sparkles"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="File"]')).not.toBeNull()
     })
 
     it('renders the file chip as muted colored text with no background or border', () => {
@@ -597,8 +597,8 @@ describe('ChatMessage', () => {
 
       // The command token renders as a CommandChip (`/name`, terminal icon).
       expect(screen.getByText('/compact')).toBeInTheDocument()
-      expect(container.querySelector('svg[data-termul-icon="TerminalSquare"]')).not.toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="Sparkles"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="TerminalSquare"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="Sparkles"]')).toBeNull()
       expect(screen.getByText(/please summarize/)).toBeInTheDocument()
     })
 
@@ -612,9 +612,9 @@ describe('ChatMessage', () => {
       expect(screen.getByText('/compact')).toBeInTheDocument()
       expect(screen.getByText('git-worktree')).toBeInTheDocument()
       expect(screen.getByText('auth.ts')).toBeInTheDocument()
-      expect(container.querySelector('svg[data-termul-icon="TerminalSquare"]')).not.toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="Sparkles"]')).not.toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="File"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="TerminalSquare"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="Sparkles"]')).not.toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="File"]')).not.toBeNull()
     })
 
     it('renders the command chip as muted text with a terminal icon', () => {
@@ -642,9 +642,9 @@ describe('ChatMessage', () => {
       )
       // No crash; no chip rendered (no skill, command, or file icon, no
       // `/compact` chip text).
-      expect(container.querySelector('svg[data-termul-icon="Sparkles"]')).toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="TerminalSquare"]')).toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="File"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="Sparkles"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="TerminalSquare"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="File"]')).toBeNull()
       expect(screen.queryByText('/compact')).toBeNull()
       // The malformed sentinel stays inside a plain text span (raw render).
       expect(screen.getByText(/broken/).textContent).toBe(text)
@@ -658,9 +658,9 @@ describe('ChatMessage', () => {
         </TooltipProvider>
       )
       // No chip rendered; the sentinel pair stays inside a plain text span.
-      expect(container.querySelector('svg[data-termul-icon="Sparkles"]')).toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="TerminalSquare"]')).toBeNull()
-      expect(container.querySelector('svg[data-termul-icon="File"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="Sparkles"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="TerminalSquare"]')).toBeNull()
+      expect(container.querySelector('svg[data-itzterm-icon="File"]')).toBeNull()
       expect(screen.getByText(/x /).textContent).toBe(text)
     })
 

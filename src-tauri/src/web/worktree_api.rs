@@ -250,7 +250,7 @@ pub async fn create(
         Err(resp) => return resp.into_response(),
     };
     // If a custom target_path was provided, boundary-check it too (the default
-    // is `<project>/.termul/worktrees/<name>/` which is inside the boundary).
+    // is `<project>/.itzterm/worktrees/<name>/` which is inside the boundary).
     let target_path = match req.target_path.as_deref() {
         Some(tp) => match resolve_project_path::<GitWorktreeEntry>(tp, &state, Some(peer), true) {
             Ok(p) => match path_string::<GitWorktreeEntry>(&p) {

@@ -51,8 +51,8 @@ function seedProject(fields: Record<string, unknown> = {}): void {
 const localSession = { projectId: 'p1', cwd: '/work' }
 const worktreeSession = {
   projectId: 'p1',
-  cwd: '/work/.termul/worktrees/abcd1234',
-  worktreePath: '/work/.termul/worktrees/abcd1234',
+  cwd: '/work/.itzterm/worktrees/abcd1234',
+  worktreePath: '/work/.itzterm/worktrees/abcd1234',
   worktreeBranch: 'chat/abcd1234'
 }
 
@@ -105,7 +105,7 @@ describe('ChatContextStrip', () => {
           id: 'w1',
           name: 'abcd1234',
           branch: 'feat/renamed',
-          path: '/work/.termul/worktrees/abcd1234',
+          path: '/work/.itzterm/worktrees/abcd1234',
           createdAt: '2026-01-01T00:00:00.000Z'
         }
       ]
@@ -147,7 +147,7 @@ describe('ChatContextStrip', () => {
             id: 'w1',
             name: 'abcd1234',
             branch: 'dev-listed',
-            path: '/work/.termul/worktrees/abcd1234',
+            path: '/work/.itzterm/worktrees/abcd1234',
             createdAt: '2026-01-01T00:00:00.000Z'
           }
         ]
@@ -171,8 +171,8 @@ describe('ChatContextStrip', () => {
       <ChatContextStrip
         session={{
           ...worktreeSession,
-          cwd: '/work/.termul/worktrees/other',
-          worktreePath: '/work/.termul/worktrees/other',
+          cwd: '/work/.itzterm/worktrees/other',
+          worktreePath: '/work/.itzterm/worktrees/other',
           worktreeBranch: 'chat/other'
         }}
       />

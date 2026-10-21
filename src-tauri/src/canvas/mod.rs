@@ -1,9 +1,9 @@
-//! Canvas mode: the figcraft editor embedded in a Termul tab.
+//! Canvas mode: the figcraft editor embedded in a itzTerm tab.
 //!
-//! The editor is a prebuilt web bundle (pinned by [`pin`]) that Termul serves
-//! at `/canvas/<id>/` and drives over a control protocol; Termul owns the
+//! The editor is a prebuilt web bundle (pinned by [`pin`]) that itzTerm serves
+//! at `/canvas/<id>/` and drives over a control protocol; itzTerm owns the
 //! document file, never the editor. Everything here is **Tauri-free** so the
-//! desktop (`lib.rs`) and the standalone `termul-server` share one
+//! desktop (`lib.rs`) and the standalone `itzterm-server` share one
 //! implementation. Boundary logging uses the `log` crate (desktop seam
 //! convention); the web route mounts log their own seams. Document contents
 //! and session tokens are never logged.

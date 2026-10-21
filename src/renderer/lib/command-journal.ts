@@ -25,7 +25,7 @@ import { logFrontendError } from './log-api'
 import { sha256Hex } from './sha256-hex'
 import { randomUUID } from './uuid'
 
-export const COMMAND_JOURNAL_STORAGE_KEY = 'termul.commandJournal'
+export const COMMAND_JOURNAL_STORAGE_KEY = 'itzterm.commandJournal'
 /** Most unresolved commands kept; the oldest are dropped past this. */
 export const COMMAND_JOURNAL_MAX_ENTRIES = 64
 /**

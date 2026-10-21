@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest'
 import { preparePlatformArtifacts } from './prepare-platform-artifacts.mjs'
 
 async function fixtureDir() {
-  return mkdtemp(join(tmpdir(), 'termul-platform-artifacts-'))
+  return mkdtemp(join(tmpdir(), 'itzterm-platform-artifacts-'))
 }
 
 async function fixtureFile(root: string, relativePath: string, content = 'artifact') {
@@ -43,21 +43,21 @@ describe('preparePlatformArtifacts', () => {
     ['macos-x64', 'x64', 'darwin-x86_64']
   ])('renames %s updater assets and preserves signature association', async (platform, arch, key) => {
     const root = await fixtureDir()
-    const archive = await fixtureFile(root, 'bundle/macos/Termul Manager.app.tar.gz')
+    const archive = await fixtureFile(root, 'bundle/macos/itzTerm.app.tar.gz')
     const signature = await fixtureFile(
       root,
-      'bundle/macos/Termul Manager.app.tar.gz.sig',
+      'bundle/macos/itzTerm.app.tar.gz.sig',
       `signature-${arch}\n`
     )
-    const dmg = await fixtureFile(root, `bundle/dmg/Termul.Manager_1.2.3_${arch}.dmg`)
+    const dmg = await fixtureFile(root, `bundle/dmg/itzTerm.Manager_1.2.3_${arch}.dmg`)
 
     const { manifest, outputPath } = await prepare(platform, [archive, signature, dmg], root)
-    const updaterName = `Termul.Manager_${arch}.app.tar.gz`
+    const updaterName = `itzTerm.Manager_${arch}.app.tar.gz`
 
     expect(manifest.assetNames).toContain(updaterName)
     expect(manifest.assetNames).toContain(`${updaterName}.sig`)
     expect(manifest.platforms[key]).toEqual({
-      url: `https://github.com/gnoviawan/termul/releases/download/v1.2.3/${updaterName}`,
+      url: `https://github.com/latiefahmad/itzTerm/releases/download/v1.2.3/${updaterName}`,
       signature: `signature-${arch}`
     })
     expect(await readFile(join(outputPath, 'assets', `${updaterName}.sig`), 'utf8')).toBe(
@@ -67,16 +67,16 @@ describe('preparePlatformArtifacts', () => {
 
   test('collects Windows MSI and NSIS paths', async () => {
     const root = await fixtureDir()
-    const msi = await fixtureFile(root, 'bundle/msi/Termul.Manager_1.2.3_x64_en-US.msi')
+    const msi = await fixtureFile(root, 'bundle/msi/itzTerm.Manager_1.2.3_x64_en-US.msi')
     const msiSig = await fixtureFile(
       root,
-      'bundle/msi/Termul.Manager_1.2.3_x64_en-US.msi.sig',
+      'bundle/msi/itzTerm.Manager_1.2.3_x64_en-US.msi.sig',
       'msi-signature'
     )
-    const exe = await fixtureFile(root, 'bundle/nsis/Termul.Manager_1.2.3_x64-setup.exe')
+    const exe = await fixtureFile(root, 'bundle/nsis/itzTerm.Manager_1.2.3_x64-setup.exe')
     const exeSig = await fixtureFile(
       root,
-      'bundle/nsis/Termul.Manager_1.2.3_x64-setup.exe.sig',
+      'bundle/nsis/itzTerm.Manager_1.2.3_x64-setup.exe.sig',
       'nsis-signature'
     )
 
@@ -88,10 +88,10 @@ describe('preparePlatformArtifacts', () => {
 
   test('collects NSIS-only Windows paths (prerelease --bundles nsis, no MSI)', async () => {
     const root = await fixtureDir()
-    const exe = await fixtureFile(root, 'bundle/nsis/Termul.Manager_1.2.3_x64-setup.exe')
+    const exe = await fixtureFile(root, 'bundle/nsis/itzTerm.Manager_1.2.3_x64-setup.exe')
     const exeSig = await fixtureFile(
       root,
-      'bundle/nsis/Termul.Manager_1.2.3_x64-setup.exe.sig',
+      'bundle/nsis/itzTerm.Manager_1.2.3_x64-setup.exe.sig',
       'nsis-signature'
     )
 
@@ -106,9 +106,9 @@ describe('preparePlatformArtifacts', () => {
     const root = await fixtureDir()
     const paths = []
     for (const [bundle, name] of [
-      ['appimage', 'Termul.Manager_1.2.3_amd64.AppImage'],
-      ['deb', 'Termul.Manager_1.2.3_amd64.deb'],
-      ['rpm', 'Termul.Manager-1.2.3-1.x86_64.rpm']
+      ['appimage', 'itzTerm.Manager_1.2.3_amd64.AppImage'],
+      ['deb', 'itzTerm.Manager_1.2.3_amd64.deb'],
+      ['rpm', 'itzTerm.Manager-1.2.3-1.x86_64.rpm']
     ]) {
       paths.push(await fixtureFile(root, `bundle/${bundle}/${name}`))
       paths.push(await fixtureFile(root, `bundle/${bundle}/${name}.sig`, `${bundle}-signature`))
@@ -123,23 +123,23 @@ describe('preparePlatformArtifacts', () => {
 
   test('rejects duplicate collected asset names even when paths are identical', async () => {
     const root = await fixtureDir()
-    const msi = await fixtureFile(root, 'bundle/msi/Termul.Manager_1.2.3_x64_en-US.msi')
+    const msi = await fixtureFile(root, 'bundle/msi/itzTerm.Manager_1.2.3_x64_en-US.msi')
     const msiSig = await fixtureFile(
       root,
-      'bundle/msi/Termul.Manager_1.2.3_x64_en-US.msi.sig',
+      'bundle/msi/itzTerm.Manager_1.2.3_x64_en-US.msi.sig',
       'signature'
     )
 
     await expect(prepare('windows-x64', [msi, msi, msiSig], root)).rejects.toThrow(
-      'windows-x64 has duplicate release asset Termul.Manager_1.2.3_x64_en-US.msi'
+      'windows-x64 has duplicate release asset itzTerm.Manager_1.2.3_x64_en-US.msi'
     )
   })
 
   test('rejects multiple signatures for one updater bundle', async () => {
     const root = await fixtureDir()
-    const first = await fixtureFile(root, 'one/msi/Termul.Manager_1.2.3_x64_en-US.msi.sig', 'one')
+    const first = await fixtureFile(root, 'one/msi/itzTerm.Manager_1.2.3_x64_en-US.msi.sig', 'one')
     const second = await fixtureFile(root, 'two/msi/Other_1.2.3_x64_en-US.msi.sig', 'two')
-    const msi = await fixtureFile(root, 'one/msi/Termul.Manager_1.2.3_x64_en-US.msi')
+    const msi = await fixtureFile(root, 'one/msi/itzTerm.Manager_1.2.3_x64_en-US.msi')
 
     await expect(prepare('windows-x64', [msi, first, second], root)).rejects.toThrow(
       'windows-x64 must have exactly one msi updater signature'
@@ -148,16 +148,16 @@ describe('preparePlatformArtifacts', () => {
 
   test('normalizes productName spaces to dots in Windows MSI and NSIS release asset names', async () => {
     const root = await fixtureDir()
-    const msi = await fixtureFile(root, 'bundle/msi/Termul Manager_0.4.10_x64_en-US.msi')
+    const msi = await fixtureFile(root, 'bundle/msi/itzTerm_0.4.10_x64_en-US.msi')
     const msiSig = await fixtureFile(
       root,
-      'bundle/msi/Termul Manager_0.4.10_x64_en-US.msi.sig',
+      'bundle/msi/itzTerm_0.4.10_x64_en-US.msi.sig',
       'msi-signature'
     )
-    const exe = await fixtureFile(root, 'bundle/nsis/Termul Manager_0.4.10_x64-setup.exe')
+    const exe = await fixtureFile(root, 'bundle/nsis/itzTerm_0.4.10_x64-setup.exe')
     const exeSig = await fixtureFile(
       root,
-      'bundle/nsis/Termul Manager_0.4.10_x64-setup.exe.sig',
+      'bundle/nsis/itzTerm_0.4.10_x64-setup.exe.sig',
       'nsis-signature'
     )
 
@@ -171,21 +171,21 @@ describe('preparePlatformArtifacts', () => {
       }
     )
 
-    const msiName = 'Termul.Manager_0.4.10_x64_en-US.msi'
-    const exeName = 'Termul.Manager_0.4.10_x64-setup.exe'
+    const msiName = 'itzTerm.Manager_0.4.10_x64_en-US.msi'
+    const exeName = 'itzTerm.Manager_0.4.10_x64-setup.exe'
     expect(manifest.assetNames).toContain(msiName)
     expect(manifest.assetNames).toContain(`${msiName}.sig`)
     expect(manifest.assetNames).toContain(exeName)
     expect(manifest.assetNames).toContain(`${exeName}.sig`)
     expect(manifest.platforms['windows-x86_64-msi'].url).toBe(
-      `https://github.com/gnoviawan/termul/releases/download/v0.4.10/${msiName}`
+      `https://github.com/latiefahmad/itzTerm/releases/download/v0.4.10/${msiName}`
     )
     expect(manifest.platforms['windows-x86_64'].url).toBe(
       manifest.platforms['windows-x86_64-msi'].url
     )
     expect(manifest.platforms['windows-x86_64-msi'].url).not.toMatch(/%20/)
     expect(manifest.platforms['windows-x86_64-nsis'].url).toBe(
-      `https://github.com/gnoviawan/termul/releases/download/v0.4.10/${exeName}`
+      `https://github.com/latiefahmad/itzTerm/releases/download/v0.4.10/${exeName}`
     )
     expect(manifest.platforms['windows-x86_64-nsis'].url).not.toMatch(/%20/)
     expect(await readFile(join(outputPath, 'assets', msiName), 'utf8')).toBe('artifact')
@@ -202,9 +202,9 @@ describe('preparePlatformArtifacts', () => {
     const root = await fixtureDir()
     const paths: string[] = []
     for (const [bundle, name] of [
-      ['appimage', 'Termul Manager_0.4.10_amd64.AppImage'],
-      ['deb', 'Termul Manager_0.4.10_amd64.deb'],
-      ['rpm', 'Termul Manager-0.4.10-1.x86_64.rpm']
+      ['appimage', 'itzTerm_0.4.10_amd64.AppImage'],
+      ['deb', 'itzTerm_0.4.10_amd64.deb'],
+      ['rpm', 'itzTerm-0.4.10-1.x86_64.rpm']
     ]) {
       paths.push(await fixtureFile(root, `bundle/${bundle}/${name}`))
       paths.push(await fixtureFile(root, `bundle/${bundle}/${name}.sig`, `${bundle}-signature`))
@@ -215,23 +215,23 @@ describe('preparePlatformArtifacts', () => {
       tag: 'v0.4.10'
     })
 
-    const appimageName = 'Termul.Manager_0.4.10_amd64.AppImage'
-    const debName = 'Termul.Manager_0.4.10_amd64.deb'
-    const rpmName = 'Termul.Manager-0.4.10-1.x86_64.rpm'
+    const appimageName = 'itzTerm.Manager_0.4.10_amd64.AppImage'
+    const debName = 'itzTerm.Manager_0.4.10_amd64.deb'
+    const rpmName = 'itzTerm.Manager-0.4.10-1.x86_64.rpm'
     for (const name of [appimageName, debName, rpmName]) {
       expect(manifest.assetNames).toContain(name)
       expect(manifest.assetNames).toContain(`${name}.sig`)
     }
     expect(manifest.platforms['linux-x86_64-appimage'].url).toBe(
-      `https://github.com/gnoviawan/termul/releases/download/v0.4.10/${appimageName}`
+      `https://github.com/latiefahmad/itzTerm/releases/download/v0.4.10/${appimageName}`
     )
     expect(manifest.platforms['linux-x86_64-appimage'].url).not.toMatch(/%20/)
     expect(manifest.platforms['linux-x86_64-deb'].url).toBe(
-      `https://github.com/gnoviawan/termul/releases/download/v0.4.10/${debName}`
+      `https://github.com/latiefahmad/itzTerm/releases/download/v0.4.10/${debName}`
     )
     expect(manifest.platforms['linux-x86_64-deb'].url).not.toMatch(/%20/)
     expect(manifest.platforms['linux-x86_64-rpm'].url).toBe(
-      `https://github.com/gnoviawan/termul/releases/download/v0.4.10/${rpmName}`
+      `https://github.com/latiefahmad/itzTerm/releases/download/v0.4.10/${rpmName}`
     )
     expect(manifest.platforms['linux-x86_64-rpm'].url).not.toMatch(/%20/)
     expect(await readFile(join(outputPath, 'assets', rpmName), 'utf8')).toBe('artifact')

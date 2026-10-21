@@ -1,7 +1,7 @@
 //! Host key verification against OpenSSH `known_hosts` files.
 //!
-//! Two stores are consulted: the app-managed `~/.ssh/known_hosts_termul`
-//! (written by Termul, one plain OpenSSH line per trusted host) and the
+//! Two stores are consulted: the app-managed `~/.ssh/known_hosts_itzterm`
+//! (written by itzTerm, one plain OpenSSH line per trusted host) and the
 //! user's `~/.ssh/known_hosts` (read-only — system ssh owns it). A key is
 //! trusted when either store matches it. An unknown key is never accepted
 //! silently: the caller must ask the user and then call [`trust`].
@@ -193,7 +193,7 @@ static TEST_STORE_DIR: Mutex<Option<PathBuf>> = Mutex::new(None);
 /// test server's key never lands in the user's real known_hosts files.
 #[cfg(test)]
 pub(crate) fn isolate_stores_for_tests() -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("termul-known-hosts-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("itzterm-known-hosts-{}", uuid::Uuid::new_v4()));
     *TEST_STORE_DIR.lock().unwrap_or_else(|p| p.into_inner()) = Some(dir.clone());
     dir
 }
@@ -211,7 +211,7 @@ fn store_dir() -> Option<PathBuf> {
 }
 
 pub(crate) fn app_known_hosts_path() -> Option<PathBuf> {
-    store_dir().map(|d| d.join("known_hosts_termul"))
+    store_dir().map(|d| d.join("known_hosts_itzterm"))
 }
 
 fn user_known_hosts_path() -> Option<PathBuf> {
@@ -250,7 +250,7 @@ pub fn check(host: &str, port: u16, key: &PublicKey) -> Result<HostKeyStatus, St
     ))
 }
 
-/// Drop the app-file lines whose first field names exactly `entry` (Termul
+/// Drop the app-file lines whose first field names exactly `entry` (itzTerm
 /// writes one host pattern per line, so other lines are left untouched).
 pub(crate) fn without_entry(contents: &str, entry: &str) -> String {
     let mut kept = String::with_capacity(contents.len());
@@ -269,7 +269,7 @@ pub(crate) fn without_entry(contents: &str, entry: &str) -> String {
 }
 
 /// Persist trust for this host key in the app-managed file, replacing any
-/// previous Termul entry for the same host and port.
+/// previous itzTerm entry for the same host and port.
 pub fn trust(host: &str, port: u16, key: &PublicKey) -> Result<(), String> {
     let path = app_known_hosts_path().ok_or_else(|| "Home directory not found".to_string())?;
     let entry = host_entry(host, port);

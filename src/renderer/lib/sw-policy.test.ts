@@ -16,7 +16,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 const SW_PATH = resolve(__dirname, '../../../public/sw.js')
 const SW_SOURCE = readFileSync(SW_PATH, 'utf8')
-const ORIGIN = 'https://termul.example'
+const ORIGIN = 'https://itzterm.example'
 
 /** Minimal stand-in for the FetchEvent `request` — sw.js reads url/method/mode. */
 type FakeRequest = { url: string; method: string; mode: string }
@@ -205,10 +205,10 @@ describe('public/sw.js runtime policy', () => {
     expect(worker.self.skipWaiting).toHaveBeenCalledTimes(1)
   })
 
-  it('activate purges stale termul-pwa-* caches but keeps the current + foreign ones', async () => {
+  it('activate purges stale itzterm-pwa-* caches but keeps the current + foreign ones', async () => {
     const worker = loadWorker()
-    worker.stores.set('termul-pwa-v0', new Map())
-    worker.stores.set('termul-pwa-legacy', new Map())
+    worker.stores.set('itzterm-pwa-v0', new Map())
+    worker.stores.set('itzterm-pwa-legacy', new Map())
     worker.stores.set(worker.sw.CACHE_NAME, new Map())
     worker.stores.set('other-app-cache', new Map())
 

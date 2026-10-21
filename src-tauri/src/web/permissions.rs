@@ -223,7 +223,7 @@ impl State {
 ///
 /// Holds the relay-side ticket table keyed by `request_id` (globally unique —
 /// safe across agents) + per-session at-most-one queueing. The same
-/// rendezvous serves the desktop host, the shared-live host, `termul-server`
+/// rendezvous serves the desktop host, the shared-live host, `itzterm-server`
 /// and the browser client.
 pub struct PermissionRendezvous {
     state: Mutex<State>,

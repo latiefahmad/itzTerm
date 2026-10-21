@@ -3,7 +3,7 @@
  *
  * Mounts the agentation React toolbar inside a shadow DOM root to isolate
  * it from the host page's CSS. The endpoint is read from a global variable
- * injected by Rust's BrowserTabManager (window.__TERMUL_AGENTATION_ENDPOINT__).
+ * injected by Rust's BrowserTabManager (window.__ITZTERM_AGENTATION_ENDPOINT__).
  *
  * Shadow DOM isolation:
  * - `:host` reset: box-sizing: border-box, display: block !important
@@ -45,22 +45,22 @@ const SHADOW_STYLES = `
 
 function mountToolbar() {
   // Read endpoint from global injected by Rust BrowserTabManager
-  const endpoint = (window as any).__TERMUL_AGENTATION_ENDPOINT__ as string | undefined
-  const sessionId = (window as any).__TERMUL_AGENTATION_SESSION_ID__ as string | undefined
+  const endpoint = (window as any).__ITZTERM_AGENTATION_ENDPOINT__ as string | undefined
+  const sessionId = (window as any).__ITZTERM_AGENTATION_SESSION_ID__ as string | undefined
 
   if (!endpoint) {
     console.warn('[Agentation] No endpoint configured — toolbar will not sync annotations')
   }
 
   // Check if toolbar already mounted
-  const existingHost = document.getElementById('termul-agentation-host')
+  const existingHost = document.getElementById('itzterm-agentation-host')
   if (existingHost?.shadowRoot) {
     return
   }
 
   // Create shadow DOM host element
   const host = document.createElement('div')
-  host.id = 'termul-agentation-host'
+  host.id = 'itzterm-agentation-host'
   host.style.cssText =
     'all: initial; position: fixed; z-index: 2147483647; bottom: 0; left: 0; right: 0; pointer-events: none;'
   document.body.appendChild(host)
@@ -91,8 +91,8 @@ function mountToolbar() {
     })
   )
 
-  ;(window as any).__TERMUL_AGENTATION_ROOT__ = root
-  ;(window as any).__TERMUL_AGENTATION_HOST__ = host
+  ;(window as any).__ITZTERM_AGENTATION_ROOT__ = root
+  ;(window as any).__ITZTERM_AGENTATION_HOST__ = host
 
   console.log('[Agentation] Toolbar mounted', { endpoint, sessionId })
 }
@@ -100,7 +100,7 @@ function mountToolbar() {
 /**
  * React page detection — if the page is a React app, the toolbar may cause
  * "Invalid hook call" if React versions conflict. In that case, we should
- * fall back to termul's existing vanilla-JS overlay.
+ * fall back to itzterm's existing vanilla-JS overlay.
  */
 function isReactPage(): boolean {
   // Check for React DevTools global
@@ -124,7 +124,7 @@ function isReactPage(): boolean {
  */
 function start() {
   // When injected via eval (button click or delayed injection),
-  // __TERMUL_ANNOTATION_MODE__ may not be set. Mount unconditionally —
+  // __ITZTERM_ANNOTATION_MODE__ may not be set. Mount unconditionally —
   // the user clicked the button, so they want the toolbar.
 
   // React page detection removed — the toolbar uses its own bundled React
@@ -144,8 +144,8 @@ function init() {
 
 // Cleanup on page unload
 function cleanup() {
-  const root = (window as any).__TERMUL_AGENTATION_ROOT__
-  const host = (window as any).__TERMUL_AGENTATION_HOST__
+  const root = (window as any).__ITZTERM_AGENTATION_ROOT__
+  const host = (window as any).__ITZTERM_AGENTATION_HOST__
   if (root) {
     root.unmount()
   }
@@ -161,7 +161,7 @@ init()
 window.addEventListener('beforeunload', cleanup)
 
 // Export for manual control
-;(window as any).TermulAgentation = {
+;(window as any).ItzTermAgentation = {
   mount: mountToolbar,
   unmount: cleanup,
   isReactPage

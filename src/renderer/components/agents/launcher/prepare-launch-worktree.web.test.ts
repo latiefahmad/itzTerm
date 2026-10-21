@@ -19,7 +19,7 @@ const PROJECT_ROOT = '/work'
 const createdInfo = (name: string) => ({
   name,
   branch: `chat/${name}`,
-  path: `/work/.termul/worktrees/${name}`,
+  path: `/work/.itzterm/worktrees/${name}`,
   headCommit: 'abc123'
 })
 
@@ -111,8 +111,8 @@ describe('prepareLaunchWorktree on the web client', () => {
     })
 
     await expect(launch()).resolves.toEqual({
-      launchCwd: '/work/.termul/worktrees/abcd1234',
-      worktreePath: '/work/.termul/worktrees/abcd1234',
+      launchCwd: '/work/.itzterm/worktrees/abcd1234',
+      worktreePath: '/work/.itzterm/worktrees/abcd1234',
       worktreeBranch: 'chat/abcd1234'
     })
 
@@ -131,7 +131,7 @@ describe('prepareLaunchWorktree on the web client', () => {
       },
       {
         path: '/worktree/copy-include-files',
-        body: { projectPath: '/work', worktreePath: '/work/.termul/worktrees/abcd1234' }
+        body: { projectPath: '/work', worktreePath: '/work/.itzterm/worktrees/abcd1234' }
       },
       { path: '/worktree/list', body: { projectPath: '/work' } }
     ])
@@ -146,7 +146,7 @@ describe('prepareLaunchWorktree on the web client', () => {
 
     const stored = useProjectStore.getState().projects[0]?.worktrees ?? []
     expect(stored.map((w) => [w.path, w.branch])).toEqual([
-      ['/work/.termul/worktrees/abcd1234', 'chat/abcd1234']
+      ['/work/.itzterm/worktrees/abcd1234', 'chat/abcd1234']
     ])
   })
 
@@ -167,8 +167,8 @@ describe('prepareLaunchWorktree on the web client', () => {
     })
 
     await expect(launch()).resolves.toEqual({
-      launchCwd: '/work/.termul/worktrees/abcd1234-2',
-      worktreePath: '/work/.termul/worktrees/abcd1234-2',
+      launchCwd: '/work/.itzterm/worktrees/abcd1234-2',
+      worktreePath: '/work/.itzterm/worktrees/abcd1234-2',
       worktreeBranch: 'chat/abcd1234-2'
     })
     const creates = worktreeCalls()

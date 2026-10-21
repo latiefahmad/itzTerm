@@ -90,8 +90,8 @@ impl BrowserTabManager {
             let poller_script = format!(
                 r#"
                 (function() {{
-                    if (window.__termul_poller) return;
-                    window.__termul_poller = true;
+                    if (window.__itzterm_poller) return;
+                    window.__itzterm_poller = true;
 
                     var tabId = '{}';
                     var lastUrl = location.href;
@@ -280,8 +280,8 @@ impl BrowserTabManager {
             if let Some(endpoint_url) = &endpoint {
                 let init_script = format!(
                     r#"
-                    window.__TERMUL_AGENTATION_ENDPOINT__ = "{endpoint_url}";
-                    window.__TERMUL_ANNOTATION_MODE__ = true;
+                    window.__ITZTERM_AGENTATION_ENDPOINT__ = "{endpoint_url}";
+                    window.__ITZTERM_ANNOTATION_MODE__ = true;
                     "#
                 );
                 builder = builder.initialization_script(&init_script);
@@ -518,7 +518,7 @@ impl BrowserTabManager {
         let webview = self.get_webview(tab_id)?;
 
         // Inject the agentation toolbar bundle (bundled IIFE).
-        // The bundle self-checks __TERMUL_AGENTATION_HOST__ to avoid double-mount.
+        // The bundle self-checks __ITZTERM_AGENTATION_HOST__ to avoid double-mount.
         let toolbar_script = include_str!("../resources/agentation-toolbar.js");
         webview
             .eval(toolbar_script)
@@ -540,7 +540,7 @@ impl BrowserTabManager {
         let tab_id = tab_id.to_string();
         std::thread::spawn(move || {
             // Wait for the new document to start loading before re-injecting
-            // the poller. The poller self-deduplicates via __termul_poller.
+            // the poller. The poller self-deduplicates via __itzterm_poller.
             std::thread::sleep(std::time::Duration::from_millis(500));
             if let Some(bt) = app_handle.try_state::<Arc<BrowserTabManager>>() {
                 if bt.is_agentation_enabled() {

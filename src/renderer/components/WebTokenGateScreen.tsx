@@ -1,7 +1,7 @@
 /**
  * Web auth token-entry screen (issue #854).
  *
- * On a token-gated `termul-server`, opening the web client without a token
+ * On a token-gated `itzterm-server`, opening the web client without a token
  * (or with a rotated one) used to hang on "Loading..." forever — the projects
  * mirror 401s, `isLoaded` never flips, and an installed iOS PWA has no way to
  * re-enter a token (`#token=` needs an editable URL). This screen renders in
@@ -72,7 +72,7 @@ export function WebTokenGateScreen(): React.JSX.Element {
         <div className="flex flex-col gap-1.5 text-center">
           <h1 className="text-lg font-semibold text-foreground">Server access token required</h1>
           <p className="text-sm text-muted-foreground">
-            This Termul server requires a token. Paste the token from your bootstrap link or server
+            This itzTerm server requires a token. Paste the token from your bootstrap link or server
             console.
           </p>
         </div>

@@ -508,7 +508,7 @@ export async function loadSessionIndex(): Promise<SessionIndexEntry[]> {
   if (mode === 'live_only' && transport.listPersistedSessions) {
     // Boot race (F13): the WS transport reports the pre-handshake default
     // 'live_only' until connect()'s authenticate handshake negotiates the real
-    // mode ('server' on termul-server). Await the handshake and re-read the
+    // mode ('server' on itzterm-server). Await the handshake and re-read the
     // mode before concluding there is no server-side history. connect() is
     // idempotent (fast-returns on an OPEN+authed socket); the Tauri transport
     // has no historyMode, so this branch never triggers on desktop. connect()
@@ -839,8 +839,8 @@ function takeCachedPayload(id: string): SessionPayload | undefined {
 
 type ContentBlock = ChatMessage['blocks'][number]
 
-/** A text block that IS a `termul-plan` fence (mirrors `isTermulPlanFenceBlock`). */
-const PLAN_FENCE_BLOCK = /^```termul-plan\r?\n[\s\S]*?\r?\n```$/
+/** A text block that IS a `itzterm-plan` fence (mirrors `isItzTermPlanFenceBlock`). */
+const PLAN_FENCE_BLOCK = /^```itzterm-plan\r?\n[\s\S]*?\r?\n```$/
 
 const isPlanFenceBlock = (block: ContentBlock): boolean =>
   block.type === 'text' && typeof block.text === 'string' && PLAN_FENCE_BLOCK.test(block.text)

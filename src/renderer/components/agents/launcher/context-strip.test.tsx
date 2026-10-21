@@ -17,7 +17,7 @@ const worktree: Worktree = {
   id: 'a',
   name: 'a',
   branch: 'feat/a',
-  path: '/p/.termul/worktrees/a',
+  path: '/p/.itzterm/worktrees/a',
   createdAt: '2026-01-01T00:00:00.000Z'
 }
 

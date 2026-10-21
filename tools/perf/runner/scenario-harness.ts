@@ -142,7 +142,7 @@ async function gitCommitAsync(): Promise<string | undefined> {
 export interface RunScenarioOptions {
   scenario: ScenarioDef
   argv: string[]
-  /** Lane: desktop (real app) or browser (termul-server, CAP-7). */
+  /** Lane: desktop (real app) or browser (itzterm-server, CAP-7). */
   lane?: 'desktop' | 'browser'
 }
 
@@ -280,7 +280,7 @@ export async function runScenario(opts: RunScenarioOptions): Promise<string> {
   }
 
   const commit = await gitCommitAsync().catch(() => undefined)
-  const reactProfiling = process.env.TERMUL_PERF_PROFILING === '1'
+  const reactProfiling = process.env.ITZTERM_PERF_PROFILING === '1'
   const result: PerfRunResult = {
     meta: {
       runId,

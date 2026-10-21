@@ -23,7 +23,7 @@ fn test_parse_exit_code_osc_133_empty() {
 
 #[test]
 fn test_parse_exit_code_marker() {
-    let code = ExitCodeTracker::parse_exit_code("__TERMUL_EXIT__127__");
+    let code = ExitCodeTracker::parse_exit_code("__ITZTERM_EXIT__127__");
     assert_eq!(code, Some(127));
 }
 
@@ -49,7 +49,7 @@ fn test_parse_exit_code_quick_check_performance() {
 #[test]
 fn test_parse_exit_code_osc_preferred_over_marker() {
     // OSC should be tried first and returned
-    let data = "\x1b]133;D;7\x07 and __TERMUL_EXIT__99__";
+    let data = "\x1b]133;D;7\x07 and __ITZTERM_EXIT__99__";
     assert_eq!(ExitCodeTracker::parse_exit_code(data), Some(7));
 }
 
@@ -61,13 +61,13 @@ fn test_parse_exit_code_multiple_osc_sequences() {
 
 #[test]
 fn test_parse_exit_code_multiple_markers() {
-    let data = "__TERMUL_EXIT__10____TERMUL_EXIT__20__";
+    let data = "__ITZTERM_EXIT__10____ITZTERM_EXIT__20__";
     assert_eq!(ExitCodeTracker::parse_exit_code(data), Some(10));
 }
 
 #[test]
 fn test_parse_exit_code_invalid_marker() {
-    let code = ExitCodeTracker::parse_exit_code("__TERMUL_EXIT__abc__");
+    let code = ExitCodeTracker::parse_exit_code("__ITZTERM_EXIT__abc__");
     assert_eq!(code, None);
 }
 

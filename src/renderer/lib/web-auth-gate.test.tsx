@@ -1,6 +1,6 @@
 /**
  * Web auth gate tests (issue #854): a missing/wrong token on a gated
- * `termul-server` must surface the token-entry flow instead of hanging on
+ * `itzterm-server` must surface the token-entry flow instead of hanging on
  * "Loading...".
  *
  * Covers:
@@ -148,7 +148,7 @@ describe('web auth gate (lib)', () => {
     expect(outcome).toBe('ok')
     // Same persistence as the #token= fragment flow.
     expect(getWebAuthToken()).toBe('new-token')
-    expect(window.localStorage.getItem('termul.webAuthToken')).toBe('new-token')
+    expect(window.localStorage.getItem('itzterm.webAuthToken')).toBe('new-token')
     expect(getWebAuthGateState().status).toBe('ok')
     expect(getWebAuthGateState().submitting).toBe(false)
   })

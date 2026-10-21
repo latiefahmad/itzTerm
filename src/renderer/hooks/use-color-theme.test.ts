@@ -38,7 +38,7 @@ describe('useAppliedColorThemeSync', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.useAppSettingsLoaded.mockReturnValue(true)
-    mocks.useColorTheme.mockReturnValue('termul')
+    mocks.useColorTheme.mockReturnValue('itzterm')
     mocks.useAppearanceMode.mockReturnValue('dark')
     mocks.useThemePickerOpen.mockReturnValue(false)
   })

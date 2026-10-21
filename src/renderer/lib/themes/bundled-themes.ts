@@ -1,6 +1,6 @@
 import { BUNDLED_LIGHT_COLOR_THEMES } from './bundled-light-themes'
-import { TERMUL_DARK_CHROME } from './termul-dark-chrome'
-import { TERMUL_DARK_SYNTAX } from './termul-syntax'
+import { ITZTERM_DARK_CHROME } from './itzterm-dark-chrome'
+import { ITZTERM_DARK_SYNTAX } from './itzterm-syntax'
 import type { ColorThemeDefinition } from './types'
 
 export interface ColorThemeFamily {
@@ -12,16 +12,16 @@ export interface ColorThemeFamily {
 
 /** Built-in dark appearance themes (OpenCode palette-compatible). */
 const BUNDLED_DARK_COLOR_THEMES: Record<string, ColorThemeDefinition> = {
-  // syntax: bright Termul palette (see termul-syntax.ts)
-  termul: {
-    id: 'termul',
-    name: 'Termul',
+  // syntax: bright itzTerm palette (see itzterm-syntax.ts)
+  itzterm: {
+    id: 'itzterm',
+    name: 'itzTerm',
     appearance: 'dark',
-    familyId: 'termul',
+    familyId: 'itzterm',
     dark: {
       palette: {
-        neutral: TERMUL_DARK_CHROME.background,
-        ink: TERMUL_DARK_CHROME.foreground,
+        neutral: ITZTERM_DARK_CHROME.background,
+        ink: ITZTERM_DARK_CHROME.foreground,
         primary: '#3b82f6',
         accent: '#3b82f6',
         success: '#22c55e',
@@ -29,8 +29,8 @@ const BUNDLED_DARK_COLOR_THEMES: Record<string, ColorThemeDefinition> = {
         error: '#ef4444',
         info: '#38bdf8'
       },
-      chrome: TERMUL_DARK_CHROME,
-      overrides: TERMUL_DARK_SYNTAX
+      chrome: ITZTERM_DARK_CHROME,
+      overrides: ITZTERM_DARK_SYNTAX
     }
   },
   // syntax: opencode cursor + vscode fallback
@@ -323,7 +323,7 @@ export const THEME_PICKER_ROWS: ThemePickerRow[] = COLOR_THEME_FAMILIES.flatMap(
   }
 ])
 
-export const DEFAULT_COLOR_THEME_ID = 'termul'
+export const DEFAULT_COLOR_THEME_ID = 'itzterm'
 
 export const COLOR_THEME_LIST = Object.values(BUNDLED_COLOR_THEMES)
 

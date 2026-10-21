@@ -5,7 +5,7 @@ import { type APIRequestContext, expect, type Locator, type Page, test } from 'p
 import { E2E_BASE_URL, E2E_TOKEN } from './helpers'
 
 /**
- * Mobile composer row E2E (termul-server web client on a phone).
+ * Mobile composer row E2E (itzterm-server web client on a phone).
  *
  * Covers spec-mobile-composer-row.md in a REAL browser, where the jsdom unit
  * tests cannot reach: layout on a 390 / 360 / 320px phone viewport, the focus
@@ -100,7 +100,7 @@ async function openChat(
   const projectName = await createProject(api, slug)
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)

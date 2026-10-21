@@ -13,12 +13,12 @@ lazy_static! {
 
 // Simple marker pattern as fallback (injected via PROMPT_COMMAND)
 lazy_static! {
-    static ref EXIT_MARKER_RE: Regex = Regex::new(r"__TERMUL_EXIT__(\d+)__").unwrap();
+    static ref EXIT_MARKER_RE: Regex = Regex::new(r"__ITZTERM_EXIT__(\d+)__").unwrap();
 }
 
 /// Quick check strings for performance optimization
 const OSC_QUICK_CHECK: &str = "\x1b]133;D";
-const MARKER_QUICK_CHECK: &str = "__TERMUL_EXIT__";
+const MARKER_QUICK_CHECK: &str = "__ITZTERM_EXIT__";
 
 /// State for tracking a terminal's exit code
 #[derive(Debug, Clone)]

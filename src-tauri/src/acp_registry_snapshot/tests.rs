@@ -41,7 +41,7 @@ fn is_safe_agent_id_rejects_dot_and_dotdot() {
 
 fn temp_cache_path(label: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!(
-        "termul-acp-snapshot-{label}-{}-{}",
+        "itzterm-acp-snapshot-{label}-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

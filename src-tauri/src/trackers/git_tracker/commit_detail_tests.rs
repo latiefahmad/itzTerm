@@ -32,7 +32,7 @@ fn unique_temp_dir(tag: &str) -> TestDir {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let dir = std::env::temp_dir().join(format!(
-        "termul-commitdetail-{tag}-{}-{n}-{nanos}",
+        "itzterm-commitdetail-{tag}-{}-{n}-{nanos}",
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("create temp dir");
@@ -539,7 +539,7 @@ fn it_signed_commit_detail_ignores_show_signature() {
             "--passphrase",
             "",
             "--quick-gen-key",
-            "Termul Test <t@example.com>",
+            "itzTerm Test <t@example.com>",
             "ed25519",
             "sign",
             "never",

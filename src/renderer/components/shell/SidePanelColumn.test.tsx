@@ -41,7 +41,7 @@ const makeProject = (overrides: Partial<Project> = {}): Project =>
         id: 'w1',
         name: 'feature',
         branch: 'feat/x',
-        path: '/repo/.termul/worktrees/feature',
+        path: '/repo/.itzterm/worktrees/feature',
         createdAt: '2026-01-01T00:00:00.000Z'
       }
     ],
@@ -142,11 +142,11 @@ describe('SidePanelColumn', () => {
 
   it('renders the Changes panel for the picked working copy', () => {
     useShellLayoutStore.setState({
-      worktreePickByProject: { p1: '/repo/.termul/worktrees/feature' }
+      worktreePickByProject: { p1: '/repo/.itzterm/worktrees/feature' }
     })
     useGitStatusStore.setState({
       statuses: {
-        '/repo/.termul/worktrees/feature': [
+        '/repo/.itzterm/worktrees/feature': [
           { path: 'a.ts' },
           { path: 'b.ts' },
           { path: 'a.ts' }
@@ -159,7 +159,7 @@ describe('SidePanelColumn', () => {
     fireEvent.click(screen.getByRole('tab', { name: /Changes/ }))
     expect(screen.getByTestId('changes-panel')).toHaveAttribute(
       'data-cwd',
-      '/repo/.termul/worktrees/feature'
+      '/repo/.itzterm/worktrees/feature'
     )
   })
 

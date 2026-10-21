@@ -8,7 +8,7 @@ const addEditorTab = vi.fn()
 const closeSettings = vi.fn()
 const skillsRef = { current: [] as AgentSkillSummary[] }
 const projectRef = {
-  current: { id: 'p1', name: 'Cloud Hello', path: '/tmp/termul-hello' } as
+  current: { id: 'p1', name: 'Cloud Hello', path: '/tmp/itzterm-hello' } as
     | { id: string; name: string; path: string }
     | undefined
 }
@@ -53,13 +53,13 @@ const projectSkill: AgentSkillSummary = {
   name: 'writing-guidelines',
   description: 'Review docs',
   scope: 'project',
-  path: '/tmp/termul-hello/.agents/skills/writing-guidelines/SKILL.md'
+  path: '/tmp/itzterm-hello/.agents/skills/writing-guidelines/SKILL.md'
 }
 
 describe('SkillsSection', () => {
   beforeEach(() => {
     skillsRef.current = [globalSkill, projectSkill]
-    projectRef.current = { id: 'p1', name: 'Cloud Hello', path: '/tmp/termul-hello' }
+    projectRef.current = { id: 'p1', name: 'Cloud Hello', path: '/tmp/itzterm-hello' }
     openFile.mockReset().mockResolvedValue(undefined)
     addEditorTab.mockReset()
     closeSettings.mockReset()

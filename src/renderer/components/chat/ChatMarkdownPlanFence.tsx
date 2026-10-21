@@ -7,20 +7,23 @@ import { logFrontendError } from '@/lib/log-api'
 import { PlanPanel } from './PlanPanel'
 
 /**
- * Streamdown custom renderer for `termul-plan` fenced code blocks. Parses the
+ * Streamdown custom renderer for `itzterm-plan` fenced code blocks. Parses the
  * fence JSON and renders a read-only `PlanPanel` so historical assistant
  * messages retain their plan-of-record inline in the transcript.
  *
  * The live sticky plan covers the streaming turn; this renderer is gated to
  * non-streaming (historical) messages via the `STREAMDOWN_PLUGINS` selection
- * in `ChatMessage` — the `termul-plan` renderer is only attached when
+ * in `ChatMessage` — the `itzterm-plan` renderer is only attached when
  * `!streaming` so an in-flight turn never shows a duplicate inline plan.
  *
  * Malformed JSON degrades to a "Plan snapshot unavailable" fallback card so a
  * corrupted snapshot never crashes the transcript; the store's rehydrate path
  * independently logs the malformed fence and leaves `plans[sessionId]` empty.
  */
-export function TermulPlanRenderer({ code, isIncomplete }: CustomRendererProps): React.JSX.Element {
+export function ItzTermPlanRenderer({
+  code,
+  isIncomplete
+}: CustomRendererProps): React.JSX.Element {
   // Parse the fence JSON. An incomplete fence on a non-streaming message is a
   // truncated historical payload (not a stream-in-progress); skip parsing.
   let parsed: PlanEntry[] | null = null
@@ -47,7 +50,7 @@ export function TermulPlanRenderer({ code, isIncomplete }: CustomRendererProps):
     void logFrontendError({
       level: 'warn',
       source: 'planSnapshotRenderer',
-      message: 'Malformed termul-plan fence rendered as fallback'
+      message: 'Malformed itzterm-plan fence rendered as fallback'
     })
   }, [isMalformed])
 

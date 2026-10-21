@@ -119,7 +119,7 @@ fn test_main_webview_allows_app_internal_schemes() {
         &"ipc://localhost".parse().unwrap()
     ));
     assert!(main_webview_allows_navigation(
-        &"blob:https://termul.app/".parse().unwrap()
+        &"blob:https://itzterm.app/".parse().unwrap()
     ));
 }
 

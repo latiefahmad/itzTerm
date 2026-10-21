@@ -308,7 +308,7 @@ where
         return Outcome::InvalidId;
     }
     let Some(class) = class_of_kind(kind) else {
-        warn!(target: "termul::web::command_ledger", kind, "terminal kind has no class");
+        warn!(target: "itzterm::web::command_ledger", kind, "terminal kind has no class");
         return Outcome::Unknown;
     };
     let produced: Arc<Mutex<Option<Produced<T>>>> = Arc::new(Mutex::new(None));

@@ -23,7 +23,7 @@ pub enum SignInCheck {
     /// Project's open Claude chats right after it, and the spawn gate rejects
     /// an Account that is not signed in, so refuse it before anything changes.
     Required,
-    /// Headless setup (`termul-server claude account`), where an admin may
+    /// Headless setup (`itzterm-server claude account`), where an admin may
     /// choose an Account before running `login`. Nothing restarts there.
     Skip,
 }
@@ -235,7 +235,7 @@ impl ClaudeAgentService {
     }
 
     /// Run Anthropic's interactive `claude auth login` for one Account in the
-    /// caller's terminal (headless `termul-server claude account login`).
+    /// caller's terminal (headless `itzterm-server claude account login`).
     pub fn run_account_cli_login(&self, id: &str) -> Result<(), String> {
         let store = self.account_store()?;
         if !store.snapshot()?.profiles.iter().any(|row| row.id == id) {
@@ -247,7 +247,7 @@ impl ClaudeAgentService {
     }
 
     /// Run Anthropic's browser login for one Account without a terminal. The
-    /// CLI opens the browser and stores the login itself; Termul never sees
+    /// CLI opens the browser and stores the login itself; itzTerm never sees
     /// the token. Resolves when the login finishes, fails, or times out.
     pub async fn login_account(&self, id: &str) -> Result<(), String> {
         let store = self.account_store()?;

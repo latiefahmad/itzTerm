@@ -3,7 +3,7 @@
 //! `AcpManager::spawn`, so the production `SendPrompt` arm, `race_turn`
 //! deadline handling and the `run_agent` crash teardown all run. The prompt
 //! goes through the shared prompt-turn service exactly as on `/ws` and desktop.
-//! A missing interpreter fails loudly; `TERMUL_SKIP_REAL_LOOP_TESTS=1` skips.
+//! A missing interpreter fails loudly; `ITZTERM_SKIP_REAL_LOOP_TESTS=1` skips.
 
 use super::*;
 use crate::acp::provider_errors::{ACP_PROVIDER_REQUEST_REJECTED, ACP_PROVIDER_SESSION_LIMIT};
@@ -86,9 +86,9 @@ for line in sys.stdin:
 
 /// Serializes every test that reads or writes process-global ACP timeout state:
 /// the in-process idle-timeout override and the environment variables
-/// `TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS`, `TERMUL_ACP_TURN_TIMEOUT_SECS`,
-/// `TERMUL_ACP_SESSION_NEW_TIMEOUT_SECS` and
-/// `TERMUL_ACP_SESSION_REOPEN_TIMEOUT_SECS`. It covers all real-loop tests and
+/// `ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS`, `ITZTERM_ACP_TURN_TIMEOUT_SECS`,
+/// `ITZTERM_ACP_SESSION_NEW_TIMEOUT_SECS` and
+/// `ITZTERM_ACP_SESSION_REOPEN_TIMEOUT_SECS`. It covers all real-loop tests and
 /// the override and precedence tests in `manager/tests.rs`. A real-loop test
 /// therefore never inherits another test's timeout, and vice versa.
 pub(super) static TIMEOUT_TEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
@@ -96,7 +96,7 @@ pub(super) static TIMEOUT_TEST_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex
 /// Opt-out for hosts without a Python interpreter. Without it a missing
 /// interpreter is a hard failure: these are the only tests that drive the
 /// production `SendPrompt` arm, `race_turn` and the crash teardown.
-const SKIP_ENV: &str = "TERMUL_SKIP_REAL_LOOP_TESTS";
+const SKIP_ENV: &str = "ITZTERM_SKIP_REAL_LOOP_TESTS";
 
 /// First interpreter on PATH that runs (`python3`, then `python` for
 /// Windows runners).
@@ -131,10 +131,10 @@ impl Drop for IdleTimeoutGuard {
 /// sets, so a developer/CI environment that configures one would change every
 /// real-loop turn's deadlines.
 const TURN_TIMEOUT_ENV_VARS: [&str; 4] = [
-    "TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS",
-    "TERMUL_ACP_TURN_TIMEOUT_SECS",
-    "TERMUL_ACP_SESSION_NEW_TIMEOUT_SECS",
-    "TERMUL_ACP_SESSION_REOPEN_TIMEOUT_SECS",
+    "ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS",
+    "ITZTERM_ACP_TURN_TIMEOUT_SECS",
+    "ITZTERM_ACP_SESSION_NEW_TIMEOUT_SECS",
+    "ITZTERM_ACP_SESSION_REOPEN_TIMEOUT_SECS",
 ];
 
 /// Clears the ambient turn-timeout env vars for the harness lifetime (the
@@ -243,7 +243,7 @@ struct Harness {
 }
 
 impl Harness {
-    /// `None` only when the host opted out via `TERMUL_SKIP_REAL_LOOP_TESTS=1`;
+    /// `None` only when the host opted out via `ITZTERM_SKIP_REAL_LOOP_TESTS=1`;
     /// a missing interpreter otherwise panics rather than passing vacuously.
     async fn start() -> Option<Self> {
         Self::start_inner(false, None).await
@@ -274,7 +274,7 @@ impl Harness {
         };
         let serial = TIMEOUT_TEST_LOCK.lock().await;
         let env = TurnTimeoutEnvGuard::clear();
-        let dir = std::env::temp_dir().join(format!("termul-real-loop-{}", uuid::Uuid::new_v4()));
+        let dir = std::env::temp_dir().join(format!("itzterm-real-loop-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&dir).unwrap();
         let script = dir.join("mock_agent.py");
         std::fs::write(&script, MOCK_AGENT).unwrap();
@@ -1138,7 +1138,7 @@ async fn idle_agent_driver_thread_stays_parked() {
         }
         panic!("this test needs `python3` (or `python`) on PATH; set {SKIP_ENV}=1 to skip it");
     };
-    let dir = std::env::temp_dir().join(format!("termul-idle-agent-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("itzterm-idle-agent-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&dir).unwrap();
     let script = dir.join("mock_agent.py");
     std::fs::write(&script, MOCK_AGENT).unwrap();

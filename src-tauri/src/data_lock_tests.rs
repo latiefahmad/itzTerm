@@ -6,7 +6,7 @@ fn temp_dir(label: &str) -> PathBuf {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let path = std::env::temp_dir().join(format!(
-        "termul-data-lock-{label}-{}-{nanos}",
+        "itzterm-data-lock-{label}-{}-{nanos}",
         std::process::id()
     ));
     fs::create_dir_all(&path).expect("create temp dir");
@@ -28,7 +28,7 @@ fn second_acquire_of_a_held_dir_is_busy_until_the_first_is_dropped() {
     let canonical = fs::canonicalize(&dir).unwrap();
     assert!(
         message.contains(&canonical.display().to_string())
-            && message.contains("another Termul host")
+            && message.contains("another itzTerm host")
             && message.contains(&format!("by pid {}", std::process::id())),
         "message must name the path, the rival and its pid: {message}"
     );
@@ -183,7 +183,7 @@ fn recorded_pid_is_readable_by_a_rival_and_never_leaves_stale_digits() {
 #[test]
 fn desktop_lock_set_covers_app_data_and_its_overridable_stores() {
     let root = temp_dir("desktop");
-    let app_data = root.join("com.termul.app");
+    let app_data = root.join("com.itzterm.app");
 
     let held = lock_desktop_data(&app_data).unwrap();
     assert!(held.len() >= 6);
@@ -251,7 +251,7 @@ fn two_standalone_hosts_on_one_state_dir_conflict_and_overlapping_overrides_dedu
 
     let error = paths.lock().expect_err("second server is refused");
     assert!(error.is_busy());
-    assert!(error.to_string().contains("another Termul host"));
+    assert!(error.to_string().contains("another itzTerm host"));
 
     drop(first);
     paths.lock().expect("lockable again after the first exits");

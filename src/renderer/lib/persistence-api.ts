@@ -6,7 +6,7 @@
  * WebSocket; the desktop speaks it over the Tauri IPC Channel carrier
  * (`ChannelSocket`) to the host store it runs in-process, so every surface
  * scopes keys by device, tracks revisions and reports write failures the same
- * way. The desktop plugin-store file `termul-data.json` is no longer read or
+ * way. The desktop plugin-store file `itzterm-data.json` is no longer read or
  * written here: the host imports it once, into the first device that reaches
  * the store over the Channel.
  *

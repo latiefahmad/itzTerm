@@ -311,7 +311,7 @@ export function McpServersSettings(): React.JSX.Element {
         footnote={
           <>
             Agents can also advertise experimental MCP-over-ACP (<code>mcpCapabilities.acp</code>).
-            Termul does not read it yet.
+            itzTerm does not read it yet.
           </>
         }
       >
@@ -511,7 +511,7 @@ export function McpServersSettings(): React.JSX.Element {
                           </Button>
                         }
                       >
-                        Termul could not reach this server. Check the command, URL and environment
+                        itzTerm could not reach this server. Check the command, URL and environment
                         values, then try again.
                         {mcpProbeError[server.id] ? (
                           <span className="mt-1 block break-words font-mono text-muted-foreground">

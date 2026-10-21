@@ -35,7 +35,7 @@ function windowIsFocused(): boolean {
   return true
 }
 
-async function focusTermulWindow(): Promise<void> {
+async function focusItzTermWindow(): Promise<void> {
   try {
     if (isTauriContext()) {
       const win = getCurrentWindow()
@@ -59,7 +59,7 @@ export function activateNotifiedTerminal(terminalId: string): void {
   useProjectStore.getState().selectProject(terminal.projectId)
   useTerminalStore.getState().selectTerminal(terminal.id)
   useTerminalStore.getState().setTerminalNeedsAttention(terminal.id, false)
-  void focusTermulWindow()
+  void focusItzTermWindow()
 }
 
 /**
@@ -110,7 +110,7 @@ export function useTerminalIdleNotification(): void {
       terminalState.setTerminalNeedsAttention(terminal.id, true)
 
       const project = useProjectStore.getState().projects.find((p) => p.id === terminal.projectId)
-      const title = sanitizeNotificationText(project?.name ?? 'Termul')
+      const title = sanitizeNotificationText(project?.name ?? 'itzTerm')
       const terminalName = sanitizeNotificationText(terminal.name)
       void sendDesktopNotification(title, `${terminalName} — agent finished`, {
         onClick: () => activateNotifiedTerminal(terminal.id)

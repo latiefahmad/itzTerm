@@ -114,10 +114,10 @@
 @layer base {
   :root {
     /* Color tokens are OKLCH "L C H" components, read as oklch(var(--token)).
-       These match Termul dark `applyColorTheme('termul')` so first paint
+       These match itzTerm dark `applyColorTheme('itzterm')` so first paint
        equals runtime. applyColorTheme overwrites them at startup. */
 
-    /* Termul dark first paint. Neutrals are the Linear void scale.
+    /* itzTerm dark first paint. Neutrals are the Linear void scale.
        Brand fill stays the composer blue. applyColorTheme overwrites these. */
     --background: 0.139 0.003 246.3;
     --foreground: 0.922 0.001 286.4;
@@ -433,7 +433,7 @@
     color: oklch(var(--popover-foreground));
   }
   /* Neutral, solid highlight: native popups may drop alpha, and --accent
-     is maroon in Termul Light. --input is one step above popover in both. */
+     is maroon in itzTerm Light. --input is one step above popover in both. */
   select option:checked,
   select option:hover {
     background-color: oklch(var(--input));
@@ -691,22 +691,22 @@
    Unlayered so it wins over tailwindcss-animate. */
 @media (prefers-reduced-motion: reduce) {
   [data-radix-popper-content-wrapper] > [data-state="open"] {
-    animation-name: termul-popover-fade-in;
+    animation-name: itzterm-popover-fade-in;
     animation-duration: 150ms;
   }
 
   [data-radix-popper-content-wrapper] > [data-state="closed"] {
-    animation-name: termul-popover-fade-out;
+    animation-name: itzterm-popover-fade-out;
     animation-duration: 150ms;
   }
 }
 
 /* The model menu drives open and close with a transition. */
-[data-radix-popper-content-wrapper] > .termul-popover-transition {
+[data-radix-popper-content-wrapper] > .itzterm-popover-transition {
   animation: none;
 }
 
-@keyframes termul-popover-fade-in {
+@keyframes itzterm-popover-fade-in {
   from {
     opacity: 0;
   }
@@ -715,7 +715,7 @@
   }
 }
 
-@keyframes termul-popover-fade-out {
+@keyframes itzterm-popover-fade-out {
   from {
     opacity: 1;
   }
@@ -1650,7 +1650,7 @@
      panel root — the padding reserves layout space the native child webview
      shrinks inside, so the ring is real chrome, never painted over. Hues
      come from the status-bar scale (theme-aware via applyColorTheme). */
-  .termul-agent-border {
+  .itzterm-agent-border {
     background-image: linear-gradient(
       115deg,
       oklch(var(--status-bar-blue)),
@@ -1663,9 +1663,9 @@
        image width, so the pan wraps seamlessly — no-repeat slides the image
        fully off-element for the back half of every cycle. */
     background-repeat: repeat;
-    animation: termul-agent-border-pan 6s linear infinite;
+    animation: itzterm-agent-border-pan 6s linear infinite;
   }
-  @keyframes termul-agent-border-pan {
+  @keyframes itzterm-agent-border-pan {
     0% {
       background-position: 0% 50%;
     }
@@ -1674,7 +1674,7 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .termul-agent-border {
+    .itzterm-agent-border {
       animation: none;
     }
   }
@@ -1683,25 +1683,25 @@
 @layer components {
   /* Mobile drawer rows: an over-long title scrolls to its tail on a slow
      scroll-pause-return loop (MarqueeText measures the overflow and sets
-     --termul-marquee-distance/-duration inline). Reduced motion never mounts
+     --itzterm-marquee-distance/-duration inline). Reduced motion never mounts
      this class; the media query is the belt-and-braces fallback. */
-  .termul-marquee {
-    animation: termul-marquee var(--termul-marquee-duration, 8s) ease-in-out infinite;
+  .itzterm-marquee {
+    animation: itzterm-marquee var(--itzterm-marquee-duration, 8s) ease-in-out infinite;
   }
   /* WCAG 2.2.2 partial mitigation: hovering the label or keyboard-focusing
      its parent control pauses the loop so the text can be read in place. */
-  .termul-marquee:hover,
-  *:focus-visible .termul-marquee {
+  .itzterm-marquee:hover,
+  *:focus-visible .itzterm-marquee {
     animation-play-state: paused;
   }
-  @keyframes termul-marquee {
+  @keyframes itzterm-marquee {
     0%,
     18% {
       transform: translateX(0);
     }
     46%,
     54% {
-      transform: translateX(calc(-1 * var(--termul-marquee-distance, 0px)));
+      transform: translateX(calc(-1 * var(--itzterm-marquee-distance, 0px)));
     }
     82%,
     100% {
@@ -1709,7 +1709,7 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    .termul-marquee {
+    .itzterm-marquee {
       animation: none;
     }
   }
@@ -1732,7 +1732,7 @@
   }
 }
 
-/* Termul light only. Hairline borders carry surface elevation.
+/* itzTerm light only. Hairline borders carry surface elevation.
    Real buttons and `data-keep-shadow` (Button asChild, switch thumb)
    keep their emboss. Ring shadows stay. */
 html[data-flat-elevation="true"] [class*="shadow-"]:not(button):not([data-keep-shadow]) {

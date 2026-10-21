@@ -16,7 +16,7 @@ fn parse_skill_md_splits_frontmatter() {
 
 #[test]
 fn list_and_read_project_skill() {
-    let temp = std::env::temp_dir().join(format!("termul-skill-test-{}", std::process::id()));
+    let temp = std::env::temp_dir().join(format!("itzterm-skill-test-{}", std::process::id()));
     let skills_root = temp.join(".agents").join("skills");
     let skill_dir = skills_root.join("demo-skill");
     fs::create_dir_all(&skill_dir).unwrap();
@@ -58,7 +58,7 @@ fn list_and_read_global_skill_populates_path() {
     // Skills under the user's home `~/.agents/skills/<name>/SKILL.md` must
     // surface their absolute path so the wire prompt can cite a global skill
     // path (the agent reads the body from disk at prompt time).
-    let home = std::env::temp_dir().join(format!("termul-skill-home-{}", std::process::id()));
+    let home = std::env::temp_dir().join(format!("itzterm-skill-home-{}", std::process::id()));
     let global_root = home.join(".agents").join("skills");
     let skill_dir = global_root.join("global-skill");
     fs::create_dir_all(&skill_dir).unwrap();
@@ -94,7 +94,7 @@ fn list_and_read_global_skill_populates_path() {
 
 #[test]
 fn read_agent_skill_rejects_path_traversal_names() {
-    let temp = std::env::temp_dir().join(format!("termul-skill-sec-{}", std::process::id()));
+    let temp = std::env::temp_dir().join(format!("itzterm-skill-sec-{}", std::process::id()));
     let skill_dir = temp.join(".agents").join("skills").join("safe-skill");
     fs::create_dir_all(&skill_dir).unwrap();
     fs::write(
@@ -124,7 +124,7 @@ fn read_agent_skill_rejects_path_traversal_names() {
 
 #[test]
 fn list_agent_skills_ignores_invalid_directory_names() {
-    let temp = std::env::temp_dir().join(format!("termul-skill-list-sec-{}", std::process::id()));
+    let temp = std::env::temp_dir().join(format!("itzterm-skill-list-sec-{}", std::process::id()));
     let skills_root = temp.join(".agents").join("skills");
     fs::create_dir_all(skills_root.join("valid-skill")).unwrap();
     fs::write(
@@ -162,7 +162,7 @@ fn parse_skill_md_handles_empty_frontmatter() {
 
 #[test]
 fn list_agent_skills_skips_malformed_skill_and_keeps_valid() {
-    let temp = std::env::temp_dir().join(format!("termul-skip-bad-{}", std::process::id()));
+    let temp = std::env::temp_dir().join(format!("itzterm-skip-bad-{}", std::process::id()));
     let skills_root = temp.join(".agents").join("skills");
     fs::create_dir_all(skills_root.join("good-skill")).unwrap();
     fs::write(
@@ -216,7 +216,7 @@ impl Scratch {
             .unwrap()
             .as_nanos();
         let root = std::env::temp_dir().join(format!(
-            "termul-claude-{label}-{}-{nanos}",
+            "itzterm-claude-{label}-{}-{nanos}",
             std::process::id()
         ));
         let _ = fs::remove_dir_all(&root);

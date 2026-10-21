@@ -2,7 +2,7 @@
 //!
 //! Replaces the legacy PTY bridge (`remote/server.rs`, removed). Where the old
 //! server proxied live PTY I/O over a separate WebSocket, this wraps the same
-//! [`crate::web`] Axum server the standalone `termul-server` binary uses, so the
+//! [`crate::web`] Axum server the standalone `itzterm-server` binary uses, so the
 //! desktop's live `AcpManager` (the same agent sessions the renderer sees) is
 //! shared with a browser/phone client over the LAN — the "shared-live" mode.
 //!
@@ -377,7 +377,7 @@ impl RemoteServerState {
             // `serve_router` below; this path override is never consulted.
             store_file: None,
             // Desktop shared-live LAN clients stay view-only for mutations
-            // (CWE-306 guard stays on); only the standalone `termul-server`
+            // (CWE-306 guard stays on); only the standalone `itzterm-server`
             // honors the `--allow-remote-writes` opt-in.
             allow_remote_writes: false,
             // The bearer token reaches `serve_router` as the resolved

@@ -216,7 +216,7 @@ async fn a_session_in_a_nested_linked_worktree_does_not_block_the_enclosing_tree
         return; // git unavailable
     }
     let repo = std::fs::canonicalize(&repo).unwrap();
-    let nested = repo.join(".termul/worktrees/wt");
+    let nested = repo.join(".itzterm/worktrees/wt");
     std::fs::create_dir_all(nested.parent().unwrap()).unwrap();
     assert!(
         GitTracker::run_git_command(

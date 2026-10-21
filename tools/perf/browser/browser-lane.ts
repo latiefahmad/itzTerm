@@ -1,17 +1,17 @@
 /**
- * CAP-7 secondary lane: the same scenario scripts against the termul-server
+ * CAP-7 secondary lane: the same scenario scripts against the itzterm-server
  * web client, headless, producing results in the same schema as desktop
  * runs.
  *
  * Stream-storm and project-switch only (spec: the terminal/PTY lane and
  * soak are desktop-primary). Load can use the same fake agents through the
- * server's agent path — the web client talks to termul-server over WS, and
+ * server's agent path — the web client talks to itzterm-server over WS, and
  * the server spawns agents exactly like the desktop Rust host.
  *
  * Differences from the desktop lane:
  *  - The target is a URL (http://127.0.0.1:<port>), launched with plain
  *    `chromium.launch({ headless: true })` — no WebView2, no PID tree.
- *  - Process counters sample the termul-server node/bun process tree
+ *  - Process counters sample the itzterm-server node/bun process tree
  *    (still OS-level, still passive).
  *  - Everything else — observer injection, phase marking, result schema,
  *    report — is identical to the desktop lane.
@@ -30,7 +30,7 @@ import { RESULTS_ROOT, type ScenarioFlags } from './browser-shared.ts'
 export interface BrowserRunOptions {
   scenario: 'stream-storm' | 'project-switch'
   flags: ScenarioFlags
-  /** Server base URL; default http://127.0.0.1:3000 (termul-server default). */
+  /** Server base URL; default http://127.0.0.1:3000 (itzterm-server default). */
   serverUrl?: string
 }
 
@@ -45,7 +45,7 @@ export interface BrowserContext {
 
 /**
  * Launch the headless browser against the web client. If `serverUrl` points
- * at a not-yet-started server, the caller starts termul-server first; this
+ * at a not-yet-started server, the caller starts itzterm-server first; this
  * module only attaches.
  */
 export async function runBrowserScenario(
@@ -133,7 +133,7 @@ export async function runBrowserScenario(
       seed: Number(opts.flags.seed ?? 42),
       lane: 'browser',
       appTarget: serverUrl,
-      reactProfiling: process.env.TERMUL_PERF_PROFILING === '1',
+      reactProfiling: process.env.ITZTERM_PERF_PROFILING === '1',
       machine: process.env.COMPUTERNAME,
       status: 'ok'
     },

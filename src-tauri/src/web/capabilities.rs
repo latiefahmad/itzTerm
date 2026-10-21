@@ -140,13 +140,13 @@ impl Capabilities {
         match decision {
             WriteDecision::Allowed => {}
             WriteDecision::AdmittedByOptIn => tracing::warn!(
-                target: "termul::web::capabilities",
+                target: "itzterm::web::capabilities",
                 carrier = carrier.as_str(),
                 peer = %peer,
                 "connection granted write capability (--allow-remote-writes)",
             ),
             WriteDecision::DeniedSharedLive | WriteDecision::DeniedRemotePeer => tracing::info!(
-                target: "termul::web::capabilities",
+                target: "itzterm::web::capabilities",
                 carrier = carrier.as_str(),
                 peer = %peer,
                 reason = ?decision,

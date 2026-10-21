@@ -119,7 +119,7 @@ pub(crate) fn expired_token_with_refresh(url: &str) -> StoredToken {
         access_token: "stale-access".into(),
         refresh_token: Some("stored-refresh".into()),
         expires_at: Some(1),
-        client_id: "termul-client".into(),
+        client_id: "itzterm-client".into(),
         issuer: url.into(),
         server_url: url.into(),
     }

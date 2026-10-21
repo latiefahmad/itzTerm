@@ -285,7 +285,7 @@ impl WatchHub {
             EnqueueOutcome::Enqueued => {}
             EnqueueOutcome::Full => {
                 warn!(
-                    target: "termul::web::watch",
+                    target: "itzterm::web::watch",
                     watch = kind.as_str(),
                     "watch subscribe refused: connection queue full"
                 );
@@ -306,7 +306,7 @@ impl WatchHub {
             runtime,
         });
         info!(
-            target: "termul::web::watch",
+            target: "itzterm::web::watch",
             watch = kind.as_str(),
             subscribers = list.len(),
             "watch subscribed"
@@ -376,7 +376,7 @@ impl WatchHub {
                 EnqueueOutcome::Closed => {
                     subscriber.retired.cancel();
                     debug!(
-                        target: "termul::web::watch",
+                        target: "itzterm::web::watch",
                         watch = kind.as_str(),
                         "dropping a subscriber whose connection is closing"
                     );
@@ -422,7 +422,7 @@ impl WatchHub {
             }
         }
         info!(
-            target: "termul::web::watch",
+            target: "itzterm::web::watch",
             watch = kind.as_str(),
             "watch ended by the host"
         );
@@ -435,7 +435,7 @@ impl WatchHub {
 /// never makes any).
 fn schedule_resync(kind: WatchKind, scope: &str, host_epoch: &str, subscriber: &mut Subscriber) {
     warn!(
-        target: "termul::web::watch",
+        target: "itzterm::web::watch",
         watch = kind.as_str(),
         "watch delta dropped: connection queue full; the client resubscribes on the revision gap"
     );

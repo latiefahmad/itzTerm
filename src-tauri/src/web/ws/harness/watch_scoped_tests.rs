@@ -20,7 +20,7 @@ fn frames(conn: &Conn, watch: &str, scope: &str) -> Vec<Value> {
 }
 
 fn host_with_store() -> (Host, std::path::PathBuf) {
-    let dir = std::env::temp_dir().join(format!("termul-watch-store-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("itzterm-watch-store-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&dir).expect("create store dir");
     let store = Arc::new(WebStore::open(dir.join("store.json"), StorePolicy::default()).expect("open store"));
     let mut host = Host::new(|_, _| {});

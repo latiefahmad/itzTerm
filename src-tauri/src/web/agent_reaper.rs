@@ -2,11 +2,11 @@
 //!
 //! Reload-heavy usage leaks agent processes: every page load can spawn a fresh
 //! agent, and nothing stops them once the client that created them is gone.
-//! The host owns that lifecycle: the standalone `termul-server` (`serve`) and
+//! The host owns that lifecycle: the standalone `itzterm-server` (`serve`) and
 //! the desktop app (`lib.rs` setup) each start exactly one reaper over their
 //! `AcpManager`. The live window is [`resolved_agent_idle_window`]: the server
 //! locks the value from its flag, env var, or the 30-minute default; the
-//! desktop reads `$TERMUL_AGENT_IDLE_REAP_SECS` and, when that variable is
+//! desktop reads `$ITZTERM_AGENT_IDLE_REAP_SECS` and, when that variable is
 //! unset, accepts the App Preferences override on the next sweep.
 //!
 //! An agent is reaped only when the host itself saw no sign of life:
@@ -40,7 +40,7 @@ use serde::Serialize;
 use crate::acp::{AcpManager, AgentId, SessionId};
 use crate::web::config::DEFAULT_AGENT_IDLE_WINDOW_SECS;
 
-const LOG_TARGET: &str = "termul::web::agent_reaper";
+const LOG_TARGET: &str = "itzterm::web::agent_reaper";
 
 /// Default sweep cadence: each sweep re-probes every live agent.
 pub(crate) const DEFAULT_SWEEP_INTERVAL: Duration = Duration::from_secs(60);
@@ -257,7 +257,7 @@ impl AgentReaperHandle {
 #[serde(rename_all = "camelCase")]
 pub struct AgentIdleWindowStatus {
     pub secs: u64,
-    /// `env` when `$TERMUL_AGENT_IDLE_REAP_SECS` is set, `operator` when the
+    /// `env` when `$ITZTERM_AGENT_IDLE_REAP_SECS` is set, `operator` when the
     /// server locked its startup value, `setting` when App Preferences applies,
     /// `default` for the 30-minute default.
     pub source: &'static str,
@@ -373,7 +373,7 @@ pub fn resolved_agent_idle_window() -> AgentIdleWindowStatus {
     resolve_idle_window(&IDLE_WINDOW.lock())
 }
 
-/// Closure the desktop and `termul-server` reapers pass so each sweep sees a
+/// Closure the desktop and `itzterm-server` reapers pass so each sweep sees a
 /// settings change.
 #[must_use]
 pub fn live_agent_idle_window() -> Duration {

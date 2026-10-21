@@ -686,7 +686,7 @@ pub(super) fn staged_entry_count(cwd: &str) -> Option<u32> {
 ///
 /// With `stamp.expected_head`, refuses when `HEAD` is not the commit the caller
 /// saw; with `stamp.command_id`, trails the message with
-/// `Termul-Command-Id: <id>` so a resend can find the commit it made.
+/// `itzTerm-Command-Id: <id>` so a resend can find the commit it made.
 pub fn git_commit_stamped(
     cwd: &str,
     summary: &str,
@@ -702,7 +702,7 @@ pub fn git_commit_stamped(
     if stamp.expected_head.is_some_and(|head| !is_valid_expected_head(head)) {
         return Err(CommitFailure::InvalidExpectedHead);
     }
-    // The head check and the commit are one step against other Termul commits.
+    // The head check and the commit are one step against other itzTerm commits.
     let repo_lock = repo_lock(cwd);
     let _held = repo_lock.lock();
     if let Some(expected) = stamp.expected_head {

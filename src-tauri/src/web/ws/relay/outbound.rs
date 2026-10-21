@@ -92,7 +92,7 @@ impl Overflow {
         if failures >= self.tolerance {
             if !self.closing.is_cancelled() {
                 warn!(
-                    target: "termul::web::ws",
+                    target: "itzterm::web::ws",
                     failures,
                     "outbound queue stayed full for the overflow tolerance; closing the connection"
                 );

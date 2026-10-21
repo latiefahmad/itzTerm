@@ -13,7 +13,7 @@ import { E2E_BASE_URL, E2E_TOKEN, storeKey, wsRequest } from './helpers'
 
 /**
  * Mobile header and palette parity E2E (spec-mobile-header-palette-parity) on
- * termul-server, on a phone-sized touch viewport.
+ * itzterm-server, on a phone-sized touch viewport.
  *
  * Two promises are checked against a real layout and a real relay:
  *
@@ -121,7 +121,7 @@ async function createProject(
       'git',
       [
         '-c',
-        'user.email=e2e@termul',
+        'user.email=e2e@itzterm',
         '-c',
         'user.name=e2e',
         'commit',
@@ -187,7 +187,7 @@ async function openMobileWorkspace(page: Page, projectName: string): Promise<voi
   })
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN,
     { timeout: 60_000 }
   )
@@ -528,7 +528,7 @@ test('header ⋯ sheet keeps its rows, order, 44px and Close chat divider on a n
 
   // No tab open: the five navigation rows, no Close chat.
   await headerButton(page, 'More').tap()
-  const sheet = page.getByRole('dialog', { name: 'Termul' })
+  const sheet = page.getByRole('dialog', { name: 'itzTerm' })
   await expect(sheet).toBeVisible()
   await expect(sheetRows(sheet)).toHaveText(navigation)
   await expectRowsAtLeast44(sheetRows(sheet))
@@ -597,7 +597,7 @@ test.describe('desktop-width shell', () => {
     })
     await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
     await page.waitForFunction(
-      (token) => localStorage.getItem('termul.webAuthToken') === token,
+      (token) => localStorage.getItem('itzterm.webAuthToken') === token,
       E2E_TOKEN,
       { timeout: 60_000 }
     )

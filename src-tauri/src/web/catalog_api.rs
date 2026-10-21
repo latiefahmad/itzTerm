@@ -78,7 +78,7 @@ pub async fn list(
             }
             service.apply_external_opencode(&mut catalog).await;
             debug!(
-                target: "termul::web::catalog_api",
+                target: "itzterm::web::catalog_api",
                 agents = catalog.agents.len(),
                 "get: resolved catalog"
             );
@@ -86,7 +86,7 @@ pub async fn list(
         }
         Err(error) => {
             warn!(
-                target: "termul::web::catalog_api",
+                target: "itzterm::web::catalog_api",
                 error = %error,
                 "get: catalog resolution failed"
             );
@@ -140,7 +140,7 @@ pub async fn set_opt_in(
         Ok(req) => req,
         Err(error) => {
             warn!(
-                target: "termul::web::catalog_api",
+                target: "itzterm::web::catalog_api",
                 error = %error,
                 "set_opt_in: payload validation failed (deny_unknown_fields or malformed JSON)"
             );
@@ -165,7 +165,7 @@ pub async fn set_opt_in(
     match service.set_opt_in(req.enabled) {
         Ok(()) => {
             info!(
-                target: "termul::web::catalog_api",
+                target: "itzterm::web::catalog_api",
                 enabled = req.enabled,
                 "set_opt_in: persisted"
             );
@@ -173,7 +173,7 @@ pub async fn set_opt_in(
         }
         Err(error) => {
             warn!(
-                target: "termul::web::catalog_api",
+                target: "itzterm::web::catalog_api",
                 error = %error,
                 "set_opt_in: persistence failed"
             );

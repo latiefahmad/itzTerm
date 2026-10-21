@@ -205,7 +205,7 @@ pub(super) async fn handle_respond_permission(
     {
         Ok(crate::web::permissions::RespondOutcome::Resolved) => {
             info!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 request_id = %id,
                 "permission resolved by ticket"
             );
@@ -314,7 +314,7 @@ pub(super) async fn handle_answer_question(
     {
         Ok(crate::web::permissions::QuestionRespondOutcome::Resolved) => {
             info!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 request_id = %id,
                 "question resolved by ticket"
             );

@@ -10,7 +10,7 @@ describe('readCssTokenHex', () => {
   })
 
   it('reads an applied theme token as hex', () => {
-    applyColorTheme('termul')
+    applyColorTheme('itzterm')
     expect(readCssTokenHex('--primary-fill')).toBe(oklchComponentsToHex('0.551 0.188 259.9'))
   })
 
@@ -25,7 +25,7 @@ describe('getTerminalSearchDecorations', () => {
   })
 
   it('uses search-match tokens, not hardcoded yellow', () => {
-    applyColorTheme('termul')
+    applyColorTheme('itzterm')
     const decorations = getTerminalSearchDecorations()
     expect(decorations.matchBackground).toBe(readCssTokenHex('--search-match'))
     expect(decorations.activeMatchBackground).toBe(readCssTokenHex('--search-match-active'))

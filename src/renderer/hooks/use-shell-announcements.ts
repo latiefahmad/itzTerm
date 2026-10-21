@@ -87,7 +87,7 @@ function acpSlicesUnchanged(next: AcpState, prev: AcpState): boolean {
  * Feed the mobile shell live region.
  *
  * Renderer-only and derived entirely from stores, so desktop shared-live
- * remote clients and standalone `termul-server` web clients behave the same.
+ * remote clients and standalone `itzterm-server` web clients behave the same.
  * Mount it once, from `MobileChatShell` only.
  */
 export function useShellAnnouncements(): void {

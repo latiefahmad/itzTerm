@@ -4,7 +4,7 @@ use std::time::Duration;
 
 fn temp_dir(label: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-store-hygiene-{label}-{}-{}",
+        "itzterm-store-hygiene-{label}-{}-{}",
         std::process::id(),
         now_millis()
     ));

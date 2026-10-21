@@ -21,8 +21,8 @@ vi.mock('@/lib/worktree-reconciler', () => ({ reconcileProjectWorktrees: reconci
 vi.mock('@/lib/log-api', () => ({ logFrontendError: vi.fn(async () => {}) }))
 
 const ROOT = '/repo'
-const WT = `${ROOT}/.termul/worktrees/a`
-const GONE = `${ROOT}/.termul/worktrees/gone`
+const WT = `${ROOT}/.itzterm/worktrees/a`
+const GONE = `${ROOT}/.itzterm/worktrees/gone`
 
 function wt(id: string, path: string): Worktree {
   return { id, name: id, branch: `b-${id}`, path, createdAt: '2026-01-01T00:00:00.000Z' }

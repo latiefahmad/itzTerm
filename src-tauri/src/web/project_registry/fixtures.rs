@@ -50,7 +50,7 @@ impl ProjectRegistry {
         projects.retain(|p| p.id != UNASSIGNED_PROJECT_ID);
         if projects.len() != before {
             tracing::warn!(
-                target: "termul::web::project_registry",
+                target: "itzterm::web::project_registry",
                 "replace: dropped a project carrying the reserved unassigned id"
             );
         }

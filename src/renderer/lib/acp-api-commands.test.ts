@@ -241,6 +241,6 @@ describe('acp-api ledgered commands', () => {
     await exhaustLadder(acpSpawnAgent(config))
     expect(new Set(commandIds('spawn_agent')).size).toBe(3)
     // Nothing content-derived was persisted in the clear.
-    expect(window.localStorage.getItem('termul.commandJournal') ?? '').not.toContain('SECRET')
+    expect(window.localStorage.getItem('itzterm.commandJournal') ?? '').not.toContain('SECRET')
   })
 })

@@ -21,8 +21,8 @@ const { reconcile } = vi.hoisted(() => ({ reconcile: vi.fn(async () => 'unchange
 vi.mock('@/lib/worktree-reconciler', () => ({ reconcileProjectWorktrees: reconcile }))
 
 const ROOT = 'E:/p'
-const WT_A = 'E:/p/.termul/worktrees/a'
-const WT_B = 'E:/p/.termul/worktrees/b'
+const WT_A = 'E:/p/.itzterm/worktrees/a'
+const WT_B = 'E:/p/.itzterm/worktrees/b'
 
 function wt(id: string, path: string): Worktree {
   return { id, name: id, branch: `b-${id}`, path, createdAt: '2026-01-01T00:00:00.000Z' }
@@ -95,20 +95,20 @@ describe('getActiveWorkingCopy', () => {
   })
 
   it('resolves a pruned pick as the project folder', () => {
-    setPick('E:/p/.termul/worktrees/gone')
+    setPick('E:/p/.itzterm/worktrees/gone')
     expect(getActiveWorkingCopy()).toMatchObject({ kind: 'project' })
   })
 
   it('returns unresolved for a chat cwd in an unlisted managed worktree', () => {
     useAcpStore.setState({
-      sessions: { s1: mockAcpSession({ id: 's1', cwd: 'E:/p/.termul/worktrees/gone/src' }) }
+      sessions: { s1: mockAcpSession({ id: 's1', cwd: 'E:/p/.itzterm/worktrees/gone/src' }) }
     })
     setActiveTab({ type: 'agent-chat', id: 'chat-s1', sessionId: 's1' })
     setPick(WT_A)
     expect(getActiveWorkingCopy()).toEqual({
       state: 'unresolved',
-      key: 'e:/p/.termul/worktrees/gone',
-      path: 'E:/p/.termul/worktrees/gone'
+      key: 'e:/p/.itzterm/worktrees/gone',
+      path: 'E:/p/.itzterm/worktrees/gone'
     })
   })
 
@@ -121,8 +121,8 @@ describe('isGitWriteBlocked', () => {
   const projects = [project()]
 
   it('blocks an unlisted managed worktree path', () => {
-    expect(isGitWriteBlocked('E:/p/.termul/worktrees/gone', projects)).toBe(true)
-    expect(isGitWriteBlocked('E:\\p\\.termul\\worktrees\\gone\\src', projects)).toBe(true)
+    expect(isGitWriteBlocked('E:/p/.itzterm/worktrees/gone', projects)).toBe(true)
+    expect(isGitWriteBlocked('E:\\p\\.itzterm\\worktrees\\gone\\src', projects)).toBe(true)
   })
 
   it('allows listed worktrees, the project folder and unknown explicit paths', () => {
@@ -134,8 +134,8 @@ describe('isGitWriteBlocked', () => {
   })
 
   it('allows a path another project resolves', () => {
-    const other = { id: 'p2', name: 'Q', color: 'red', path: 'E:/p/.termul/worktrees/gone' }
-    expect(isGitWriteBlocked('E:/p/.termul/worktrees/gone', [project(), other as Project])).toBe(
+    const other = { id: 'p2', name: 'Q', color: 'red', path: 'E:/p/.itzterm/worktrees/gone' }
+    expect(isGitWriteBlocked('E:/p/.itzterm/worktrees/gone', [project(), other as Project])).toBe(
       false
     )
   })
@@ -144,8 +144,8 @@ describe('isGitWriteBlocked', () => {
 describe('reportUnresolvedWorkingCopy', () => {
   const unresolved = {
     state: 'unresolved' as const,
-    key: 'e:/p/.termul/worktrees/gone',
-    path: 'E:/p/.termul/worktrees/gone'
+    key: 'e:/p/.itzterm/worktrees/gone',
+    path: 'E:/p/.itzterm/worktrees/gone'
   }
 
   it('reconciles once per distinct key and logs one [working-copy] record', async () => {
@@ -158,7 +158,7 @@ describe('reportUnresolvedWorkingCopy', () => {
       expect.objectContaining({ message: expect.stringContaining('[working-copy]') })
     )
     expect(
-      reportUnresolvedWorkingCopy('p1', { ...unresolved, key: 'e:/p/.termul/worktrees/x' })
+      reportUnresolvedWorkingCopy('p1', { ...unresolved, key: 'e:/p/.itzterm/worktrees/x' })
     ).toBe(true)
     expect(reconcile).toHaveBeenCalledTimes(2)
   })

@@ -13,7 +13,7 @@
  *
  * Why `:root`: sonner renders its list inline beside the router, outside the
  * shell, so only an ancestor of the Toaster can supply the variable. The
- * precedent is `--termul-keyboard-height` in `use-osk-viewport.ts`.
+ * precedent is `--itzterm-keyboard-height` in `use-osk-viewport.ts`.
  *
  * Why the viewport bottom: both sonner offsets are measured from there, so the
  * value already includes the dock's own padding, the iOS keyboard spacer and

@@ -8,8 +8,8 @@ fn pin_text(tag: &str, url: &str, sha: &str) -> String {
 
 #[test]
 fn parses_all_three_fields() {
-    let parsed = parse_pin(&pin_text("termul-0.1.0", "https://example.test/b.zip", SHA)).unwrap();
-    assert_eq!(parsed.tag, "termul-0.1.0");
+    let parsed = parse_pin(&pin_text("itzterm-0.1.0", "https://example.test/b.zip", SHA)).unwrap();
+    assert_eq!(parsed.tag, "itzterm-0.1.0");
     assert_eq!(parsed.url, "https://example.test/b.zip");
     assert_eq!(parsed.sha256, SHA);
 }

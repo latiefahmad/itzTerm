@@ -1,11 +1,11 @@
-//! Guided setup + background launch for the standalone `termul-server`.
+//! Guided setup + background launch for the standalone `itzterm-server`.
 //!
-//! `termul-server onboard` interactively asks for each supported config,
+//! `itzterm-server onboard` interactively asks for each supported config,
 //! validates answers by reusing the existing validators (`BindMode::parse`,
 //! `UpdateChannel::parse`, …), then
 //! auto-detects the host's service manager and launches the server detached
 //! so it survives SSH logout: systemd hosts install + enable + start a
-//! `termul-server.service` unit; non-systemd Linux hosts detach via `setsid`
+//! `itzterm-server.service` unit; non-systemd Linux hosts detach via `setsid`
 //! with stdio to a log file + a PID file.
 //!
 //! The wizard logic (validation, synthesis, detection predicate, unit-text
@@ -67,10 +67,10 @@ impl OnboardAnswers {
     /// for a project root: projects are added to the registry after launch.
     pub fn defaults() -> Self {
         let sessions_dir =
-            default_sessions_dir().unwrap_or_else(|| PathBuf::from("/tmp/termul/sessions"));
+            default_sessions_dir().unwrap_or_else(|| PathBuf::from("/tmp/itzterm/sessions"));
         let projects_file = default_projects_file()
             .map(normalize_projects_file_path)
-            .unwrap_or_else(|| PathBuf::from("/tmp/termul/projects.json"));
+            .unwrap_or_else(|| PathBuf::from("/tmp/itzterm/projects.json"));
         Self {
             host: "127.0.0.1".to_string(),
             port: 8080,
@@ -87,7 +87,7 @@ impl OnboardAnswers {
     /// keep it. Retries on validation error with the validator's message.
     /// Only called when stdin is a TTY — the non-TTY path uses [`Self::defaults`].
     pub fn collect<R: BufRead, W: Write>(stdin: &mut R, stdout: &mut W) -> Self {
-        writeln!(stdout, "=== termul-server onboard ===").ok();
+        writeln!(stdout, "=== itzterm-server onboard ===").ok();
         writeln!(
             stdout,
             "Press Enter to accept the [default] for each prompt.\n"
@@ -306,16 +306,16 @@ impl OnboardAnswers {
 
         let expose = BindMode::parse(&self.host) == Some(BindMode::All);
         if expose && self.allow_remote_writes {
-            lines.push("TERMUL_SERVER_ALLOW_REMOTE_WRITES=true".into());
+            lines.push("ITZTERM_SERVER_ALLOW_REMOTE_WRITES=true".into());
         }
         if let Some(channel) = self.update_channel {
-            lines.push("TERMUL_SERVER_UPDATE_ENABLED=true".into());
+            lines.push("ITZTERM_SERVER_UPDATE_ENABLED=true".into());
             lines.push(format!(
-                "TERMUL_SERVER_UPDATE_CHANNEL={}",
+                "ITZTERM_SERVER_UPDATE_CHANNEL={}",
                 channel_name(channel)
             ));
             lines.push(format!(
-                "TERMUL_SERVER_UPDATE_INTERVAL_SECS={}",
+                "ITZTERM_SERVER_UPDATE_INTERVAL_SECS={}",
                 self.update_interval_secs
             ));
         }
@@ -382,8 +382,8 @@ impl ServiceManager {
                     ""
                 };
                 format!(
-                    "Mechanism: systemd. Manage: journalctl{u} -u termul-server -f; \
-                     systemctl{u} stop termul-server."
+                    "Mechanism: systemd. Manage: journalctl{u} -u itzterm-server -f; \
+                     systemctl{u} stop itzterm-server."
                 )
             }
             Self::Setsid => "Mechanism: setsid (no systemd). Detached background process \
@@ -445,7 +445,7 @@ impl ServiceManager {
                 if user_flag {
                     enable.arg("--user");
                 }
-                enable.args(["enable", "--now", "termul-server"]);
+                enable.args(["enable", "--now", "itzterm-server"]);
                 let st = enable
                     .status()
                     .map_err(|e| format!("systemctl enable --now failed: {e}"))?;
@@ -494,8 +494,8 @@ impl ServiceManager {
                 }
                 std::fs::create_dir_all(state_dir)
                     .map_err(|e| format!("create state dir '{}': {e}", state_dir.display()))?;
-                let log_path = state_dir.join("termul-server.log");
-                let pid_path = state_dir.join("termul-server.pid");
+                let log_path = state_dir.join("itzterm-server.log");
+                let pid_path = state_dir.join("itzterm-server.pid");
                 let log = OpenOptions::new()
                     .create(true)
                     .append(true)
@@ -563,12 +563,12 @@ fn is_root() -> bool {
 
 fn unit_path(scope: &SystemdScope) -> PathBuf {
     match scope {
-        SystemdScope::System => PathBuf::from("/etc/systemd/system/termul-server.service"),
+        SystemdScope::System => PathBuf::from("/etc/systemd/system/itzterm-server.service"),
         SystemdScope::User => {
             let home = std::env::var_os("HOME")
                 .map(PathBuf::from)
                 .unwrap_or_else(|| PathBuf::from("."));
-            home.join(".config/systemd/user/termul-server.service")
+            home.join(".config/systemd/user/itzterm-server.service")
         }
     }
 }
@@ -612,7 +612,7 @@ fn build_systemd_unit_text(
 ) -> String {
     let mut s = String::new();
     s.push_str("[Unit]\n");
-    s.push_str("Description=Termul standalone server (onboard-generated)\n");
+    s.push_str("Description=itzTerm standalone server (onboard-generated)\n");
     s.push_str("After=network.target\n\n");
     s.push_str("[Service]\n");
     s.push_str("Type=simple\n");
@@ -649,7 +649,7 @@ fn write_access_info<W: Write>(
     let bind_all = BindMode::parse(host) == Some(BindMode::All);
     writeln!(
         stdout,
-        "Termul server is starting in the background on http://localhost:{port}"
+        "itzTerm server is starting in the background on http://localhost:{port}"
     )
     .ok();
     if bind_all {
@@ -680,8 +680,8 @@ fn write_access_info<W: Write>(
                 SystemdScope::User => " --user",
                 SystemdScope::System => "",
             };
-            writeln!(stdout, "Logs: journalctl{u} -u termul-server -f").ok();
-            writeln!(stdout, "Stop:  systemctl{u} stop termul-server").ok();
+            writeln!(stdout, "Logs: journalctl{u} -u itzterm-server -f").ok();
+            writeln!(stdout, "Stop:  systemctl{u} stop itzterm-server").ok();
             writeln!(
                 stdout,
                 "Note: survives logout + reboot (systemd manages auto-start)."
@@ -689,8 +689,8 @@ fn write_access_info<W: Write>(
             .ok();
         }
         ServiceManager::Setsid => {
-            let log = state_dir.join("termul-server.log").display().to_string();
-            let pid = state_dir.join("termul-server.pid").display().to_string();
+            let log = state_dir.join("itzterm-server.log").display().to_string();
+            let pid = state_dir.join("itzterm-server.pid").display().to_string();
             writeln!(stdout, "Logs: tail -f {log}").ok();
             writeln!(stdout, "Stop:  kill $(cat {pid})").ok();
             writeln!(
@@ -703,7 +703,7 @@ fn write_access_info<W: Write>(
     if let Some(channel) = update_channel {
         writeln!(
             stdout,
-            "Updates: {} channel (TERMUL_SERVER_UPDATE_ENABLED + _CHANNEL + _INTERVAL_SECS)",
+            "Updates: {} channel (ITZTERM_SERVER_UPDATE_ENABLED + _CHANNEL + _INTERVAL_SECS)",
             channel_name(channel)
         )
         .ok();
@@ -711,7 +711,7 @@ fn write_access_info<W: Write>(
     let exe_name = exe
         .file_name()
         .and_then(|s| s.to_str())
-        .unwrap_or("termul-server");
+        .unwrap_or("itzterm-server");
     writeln!(
         stdout,
         "For a foreground run: {exe_name} {}",
@@ -835,14 +835,14 @@ fn run_non_tty<W: Write>(stdout: &mut W) -> ExitCode {
     let answers = OnboardAnswers::defaults();
     let args = answers.to_command_args();
     let mechanism = ServiceManager::detect();
-    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("termul-server"));
+    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("itzterm-server"));
     let exe_name = exe
         .file_name()
         .and_then(|s| s.to_str())
-        .unwrap_or("termul-server");
+        .unwrap_or("itzterm-server");
     writeln!(
         stdout,
-        "termul-server onboard: stdin is not a TTY; using defaults — re-run in a terminal to launch."
+        "itzterm-server onboard: stdin is not a TTY; using defaults — re-run in a terminal to launch."
     )
     .ok();
     writeln!(stdout, "Default command: {exe_name} {}", args.join(" ")).ok();
@@ -890,14 +890,14 @@ fn run_interactive<R: BufRead, W: Write>(stdin: &mut R, stdout: &mut W) -> ExitC
     // `to_command_args` already pins `--sessions-dir` and `--projects-file`
     // from the answers above. Those flags outrank `--state-dir`, so the
     // launched server keeps the paths the operator accepted. That includes a
-    // `TERMUL_SESSIONS_DIR` or `TERMUL_PROJECTS_FILE` value shown as the
+    // `ITZTERM_SESSIONS_DIR` or `ITZTERM_PROJECTS_FILE` value shown as the
     // prompt default: those are the platform HOME/XDG locations (or the env
     // override), and they are not moved under `--state-dir`. `--state-dir`
     // here only pins the web-auth token, env file, and pid/log paths.
     let mut args = answers.to_command_args();
     args.push("--state-dir".into());
     args.push(state_dir.display().to_string());
-    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("termul-server"));
+    let exe = std::env::current_exe().unwrap_or_else(|_| PathBuf::from("itzterm-server"));
 
     // Optional env-file write. The env file is used ONLY by systemd's
     // `EnvironmentFile=` directive — the setsid child always receives the
@@ -907,7 +907,7 @@ fn run_interactive<R: BufRead, W: Write>(stdin: &mut R, stdout: &mut W) -> ExitC
     // the update config (and remote-writes env) effective even when the
     // operator declines the env file.
     let (env_path, child_env_lines): (Option<PathBuf>, Vec<String>) = if !env_lines.is_empty() {
-        let env_file = state_dir.join("termul-server.env");
+        let env_file = state_dir.join("itzterm-server.env");
         let write = prompt_yesno(
             stdin,
             stdout,
@@ -958,7 +958,7 @@ fn run_interactive<R: BufRead, W: Write>(stdin: &mut R, stdout: &mut W) -> ExitC
     ) {
         Ok(()) => {
             tracing::info!(
-                target: "termul::onboard",
+                target: "itzterm::onboard",
                 host = %answers.host,
                 port = answers.port,
                 sessions_dir = %answers.sessions_dir.display(),
@@ -977,7 +977,7 @@ fn run_interactive<R: BufRead, W: Write>(stdin: &mut R, stdout: &mut W) -> ExitC
         }
         Err(e) => {
             tracing::error!(
-                target: "termul::onboard",
+                target: "itzterm::onboard",
                 mechanism = ?mechanism,
                 error = %e,
                 "onboard failed: background launch did not start"

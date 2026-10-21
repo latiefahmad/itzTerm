@@ -170,7 +170,7 @@ describe('useWorkspaceOverlayBackStack', () => {
 
     it('theme-picker closes through cancel(), reverting the preview like Esc', () => {
       mountHook()
-      act(() => useThemePickerStore.getState().open('termul'))
+      act(() => useThemePickerStore.getState().open('itzterm'))
 
       expect(stackIds()).toEqual(['theme-picker'])
       const cancelSpy = vi.spyOn(useThemePickerStore.getState(), 'cancel')
@@ -188,7 +188,7 @@ describe('useWorkspaceOverlayBackStack', () => {
       rerender({ ...args, isCommandHistoryOpen: true })
       act(() => {
         showLauncherOnPaneWithTabs()
-        useThemePickerStore.getState().open('termul')
+        useThemePickerStore.getState().open('itzterm')
       })
       await settleOverlayBackStack()
 
@@ -205,7 +205,7 @@ describe('useWorkspaceOverlayBackStack', () => {
       rerender({ ...args, gitSheetOpen: true })
 
       expect(pushSpy).toHaveBeenCalledTimes(1)
-      expect(pushSpy).toHaveBeenCalledWith({ termulOverlay: true }, '')
+      expect(pushSpy).toHaveBeenCalledWith({ itztermOverlay: true }, '')
     })
 
     it('desktop re-renders the host when the stack grows (the legacy push needs the count)', () => {
@@ -249,7 +249,7 @@ describe('useWorkspaceOverlayBackStack', () => {
 
       rerender({ ...args, gitSheetOpen: true, isCommandPaletteOpen: true, isMobileWebShell: false })
       expect(pushSpy).toHaveBeenCalledTimes(1)
-      expect(pushSpy).toHaveBeenCalledWith({ termulOverlay: true }, '')
+      expect(pushSpy).toHaveBeenCalledWith({ itztermOverlay: true }, '')
     })
 
     it('mobile arms exactly one managed sentinel per overlay (no double arm)', async () => {
@@ -261,7 +261,7 @@ describe('useWorkspaceOverlayBackStack', () => {
       await settleOverlayBackStack()
 
       expect(pushSpy).toHaveBeenCalledTimes(1)
-      expect(history.state).toEqual({ termulOverlay: true, termulOverlayDepth: 1 })
+      expect(history.state).toEqual({ itztermOverlay: true, itztermOverlayDepth: 1 })
       expect(location.hash).toBe('#/base')
     })
 
@@ -299,7 +299,7 @@ describe('useWorkspaceOverlayBackStack', () => {
     it('system back closes the theme picker through its owner', async () => {
       mountHook()
 
-      act(() => useThemePickerStore.getState().open('termul'))
+      act(() => useThemePickerStore.getState().open('itzterm'))
       await waitForSentinelDepth(1)
       await pressSystemBack()
       expect(useThemePickerStore.getState().isOpen).toBe(false)
@@ -493,7 +493,7 @@ describe('useWorkspaceOverlayBackStack', () => {
     it('consumes every stranded sentinel when only mobile-only overlays were open, so the next back is a route back', async () => {
       const { result } = renderHook(() => useFlipOwners())
       act(() => result.current.setIsCommandHistoryOpen(true))
-      act(() => useThemePickerStore.getState().open('termul'))
+      act(() => useThemePickerStore.getState().open('itzterm'))
       await waitForSentinelDepth(2)
       const goSpy = vi.spyOn(history, 'go')
 
@@ -580,7 +580,7 @@ describe('useWorkspaceOverlayBackStack', () => {
       act(() => result.current.setIsCommandPaletteOpen(true))
       expect(stackIds()).toEqual(['git-sheet', 'command-palette'])
       // Legacy sentinel shape: no depth tag, owned by push-on-growth.
-      expect(history.state).toEqual({ termulOverlay: true })
+      expect(history.state).toEqual({ itztermOverlay: true })
 
       await pressSystemBack()
       expect(result.current.isCommandPaletteOpen).toBe(false)

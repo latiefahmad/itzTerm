@@ -2,7 +2,7 @@
  * Web auth token source of truth for the browser client (CAP-1 interim,
  * QA remediation Story 1).
  *
- * A gated `termul-server` (public bind or explicit `--web-auth-token`)
+ * A gated `itzterm-server` (public bind or explicit `--web-auth-token`)
  * requires one bearer token on the `/ws` `authenticate` handshake,
  * `/terminal/ws`, and every gated HTTP API route. The token reaches the
  * browser via the `#token=` URL FRAGMENT (the operator reads it from the
@@ -25,7 +25,7 @@
 
 import { logFrontendError } from './log-api'
 
-const STORAGE_KEY = 'termul.webAuthToken'
+const STORAGE_KEY = 'itzterm.webAuthToken'
 
 function safeLocalStorage(): Storage | null {
   try {
@@ -158,7 +158,7 @@ function warnIfInsecureTransport(): void {
     `web auth token will be sent over PLAINTEXT HTTP/WebSocket to non-loopback host ` +
     `'${hostname}' — anyone on the network path can read it. Prefer HTTPS ` +
     `(e.g. a TLS-terminating reverse proxy) for non-local access.`
-  console.warn(`[termul] ${message}`)
+  console.warn(`[itzterm] ${message}`)
   void logFrontendError({ level: 'warn', source: 'web-auth-token', message })
 }
 

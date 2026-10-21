@@ -83,8 +83,8 @@ impl WorktreeManager {
     ///
     /// - If `is_new_branch` is true, uses `git worktree add -b <branch> <path> [start_ref]`
     /// - Otherwise uses `git worktree add <path> <branch>`
-    /// - `target_path` defaults to `<project_path>/.termul/worktrees/<name>/` when `None`
-    /// - Auto-adds `.termul/` to `.gitignore` if not already present
+    /// - `target_path` defaults to `<project_path>/.itzterm/worktrees/<name>/` when `None`
+    /// - Auto-adds `.itzterm/` to `.gitignore` if not already present
     /// - `on_progress` receives each git stderr line live (`Preparing worktree…`,
     ///   `HEAD is now at…`). Checkout percent counters (`Updating files: N%`)
     ///   only appear when git emits them on its own — no flag forces them while
@@ -101,7 +101,7 @@ impl WorktreeManager {
         let target = match target_path {
             Some(p) => Some(p.to_string()),
             None if is_only_plain_folder_names(name) => Some(format!(
-                "{}/.termul/worktrees/{}/",
+                "{}/.itzterm/worktrees/{}/",
                 project_path.trim_end_matches('/'),
                 name
             )),
@@ -110,7 +110,7 @@ impl WorktreeManager {
 
         // Boundary log: record the create inputs before ANY early return so
         // every failure mode (path-length guard, list/pre-check error, branch
-        // collision, git failure) leaves a diagnosable record in termul.log.
+        // collision, git failure) leaves a diagnosable record in itzterm.log.
         // `{:?}` quotes and escapes control characters — name/branch/target
         // are renderer-controlled, so a raw `{}` would let a `\n` forge log
         // lines.
@@ -182,18 +182,18 @@ impl WorktreeManager {
             note_launch_created(&target, branch);
         }
 
-        // Auto-add .termul/ to .gitignore if not already present
+        // Auto-add .itzterm/ to .gitignore if not already present
         let gitignore_path = Path::new(project_path).join(".gitignore");
         if gitignore_path.exists() {
             let content = std::fs::read_to_string(&gitignore_path)
                 .map_err(|e| WorktreeError::IoError(e.to_string()))?;
-            if !content.lines().any(|l| l.trim() == ".termul/") {
-                let updated = format!("{}\n.termul/\n", content.trim_end());
+            if !content.lines().any(|l| l.trim() == ".itzterm/") {
+                let updated = format!("{}\n.itzterm/\n", content.trim_end());
                 std::fs::write(&gitignore_path, updated)
                     .map_err(|e| WorktreeError::IoError(e.to_string()))?;
             }
         } else {
-            std::fs::write(&gitignore_path, ".termul/\n")
+            std::fs::write(&gitignore_path, ".itzterm/\n")
                 .map_err(|e| WorktreeError::IoError(e.to_string()))?;
         }
 
@@ -361,18 +361,18 @@ impl WorktreeManager {
         })
     }
 
-    /// Whether `path` lies under a `.termul/worktrees` directory (a
-    /// Termul-managed worktree). Compares path components, so it works with
+    /// Whether `path` lies under a `.itzterm/worktrees` directory (a
+    /// itzTerm-managed worktree). Compares path components, so it works with
     /// Windows backslashes too.
     pub fn is_managed_path(path: &str) -> bool {
         std::path::Path::new(path)
             .components()
             .collect::<Vec<_>>()
             .windows(2)
-            .any(|w| w[0].as_os_str() == ".termul" && w[1].as_os_str() == "worktrees")
+            .any(|w| w[0].as_os_str() == ".itzterm" && w[1].as_os_str() == "worktrees")
     }
 
-    /// Remove all Termul-managed worktrees for a project.
+    /// Remove all itzTerm-managed worktrees for a project.
     /// Used during project cascade delete. Reports per-worktree success/failure.
     pub fn remove_all_managed(
         project_path: &str,
@@ -388,12 +388,12 @@ impl WorktreeManager {
             let path = wt["path"].as_str().unwrap_or("").to_string();
             let _name = wt["name"].as_str().unwrap_or("unknown").to_string();
 
-            // Only remove Termul-managed worktrees
+            // Only remove itzTerm-managed worktrees
             if !Self::is_managed_path(&path) {
                 results.push(RemoveResult {
                     worktree_path: path.clone(),
                     success: true,
-                    error: Some("Skipped: not a Termul-managed worktree".to_string()),
+                    error: Some("Skipped: not a itzTerm-managed worktree".to_string()),
                 });
                 continue;
             }

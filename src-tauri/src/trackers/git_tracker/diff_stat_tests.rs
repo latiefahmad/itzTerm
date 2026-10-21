@@ -32,7 +32,7 @@ fn unique_temp_dir(tag: &str) -> TestDir {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let dir = std::env::temp_dir().join(format!(
-        "termul-diffstat-{tag}-{}-{n}-{nanos}",
+        "itzterm-diffstat-{tag}-{}-{n}-{nanos}",
         std::process::id()
     ));
     std::fs::create_dir_all(&dir).expect("create temp dir");

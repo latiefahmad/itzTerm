@@ -24,7 +24,7 @@ impl TempDir {
             .duration_since(UNIX_EPOCH)
             .expect("clock")
             .as_nanos();
-        let path = std::env::temp_dir().join(format!("termul-web-commitdetail-{label}-{nanos}"));
+        let path = std::env::temp_dir().join(format!("itzterm-web-commitdetail-{label}-{nanos}"));
         std::fs::create_dir_all(&path).expect("create temp dir");
         Self { path }
     }

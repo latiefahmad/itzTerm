@@ -2,7 +2,7 @@ import { expect, type Page } from 'playwright/test'
 import { E2E_BASE_URL, E2E_TOKEN } from './helpers'
 
 /**
- * Page-level helpers for the termul-server web client E2E suite.
+ * Page-level helpers for the itzterm-server web client E2E suite.
  *
  * The web auth token is seeded via the `#token=` fragment bootstrap (the
  * production first-visit flow): one goto to the fragment URL persists the
@@ -17,7 +17,7 @@ import { E2E_BASE_URL, E2E_TOKEN } from './helpers'
 export async function openWorkspace(page: Page): Promise<void> {
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)

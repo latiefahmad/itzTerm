@@ -177,7 +177,7 @@ pub async fn acp_mcp_oauth_start(app: tauri::AppHandle, server_url: String) -> R
     // 2. Create the authorization session (handles dynamic registration + PKCE).
     //    The session holds the PKCE verifier in its InMemoryStateStore — we MUST
     //    keep it alive until the callback arrives, then use it for the token exchange.
-    let request = AuthorizationRequest::new(&redirect_uri).with_client_name("Termul");
+    let request = AuthorizationRequest::new(&redirect_uri).with_client_name("itzTerm");
     let session = AuthorizationSession::new(manager, request)
         .await
         .map_err(|(_manager, e)| format!("OAuth registration failed: {e}"))?;
@@ -223,7 +223,7 @@ pub async fn acp_mcp_oauth_start(app: tauri::AppHandle, server_url: String) -> R
                         continue;
                     }
                     let full_url = format!("http://127.0.0.1:{port}{target}");
-                    let body = "<!DOCTYPE html><html><body><h2>Authorization complete</h2><p>You can close this tab and return to Termul.</p><script>window.close();</script></body></html>";
+                    let body = "<!DOCTYPE html><html><body><h2>Authorization complete</h2><p>You can close this tab and return to itzTerm.</p><script>window.close();</script></body></html>";
                     let response = format!(
                         "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
                         body.len(), body
@@ -326,8 +326,8 @@ pub fn acp_mcp_oauth_disconnect(server_url: String) -> Result<(), String> {
 /// Set the in-process ACP turn (hard-cap) timeout override, in seconds, or
 /// `None` to clear it (fall back to the env var / unlimited default). Pushed from
 /// the App Preferences UI so the turn timeout is editable without a restart or
-/// env var. Desktop-only: the standalone `termul-server` has no settings
-/// surface and configures via `TERMUL_ACP_TURN_TIMEOUT_SECS`. The env var
+/// env var. Desktop-only: the standalone `itzterm-server` has no settings
+/// surface and configures via `ITZTERM_ACP_TURN_TIMEOUT_SECS`. The env var
 /// remains top-precedence (operator/diagnostic override).
 #[tauri::command]
 pub fn acp_set_turn_timeout(secs: Option<u64>) -> Result<(), String> {
@@ -338,7 +338,7 @@ pub fn acp_set_turn_timeout(secs: Option<u64>) -> Result<(), String> {
 /// Set the in-process ACP turn *idle* timeout override, in seconds, or `None`
 /// to clear it (fall back to the env var / unlimited default). Pushed from the
 /// App Preferences UI. Desktop-only parity with `acp_set_turn_timeout`: the
-/// standalone `termul-server` configures via `TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS`.
+/// standalone `itzterm-server` configures via `ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS`.
 /// The env var remains top-precedence (operator/diagnostic override).
 #[tauri::command]
 pub fn acp_set_turn_idle_timeout(secs: Option<u64>) -> Result<(), String> {
@@ -353,7 +353,7 @@ pub fn acp_set_turn_idle_timeout(secs: Option<u64>) -> Result<(), String> {
 /// Set the in-process `session/new` timeout override, in seconds, or `None`
 /// to clear it (fall back to the env var / 60s default). Pushed from the App
 /// Preferences UI; same desktop-only + env-precedence contract as
-/// `acp_set_turn_timeout` (`TERMUL_ACP_SESSION_NEW_TIMEOUT_SECS` wins).
+/// `acp_set_turn_timeout` (`ITZTERM_ACP_SESSION_NEW_TIMEOUT_SECS` wins).
 #[tauri::command]
 pub fn acp_set_session_new_timeout(secs: Option<u64>) -> Result<(), String> {
     if matches!(secs, Some(0)) {
@@ -368,7 +368,7 @@ pub fn acp_set_session_new_timeout(secs: Option<u64>) -> Result<(), String> {
 /// seconds, or `None` to clear it (fall back to the env var / 60s default).
 /// Pushed from the App Preferences UI; same desktop-only + env-precedence
 /// contract as `acp_set_turn_timeout`
-/// (`TERMUL_ACP_SESSION_REOPEN_TIMEOUT_SECS` wins).
+/// (`ITZTERM_ACP_SESSION_REOPEN_TIMEOUT_SECS` wins).
 #[tauri::command]
 pub fn acp_set_session_reopen_timeout(secs: Option<u64>) -> Result<(), String> {
     if matches!(secs, Some(0)) {
@@ -380,7 +380,7 @@ pub fn acp_set_session_reopen_timeout(secs: Option<u64>) -> Result<(), String> {
 }
 
 /// Set how long an idle agent chat stays open, in seconds, or `None` to clear
-/// the App Preferences override. `$TERMUL_AGENT_IDLE_REAP_SECS` and a locked
+/// the App Preferences override. `$ITZTERM_AGENT_IDLE_REAP_SECS` and a locked
 /// server window keep the live value. The reaper reads the result on its next
 /// sweep.
 #[tauri::command]

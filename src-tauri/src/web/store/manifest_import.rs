@@ -42,7 +42,7 @@ pub fn read_workspaces(dir: &Path) -> Vec<(String, Value)> {
         Ok(entries) => entries,
         Err(error) => {
             warn!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 "could not list the workspace manifests in '{}': {error}",
                 dir.display()
             );
@@ -69,7 +69,7 @@ pub fn read_workspaces(dir: &Path) -> Vec<(String, Value)> {
             Ok(None) => None,
             Err(reason) => {
                 warn!(
-                    target: "termul::web::store",
+                    target: "itzterm::web::store",
                     "skipped the workspace manifest '{}': {reason}",
                     path.display()
                 );
@@ -102,12 +102,12 @@ pub fn retire_dir(dir: &Path, now_ms: u64) {
     };
     match fs::rename(dir, &target) {
         Ok(()) => info!(
-            target: "termul::web::store",
+            target: "itzterm::web::store",
             "workspace manifests imported; the directory is kept as '{}'",
             target.display()
         ),
         Err(error) => warn!(
-            target: "termul::web::store",
+            target: "itzterm::web::store",
             "could not rename the imported workspace manifests '{}' to '{}': {error}",
             dir.display(),
             target.display()

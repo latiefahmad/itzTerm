@@ -11,7 +11,7 @@ const { E2E_TOKEN, storeWrite } = await import('../../../tests/e2e/helpers')
 export const DEMO_TOKEN = E2E_TOKEN
 // Screenshots show project paths, so the demo lives at a readable fixed path.
 export const DEMO_WORKSPACE_ROOT = process.env.DEMO_WORKSPACE ?? '/home/demo/projects'
-const MARKER = '.termul-docs-demo'
+const MARKER = '.itzterm-docs-demo'
 export const DEMO_BASE_URL = `http://127.0.0.1:${DEMO_PORT}`
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
@@ -21,7 +21,7 @@ type Files = Record<string, string>
 const shopFiles: Files = {
   'README.md': `# Acme Shop
 
-A small storefront used to show off Termul.
+A small storefront used to show off itzTerm.
 
 \`\`\`mermaid
 flowchart LR
@@ -172,7 +172,7 @@ async function demoEnv(home: string): Promise<NodeJS.ProcessEnv> {
     HOME: home,
     SHELL: '/bin/bash',
     USER: 'demo',
-    TERMUL_MAX_TERMINALS_PER_PROJECT: '30'
+    ITZTERM_MAX_TERMINALS_PER_PROJECT: '30'
   }
 }
 
@@ -195,7 +195,7 @@ async function resetWorkspace(root: string): Promise<void> {
 export async function startDemoServer(): Promise<DemoServer> {
   const workspaceRoot = DEMO_WORKSPACE_ROOT
   await resetWorkspace(workspaceRoot)
-  const stateDir = await mkdtemp(join(tmpdir(), 'termul-docs-state-'))
+  const stateDir = await mkdtemp(join(tmpdir(), 'itzterm-docs-state-'))
   const projects = [
     { id: 'demo-shop', name: 'acme-shop', color: 'blue' },
     { id: 'demo-api', name: 'payments-api', color: 'green' },
@@ -212,7 +212,7 @@ export async function startDemoServer(): Promise<DemoServer> {
   })
 
   const binary =
-    process.env.TERMUL_SERVER_BIN ?? join(repoRoot, 'src-tauri/target/release/termul-server')
+    process.env.ITZTERM_SERVER_BIN ?? join(repoRoot, 'src-tauri/target/release/itzterm-server')
   const child = spawn(
     binary,
     [
@@ -229,7 +229,7 @@ export async function startDemoServer(): Promise<DemoServer> {
     ],
     {
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...(await demoEnv(dirname(workspaceRoot))), TERMUL_WEB_AUTH_TOKEN: DEMO_TOKEN }
+      env: { ...(await demoEnv(dirname(workspaceRoot))), ITZTERM_WEB_AUTH_TOKEN: DEMO_TOKEN }
     }
   )
   await new Promise<void>((resolve, reject) => {
@@ -239,7 +239,7 @@ export async function startDemoServer(): Promise<DemoServer> {
     child.stdout?.on('data', onData)
     child.stderr?.on('data', onData)
     child.once('error', reject)
-    child.once('exit', (code) => reject(new Error(`termul-server exited with ${code}`)))
+    child.once('exit', (code) => reject(new Error(`itzterm-server exited with ${code}`)))
   })
   const auth = { Authorization: `Bearer ${DEMO_TOKEN}`, 'content-type': 'application/json' }
   for (const p of projects) {

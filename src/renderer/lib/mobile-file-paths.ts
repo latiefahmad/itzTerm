@@ -14,7 +14,7 @@ const DOT_SEGMENT = /(^|\/)\.\.?(\/|$)/
 
 /**
  * Windows verbatim paths (`\\?\C:\x`, `\\?\UNC\srv\share`) arrive as `//?/...`
- * once backslashes are replaced. A Windows-hosted termul-server lists entries
+ * once backslashes are replaced. A Windows-hosted itzterm-server lists entries
  * that way while the project root is a plain `C:/...`, so without this the
  * entries never sit "within" the root. `//?/C:/x` becomes `C:/x` and
  * `//?/UNC/srv/share/p` becomes `//srv/share/p`; any other path (including an

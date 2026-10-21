@@ -16,7 +16,7 @@ const HAIRLINE_ALPHA = 26 / 255
 /** `#0000000d` on white. Hover veil. */
 const HOVER_ALPHA = 13 / 255
 
-function termulLightChrome(): ThemeChrome {
+function itztermLightChrome(): ThemeChrome {
   return {
     background: PAPER,
     card: PAPER,
@@ -32,5 +32,5 @@ function termulLightChrome(): ThemeChrome {
   }
 }
 
-/** Paper ramp for the default Termul light theme. */
-export const TERMUL_LIGHT_CHROME: ThemeChrome = termulLightChrome()
+/** Paper ramp for the default itzTerm light theme. */
+export const ITZTERM_LIGHT_CHROME: ThemeChrome = itztermLightChrome()

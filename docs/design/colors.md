@@ -12,7 +12,7 @@ Tokens are OKLCH `"L C H"` on `:root`. Tailwind maps `oklch(var(--token) / <alph
 
 Nothing else exists. `green-500`, `amber-400`, `white`, `black` are bugs.
 
-The default dark theme (`termul`) paints neutrals from an explicit ramp. Other themes still derive surfaces from one neutral plus a 4% brand tint. Brand fill stays the composer blue: palette `primary` and `accent` are `#3b82f6`, and `--primary-fill` is the solid-fill step of that blue.
+The default dark theme (`itzterm`) paints neutrals from an explicit ramp. Other themes still derive surfaces from one neutral plus a 4% brand tint. Brand fill stays the composer blue: palette `primary` and `accent` are `#3b82f6`, and `--primary-fill` is the solid-fill step of that blue.
 
 | Token | Role | Source |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ The default dark theme (`termul`) paints neutrals from an explicit ramp. Other t
 | `muted-foreground` | Muted copy | Fog `#8a8f98` |
 | `ring` | Focus | Bone |
 
-The default light theme (`termul-light`) uses the paper ramp. Page, card, and popover are the same white, so a raised pane needs `border-border` to separate from the page. The primary button uses the same blue as Termul dark: palette `primary` is `#3b82f6`, so `--primary-fill` matches. Status hues stay. `data-flat-elevation` removes drop shadows on surfaces only. `button` and `[data-keep-shadow]` keep their emboss, including `Button` used as a link and the switch thumb. Other families keep derived surfaces.
+The default light theme (`itzterm-light`) uses the paper ramp. Page, card, and popover are the same white, so a raised pane needs `border-border` to separate from the page. The primary button uses the same blue as itzTerm dark: palette `primary` is `#3b82f6`, so `--primary-fill` matches. Status hues stay. `data-flat-elevation` removes drop shadows on surfaces only. `button` and `[data-keep-shadow]` keep their emboss, including `Button` used as a link and the switch thumb. Other families keep derived surfaces.
 
 | Token | Role | Source |
 | --- | --- | --- |
@@ -39,7 +39,7 @@ The default light theme (`termul-light`) uses the paper ramp. Page, card, and po
 | `secondary-foreground` | Secondary labels | Mid ash `#5d5d5d` |
 | `muted-foreground` | Muted copy | Hollow `#8f8f8f`, lifted if it misses AA |
 
-`--primary`, `--success`, `--warning`, and `--destructive` are text-on-card tokens (AA-shifted). Solid primary / success / destructive buttons use `bg-primary-fill` / `bg-success-fill` / `bg-destructive-fill` with matching `*-foreground`. Solid warning buttons use `bg-warning text-warning-foreground`. Do not use `--accent` for new state. It is maroon in Termul Light. Selection, hover and focus are neutral (see State). Washes stay on the text token (`bg-primary/10 text-primary`).
+`--primary`, `--success`, `--warning`, and `--destructive` are text-on-card tokens (AA-shifted). Solid primary / success / destructive buttons use `bg-primary-fill` / `bg-success-fill` / `bg-destructive-fill` with matching `*-foreground`. Solid warning buttons use `bg-warning text-warning-foreground`. Do not use `--accent` for new state. It is maroon in itzTerm Light. Selection, hover and focus are neutral (see State). Washes stay on the text token (`bg-primary/10 text-primary`).
 
 ## State
 
@@ -81,9 +81,9 @@ The StatusBar is quiet: `bg-card`, `border-t border-border`, ink `text-muted-for
 
 ## Syntax
 
-Code color is not a UI token. The editor, chat fences, and diffs share one map: `resolveSyntaxColors`. Termul's map is `termul-syntax.ts`. Other families keep their own overrides.
+Code color is not a UI token. The editor, chat fences, and diffs share one map: `resolveSyntaxColors`. itzTerm's map is `itzterm-syntax.ts`. Other families keep their own overrides.
 
-Termul follows the Cursor editor. Teal is a keyword. Peach is a declared function or type name. Blue is a name being read. Lavender is a name being declared, and also a JSX tag. Pink is a string. Comments stay neutral gray. Property names stay on the foreground.
+itzTerm follows the Cursor editor. Teal is a keyword. Peach is a declared function or type name. Blue is a name being read. Lavender is a name being declared, and also a JSX tag. Pink is a string. Comments stay neutral gray. Property names stay on the foreground.
 
 Roles that sit next to each other stay at least 15° apart in OKLCH hue. Do not use the olive, brown, and khaki set from VS Code Dark+ (`#6a9955`, `#ce9178`, `#dcdcaa`). Do not use the UI blue (`primary`) as a syntax hue. Each syntax color must clear WCAG AA (4.5:1) on the theme background and on the card.
 

@@ -59,7 +59,7 @@ const fakeView = { focus: mockFocus } as unknown as EditorView
 describe('CodeEditor', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    delete (global as { __termulPendingRevealLine?: unknown }).__termulPendingRevealLine
+    delete (global as { __itztermPendingRevealLine?: unknown }).__itztermPendingRevealLine
     mobileRef.current = false
     tocSettingsRef.current.settings.isVisible = false
 
@@ -108,13 +108,13 @@ describe('CodeEditor', () => {
       />
     )
 
-    ;(global as { __termulPendingRevealLine?: unknown }).__termulPendingRevealLine = {
+    ;(global as { __itztermPendingRevealLine?: unknown }).__itztermPendingRevealLine = {
       filePath: '/project/src/example.ts',
       lineNumber: 7,
       searchTerm: 'needle'
     }
     window.dispatchEvent(
-      new CustomEvent('termul:reveal-line', {
+      new CustomEvent('itzterm:reveal-line', {
         detail: {
           filePath: '/project/src/example.ts',
           lineNumber: 7,
@@ -126,7 +126,7 @@ describe('CodeEditor', () => {
     expect(mockScrollToLine).toHaveBeenCalledWith(7, 'needle')
     expect(mockScrollToLine).toHaveBeenCalledTimes(1)
     expect(
-      (global as { __termulPendingRevealLine?: unknown }).__termulPendingRevealLine
+      (global as { __itztermPendingRevealLine?: unknown }).__itztermPendingRevealLine
     ).toBeUndefined()
   })
 

@@ -143,12 +143,12 @@ export const useWorktreeProgressStore = create<WorktreeProgressState>((set, get)
     if (line === 'preparing') return // `begin` already set the preparing state.
     if (line === 'done') {
       get().finish(progressId)
-    } else if (line.startsWith('termul:error:')) {
-      // `termul:`-namespaced terminal sentinel — real git stderr lines can
+    } else if (line.startsWith('itzterm:error:')) {
+      // `itzterm:`-namespaced terminal sentinel — real git stderr lines can
       // legitimately start with `error:`/`fatal:` mid-run; those are ordinary
       // log lines and must not flip the card to error.
       get().appendLine(progressId, line)
-      get().finish(progressId, line.slice('termul:error:'.length).trim())
+      get().finish(progressId, line.slice('itzterm:error:'.length).trim())
     } else {
       get().appendLine(progressId, line)
     }

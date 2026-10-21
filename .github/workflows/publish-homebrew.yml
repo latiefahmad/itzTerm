@@ -54,7 +54,7 @@ jobs:
           VERSION="$(normalize_release_version "$INPUT_VERSION")"
           TAG="v$VERSION"
           IS_PRERELEASE="$(gh release view "$TAG" \
-            --repo gnoviawan/termul \
+            --repo latiefahmad/itzTerm \
             --json isPrerelease \
             --jq '.isPrerelease')"
 
@@ -91,7 +91,7 @@ jobs:
         run: |
           mkdir -p release-assets
           gh release download "$TAG" \
-            --repo gnoviawan/termul \
+            --repo latiefahmad/itzTerm \
             --dir release-assets
 
       - name: Generate SHA256SUMS
@@ -105,7 +105,7 @@ jobs:
           # match one. Fails loudly on any mismatch instead of shipping a
           # SHA256SUMS.txt the installer cannot resolve (#546).
           gh release view "$TAG" \
-            --repo gnoviawan/termul \
+            --repo latiefahmad/itzTerm \
             --json assets \
             --jq '.assets[].name' > release-asset-names.txt
 
@@ -121,7 +121,7 @@ jobs:
           TAG: ${{ needs.release_metadata.outputs.tag }}
         run: |
           gh release upload "$TAG" SHA256SUMS.txt \
-            --repo gnoviawan/termul \
+            --repo latiefahmad/itzTerm \
             --clobber
 
   homebrew:
@@ -157,7 +157,7 @@ jobs:
         run: |
           mkdir -p release-assets
           gh release download "$TAG" \
-            --repo gnoviawan/termul \
+            --repo latiefahmad/itzTerm \
             --pattern SHA256SUMS.txt \
             --dir release-assets
 
@@ -188,7 +188,7 @@ jobs:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           gh auth setup-git
-          gh repo clone gnoviawan/homebrew-termul tap -- --depth 1
+          gh repo clone gnoviawan/homebrew-itzterm tap -- --depth 1
 
       - name: Configure Git
         working-directory: tap
@@ -203,7 +203,7 @@ jobs:
           INTEL_SHA256: ${{ steps.dmg.outputs.intel_sha256 }}
         run: |
           source scripts/release/homebrew.sh
-          write_homebrew_cask tap/Casks/termul.rb \
+          write_homebrew_cask tap/Casks/itzterm.rb \
             "$VERSION" "$ARM_SHA256" "$INTEL_SHA256"
 
       - name: Commit and push
@@ -212,8 +212,8 @@ jobs:
           VERSION: ${{ needs.release_metadata.outputs.version }}
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          git add Casks/termul.rb
-          if git diff --cached --quiet -- Casks/termul.rb; then
+          git add Casks/itzterm.rb
+          if git diff --cached --quiet -- Casks/itzterm.rb; then
             echo "Homebrew cask already up to date."
             exit 0
           fi

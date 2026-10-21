@@ -1141,7 +1141,7 @@ describe('WebTerminalClient attach/replay snapshot dispatch', () => {
       gap: false,
       latestSeq: 5,
       snapshot: mockTerminalStateSnapshot({
-        cwd: '/home/pawbytes/termul',
+        cwd: '/home/pawbytes/itzterm',
         gitBranch: 'chore/prettify-server-help',
         gitStatus: {
           modified: 0,
@@ -1156,7 +1156,7 @@ describe('WebTerminalClient attach/replay snapshot dispatch', () => {
 
     expect(branchCb).toHaveBeenCalledWith('t1', 'chore/prettify-server-help')
     expect(statusCb).toHaveBeenCalledWith('t1', expect.objectContaining({ hasChanges: false }))
-    expect(cwdCb).toHaveBeenCalledWith('t1', '/home/pawbytes/termul')
+    expect(cwdCb).toHaveBeenCalledWith('t1', '/home/pawbytes/itzterm')
     expect(exitCodeCb).not.toHaveBeenCalled()
     expect(exitCb).not.toHaveBeenCalled()
 
@@ -1308,7 +1308,7 @@ describe('WebTerminalClient web auth handshake (CAP-1)', () => {
   }
 
   it('sends authenticate with the resolved token BEFORE any terminal op', async () => {
-    window.localStorage.setItem('termul.webAuthToken', 's3cret-token')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret-token')
     const { client, internals } = newClient()
     const spawn = await client.request('spawn', { projectId: 'p1', cwd: '/tmp' })
     expect(spawn.success).toBe(true)
@@ -1324,14 +1324,14 @@ describe('WebTerminalClient web auth handshake (CAP-1)', () => {
     expect(authReq?.payload).toEqual({
       token: 's3cret-token',
       protocolVersion: WS_PROTOCOL_VERSION,
-      deviceId: window.localStorage.getItem('termul.deviceId'),
-      clientInstanceId: window.sessionStorage.getItem('termul.clientInstanceId')
+      deviceId: window.localStorage.getItem('itzterm.deviceId'),
+      clientInstanceId: window.sessionStorage.getItem('itzterm.clientInstanceId')
     })
     client.dispose()
   })
 
   it('rejects connect when the gate refuses the token (no terminal op sent)', async () => {
-    window.localStorage.setItem('termul.webAuthToken', 'wrong')
+    window.localStorage.setItem('itzterm.webAuthToken', 'wrong')
     authenticateMode = 'refuse'
     const { client, internals } = newClient()
     // The request starts connect() synchronously; capture the socket before
@@ -1351,7 +1351,7 @@ describe('WebTerminalClient web auth handshake (CAP-1)', () => {
 
   it('clears the reconnect budget only after authenticate completes AND the connection stays stable for 60s', async () => {
     vi.useFakeTimers()
-    window.localStorage.setItem('termul.webAuthToken', 's3cret-token')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret-token')
     const { client, internals } = newClient()
     // A live terminal with a claim keeps the reconnect loop engaged
     // (scheduleReconnect no-ops without one).
@@ -1389,7 +1389,7 @@ describe('WebTerminalClient web auth handshake (CAP-1)', () => {
 
   it('a persistently refusing gate exhausts the reconnect budget instead of looping forever', async () => {
     vi.useFakeTimers()
-    window.localStorage.setItem('termul.webAuthToken', 's3cret-token')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret-token')
     const { client, internals } = newClient()
     await client.attach('t1', 'lease-abc')
     authenticateMode = 'refuse'
@@ -1451,7 +1451,7 @@ describe('WebTerminalClient web auth handshake (CAP-1)', () => {
     // authenticate reply is still pending, a concurrent connect() must NOT
     // resolve on the OPEN fast path — its request would race out pre-auth and
     // the gated server would answer UNAUTHORIZED.
-    window.localStorage.setItem('termul.webAuthToken', 's3cret-token')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret-token')
     holdAuthenticateReply = true
     const { client, internals } = newClient()
 
@@ -1582,7 +1582,7 @@ describe('WebTerminalClient protocol handshake refusals (AD-15)', () => {
   })
 
   it('never logs the web auth token on a refusal', async () => {
-    window.localStorage.setItem('termul.webAuthToken', 'super-secret-token')
+    window.localStorage.setItem('itzterm.webAuthToken', 'super-secret-token')
     authenticateMode = 'mismatch'
     const { client } = newClient()
     await client.request('spawn', { projectId: 'p1', cwd: '/tmp' })
@@ -1669,7 +1669,7 @@ describe('WebTerminalClient connect timeout (Story 10, F9)', () => {
 
   it('bounds upgrade + authenticate by one ~10s handshake: a held authenticate reply fails at 10s', async () => {
     vi.useFakeTimers()
-    window.localStorage.setItem('termul.webAuthToken', 's3cret-token')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret-token')
     holdAuthenticateReply = true
     try {
       const client = new WebTerminalClient(
@@ -1695,7 +1695,7 @@ describe('WebTerminalClient connect timeout (Story 10, F9)', () => {
     } finally {
       holdAuthenticateReply = false
       heldAuthenticateId = null
-      window.localStorage.removeItem('termul.webAuthToken')
+      window.localStorage.removeItem('itzterm.webAuthToken')
     }
   })
 

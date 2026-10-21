@@ -1,7 +1,7 @@
 //! File-backed project registry — the durable persistence layer of the host's
 //! single `web::ProjectRegistry`.
 //!
-//! Every host (standalone `termul-server` via `--projects-file`, desktop via
+//! Every host (standalone `itzterm-server` via `--projects-file`, desktop via
 //! `<app_data_dir>/projects.json`) opens its durable registry once at startup;
 //! `web::ProjectRegistry` owns the in-memory read model and writes a candidate
 //! through [`FileProjectRegistry::save_atomic`] before it swaps memory, so a

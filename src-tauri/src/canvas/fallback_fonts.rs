@@ -5,7 +5,7 @@
 //! passes their URLs to `host.fallbackFonts` before it loads the document.
 //!
 //! Only the loopback listener serves them, and only the desktop's open info
-//! lists them. The fonts are licensed to this machine; `termul-server` and the
+//! lists them. The fonts are licensed to this machine; `itzterm-server` and the
 //! shared-live host would send them to the browser of another one.
 
 use std::path::PathBuf;

@@ -36,7 +36,7 @@ const hmrPort = devPort < 65535 ? devPort + 1 : devPort - 1
 // Perf toolkit (tools/perf): opt-in release-grade React commit timing.
 // react-dom/profiling carries the DevTools hook timings; it is a perf-only
 // build flavor and NEVER ships. Zero behavior change when the env is unset.
-const perfProfiling = process.env.TERMUL_PERF_PROFILING === '1'
+const perfProfiling = process.env.ITZTERM_PERF_PROFILING === '1'
 
 export default defineConfig({
   root: './',
@@ -51,7 +51,7 @@ export default defineConfig({
       '@shared/': `${path.resolve(__dirname, 'src/shared')}/`,
       '@material-icons/': `${materialIconsDir}/`,
       // Perf-only remap: import 'react-dom' resolves to the profiling build
-      // when TERMUL_PERF_PROFILING=1 (the tools/perf runner sets it for
+      // when ITZTERM_PERF_PROFILING=1 (the tools/perf runner sets it for
       // measurement builds). Unset → identical resolution to before.
       ...(perfProfiling ? { 'react-dom': 'react-dom/profiling' } : {})
     }

@@ -197,7 +197,7 @@ export function AddAccountDialog({
             <DialogHeader>
               <DialogTitle>Add a Claude account</DialogTitle>
               <DialogDescription>
-                Give it a short name. Termul shows this name, never the email.
+                Give it a short name. itzTerm shows this name, never the email.
               </DialogDescription>
             </DialogHeader>
             <form

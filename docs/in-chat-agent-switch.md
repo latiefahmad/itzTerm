@@ -1,6 +1,6 @@
 # In-Chat Agent Switch
 
-Termul lets you move a running Agent chat to a different agent mid-conversation,
+itzTerm lets you move a running Agent chat to a different agent mid-conversation,
 with a summarized context handoff, without leaving the chat tab.
 
 You pick the agent once at launch today. When you outgrow that choice — the
@@ -78,7 +78,7 @@ The old agent is retired, not killed mid-flight. After a switch:
   switch time (the old session record stays live and readable). The host's
   idle reaper stops the process after a whole idle window (default 30
   minutes; desktop: Settings → AI Agents → Close idle chats after, or
-  `TERMUL_AGENT_IDLE_REAP_SECS`; server: `--agent-idle-window-secs`) with
+  `ITZTERM_AGENT_IDLE_REAP_SECS`; server: `--agent-idle-window-secs`) with
   no activity — a running turn, a pending approval or a running agent
   terminal keeps it up; an open tab does not.
 - No further old-agent output lands in the new session's chat after the
@@ -113,6 +113,6 @@ the agent the conversation ended with:
 ## Both surfaces
 
 The flow works identically on the Tauri desktop app and the web client over
-`termul-server`: the picker, separator, and marker persistence are shared
+`itzterm-server`: the picker, separator, and marker persistence are shared
 renderer + host code, and the durable record type is implemented on both the
 IPC command and the WS route side.

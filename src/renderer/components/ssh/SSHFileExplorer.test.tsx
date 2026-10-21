@@ -484,7 +484,9 @@ describe('SSHFileExplorer drag and drop (desktop)', () => {
   it('ignores internal drags such as tabs', async () => {
     await renderExplorer()
     const zone = screen.getByTestId('sftp-drop-zone')
-    const internal = { dataTransfer: { types: ['application/x-termul-tab'], files: [], items: [] } }
+    const internal = {
+      dataTransfer: { types: ['application/x-itzterm-tab'], files: [], items: [] }
+    }
     fireEvent.dragEnter(zone, internal)
     expect(screen.getByTestId('sftp-drop-overlay')).not.toHaveAttribute('data-active')
     fireEvent.drop(zone, internal)

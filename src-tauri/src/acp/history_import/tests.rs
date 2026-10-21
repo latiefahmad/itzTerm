@@ -3,7 +3,7 @@ use crate::acp::session_persistence::SessionPersistenceError;
 
 fn temp_dir(label: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-history-import-{label}-{}-{}",
+        "itzterm-history-import-{label}-{}-{}",
         std::process::id(),
         crate::acp::session_persistence::now_millis()
     ));

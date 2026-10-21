@@ -32,7 +32,7 @@
  * browsers. Mirrors the capability-guard pattern from `theme-appearance.ts`
  * (Story 5.1 lesson).
  *
- * CSS var: mirrors `keyboardHeight` to `--termul-keyboard-height` on
+ * CSS var: mirrors `keyboardHeight` to `--itzterm-keyboard-height` on
  * `document.documentElement` so consumers can size OSK-aware spacers via CSS
  * without re-reading React state (CSS viewport units `vh`/`dvh` ignore the
  * OSK — see Dev Notes anti-patterns).
@@ -97,7 +97,7 @@ export function resolveOskState(layoutViewportHeight: number, vv: VisualViewport
 
 function writeKeyboardHeightVar(keyboardHeight: number): void {
   if (typeof document === 'undefined' || !document.documentElement) return
-  document.documentElement.style.setProperty('--termul-keyboard-height', `${keyboardHeight}px`)
+  document.documentElement.style.setProperty('--itzterm-keyboard-height', `${keyboardHeight}px`)
 }
 
 /**
@@ -107,7 +107,7 @@ function writeKeyboardHeightVar(keyboardHeight: number): void {
  * Returns a no-OSK default on Tauri desktop / older browsers without
  * `visualViewport`. See module docstring for the capability guard rationale.
  *
- * Side effect: mirrors `keyboardHeight` to the `--termul-keyboard-height` CSS
+ * Side effect: mirrors `keyboardHeight` to the `--itzterm-keyboard-height` CSS
  * custom property on `document.documentElement` so CSS-only consumers (e.g.
  * the chat-message-list spacer) can react without re-rendering React.
  */

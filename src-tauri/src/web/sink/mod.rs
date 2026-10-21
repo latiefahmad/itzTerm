@@ -3,7 +3,7 @@
 //! The dispatcher (see `crate::acp::manager` + `crate::acp::client`) emits every
 //! agent/session event through a fan-out of [`EventSink`] trait objects instead
 //! of calling `AppHandle::emit` directly. That decouples the live session stream
-//! from Tauri: the desktop app and the standalone `termul-server` both feed the
+//! from Tauri: the desktop app and the standalone `itzterm-server` both feed the
 //! same [`WsRelaySink`], the per-session event log every `/ws` carrier reads
 //! (a WebSocket for browsers and phones, a Tauri `ipc::Channel` for the desktop
 //! renderer).
@@ -119,7 +119,7 @@ pub trait EventSink: Send + Sync {
 ///   the relay sends it through (like reliable) and the client dedups by
 ///   `seq` (Dev Notes #6).
 ///
-/// Constructible WITHOUT a Tauri `AppHandle` (the standalone `termul-server`
+/// Constructible WITHOUT a Tauri `AppHandle` (the standalone `itzterm-server`
 /// binary has no Tauri app). `Send + Sync` so clones
 /// of `Arc<WsRelaySink>` can cross from the Tauri command thread into each
 /// agent's dedicated driver thread.
@@ -137,14 +137,14 @@ pub struct WsRelaySink {
     /// Capacity of each subscription's bounded channel into its connection.
     client_queue_capacity: usize,
     /// Server-side permission rendezvous (Story 1.7). `None` for a relay built
-    /// without one (unit tests); the desktop host and `termul-server` attach
+    /// without one (unit tests); the desktop host and `itzterm-server` attach
     /// one at startup. When set, `emit` snapshots `acp:permission_request`
     /// events into a relay-side ticket table that enforces the rendezvous
     /// policy (at-most-one, first-wins, TOCTOU). Tickets have no timeout; the
     /// turn end, session close and agent death events release them.
     rendezvous: Mutex<Option<Arc<crate::web::permissions::PermissionRendezvous>>>,
     /// Server-side question rendezvous (issue #411). `None` for a relay built
-    /// without one (unit tests); the desktop host and `termul-server` attach
+    /// without one (unit tests); the desktop host and `itzterm-server` attach
     /// one at startup. When set, `emit` snapshots `acp:question_request`
     /// events into a relay-side ticket table (first-wins, TOCTOU, timeout).
     question_rendezvous: Mutex<Option<Arc<crate::web::permissions::QuestionRendezvous>>>,
@@ -300,7 +300,7 @@ impl WsRelaySink {
 
     /// Create a live relay sink with a custom per-session event-log capacity and
     /// the default per-subscription channel capacity. Used by
-    /// `termul-server` to thread `ServerConfig::event_log_capacity`.
+    /// `itzterm-server` to thread `ServerConfig::event_log_capacity`.
     #[must_use]
     pub fn with_log_capacity(event_log_capacity: usize) -> Self {
         Self::with_capacity(event_log_capacity, DEFAULT_CLIENT_QUEUE_CAPACITY)

@@ -3,7 +3,7 @@
  * fixed rate for DURATION_SEC (default 300), then completes the prompt with
  * `stopReason: 'end_turn'`. Deterministic, no network, no LLM.
  *
- * Wire behavior mirrors what termul-server's ACP client sends:
+ * Wire behavior mirrors what itzterm-server's ACP client sends:
  * - `initialize` → advertise `loadSession` (persistent) so reopen flows work.
  * - `session/new` → mint a fresh session id (server registers it).
  * - `session/prompt` → hold the request open, stream chunks, reply once done.
@@ -517,7 +517,7 @@ let nextElicitationId = 0
  * `[CRASH]` prompt; the first armed prompt consumes it and kills the agent.
  * Re-sent persisted prompts (reopen resume) find it already consumed.
  */
-const CRASH_ARM_FILE = process.env.TERMUL_FAKE_CRASH_ARM ?? ''
+const CRASH_ARM_FILE = process.env.ITZTERM_FAKE_CRASH_ARM ?? ''
 
 function consumeCrashArm(): boolean {
   if (!CRASH_ARM_FILE) return false

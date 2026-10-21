@@ -362,8 +362,8 @@ describe('file-path-links resolution', () => {
 
   it('rejects relative paths that escape the allowed roots', async () => {
     const result = await resolveFilePathCandidate('../../outside.ts', {
-      cwd: '/repo/apps/termul',
-      projectRoot: '/repo/apps/termul'
+      cwd: '/repo/apps/itzterm',
+      projectRoot: '/repo/apps/itzterm'
     })
 
     expect(result).toEqual({ ok: false, reason: 'not-found' })
@@ -372,8 +372,8 @@ describe('file-path-links resolution', () => {
 
   it('rejects absolute paths outside the allowed roots', async () => {
     const result = await resolveFilePathCandidate('/etc/hosts', {
-      cwd: '/repo/apps/termul',
-      projectRoot: '/repo/apps/termul'
+      cwd: '/repo/apps/itzterm',
+      projectRoot: '/repo/apps/itzterm'
     })
 
     expect(result).toEqual({ ok: false, reason: 'not-found' })
@@ -772,13 +772,13 @@ describe('file-path-links resolution', () => {
     const onReveal = (event: Event): void => {
       reveals.push((event as CustomEvent).detail)
     }
-    window.addEventListener('termul:reveal-line', onReveal)
+    window.addEventListener('itzterm:reveal-line', onReveal)
 
     try {
       await openFilePathFromTerminal('src/App.tsx:7', { cwd: '/repo' })
       await openFilePathFromTerminal('src/App.tsx', { cwd: '/repo' })
     } finally {
-      window.removeEventListener('termul:reveal-line', onReveal)
+      window.removeEventListener('itzterm:reveal-line', onReveal)
     }
 
     expect(reveals).toEqual([{ filePath: '/repo/src/App.tsx', lineNumber: 7 }])

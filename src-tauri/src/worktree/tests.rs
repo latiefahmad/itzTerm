@@ -110,7 +110,7 @@ fn test_list_multiple_entries() {
                       HEAD aaa111\n\
                       branch refs/heads/main\n\
                       \n\
-                      worktree /path/to/project/.termul/worktrees/feat-1\n\
+                      worktree /path/to/project/.itzterm/worktrees/feat-1\n\
                       HEAD bbb222\n\
                       branch refs/heads/feat-1\n\
                       \n";
@@ -331,7 +331,7 @@ fn test_create_with_progress_streams_lifecycle_lines() {
         return;
     }
     let dir = std::env::temp_dir().join(format!(
-        "termul-wt-create-{}-{}",
+        "itzterm-wt-create-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -382,7 +382,7 @@ fn test_create_without_progress_succeeds() {
         return;
     }
     let dir = std::env::temp_dir().join(format!(
-        "termul-wt-create-noprogress-{}-{}",
+        "itzterm-wt-create-noprogress-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -454,7 +454,7 @@ fn test_check_dirty_ignores_ignored_entries() {
         return;
     }
     let dir = std::env::temp_dir().join(format!(
-        "termul-wt-ignored-{}-{}",
+        "itzterm-wt-ignored-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -517,7 +517,7 @@ fn test_error_code_mapping() {
 /// the nonexistent flag that used to kill every streamed create.
 #[test]
 fn test_worktree_add_args_new_branch_with_start_ref() {
-    let args = worktree_add_args("chat/abc", true, "/p/.termul/worktrees/abc/", Some("main"));
+    let args = worktree_add_args("chat/abc", true, "/p/.itzterm/worktrees/abc/", Some("main"));
     assert_eq!(
         args,
         [
@@ -526,7 +526,7 @@ fn test_worktree_add_args_new_branch_with_start_ref() {
             "-b",
             "chat/abc",
             "--",
-            "/p/.termul/worktrees/abc/",
+            "/p/.itzterm/worktrees/abc/",
             "main"
         ]
     );
@@ -548,13 +548,13 @@ fn test_worktree_add_args_existing_branch() {
 }
 
 #[test]
-fn test_is_termul_managed_true() {
-    assert!("/project/.termul/worktrees/feat-1".contains(".termul/worktrees/"));
+fn test_is_itzterm_managed_true() {
+    assert!("/project/.itzterm/worktrees/feat-1".contains(".itzterm/worktrees/"));
 }
 
 #[test]
-fn test_is_termul_managed_false() {
-    assert!(!"/project/../other-worktree".contains(".termul/worktrees/"));
+fn test_is_itzterm_managed_false() {
+    assert!(!"/project/../other-worktree".contains(".itzterm/worktrees/"));
 }
 
 // --------------------------------------------------------------------
@@ -678,7 +678,7 @@ fn test_copy_worktree_include_files_errors_when_worktree_dir_missing() {
     std::fs::write(project.path().join(".worktree-include"), "file.env\n").unwrap();
     let missing_worktree = project
         .path()
-        .join(".termul")
+        .join(".itzterm")
         .join("worktrees")
         .join("missing");
     let result = WorktreeManager::copy_worktree_include_files(
@@ -760,10 +760,10 @@ fn test_resolve_default_base_branch_detached_head_flag() {
 }
 
 #[test]
-fn managed_path_requires_a_termul_worktrees_component_pair() {
-    assert!(WorktreeManager::is_managed_path("/p/.termul/worktrees/wt-1"));
-    assert!(WorktreeManager::is_managed_path("/p/.termul/worktrees"));
+fn managed_path_requires_a_itzterm_worktrees_component_pair() {
+    assert!(WorktreeManager::is_managed_path("/p/.itzterm/worktrees/wt-1"));
+    assert!(WorktreeManager::is_managed_path("/p/.itzterm/worktrees"));
     assert!(!WorktreeManager::is_managed_path("/p/worktrees/wt-1"));
-    assert!(!WorktreeManager::is_managed_path("/p/.termul/other/worktrees/wt-1"));
-    assert!(!WorktreeManager::is_managed_path("/p/not.termul/worktrees/wt-1"));
+    assert!(!WorktreeManager::is_managed_path("/p/.itzterm/other/worktrees/wt-1"));
+    assert!(!WorktreeManager::is_managed_path("/p/not.itzterm/worktrees/wt-1"));
 }

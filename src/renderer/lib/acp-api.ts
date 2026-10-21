@@ -295,7 +295,7 @@ export type McpServerConfig = McpStdioServer | McpHttpServer | McpSseServer
 
 // --- MCP client probe (on-demand `initialize` + `tools/list`) -------------
 
-/** Per-server probe status (Termul's own client connection, not the agent's). */
+/** Per-server probe status (itzTerm's own client connection, not the agent's). */
 export type ProbeStatus = 'connected' | 'disconnected' | 'authRequired'
 
 /** A tool exposed by a probed MCP server (`tools/list` output, UI subset). */
@@ -837,7 +837,7 @@ export async function acpProbeRuntime(): Promise<AcpRuntimeAvailability> {
  * the connected/disconnected status + tool list. Stateless — the renderer
  * supplies the full `McpServerConfig` (no registry-store coupling). Never
  * logs env/header values, tokens, or credentials. Desktop↔web parity: the
- * probe runs on the termul-server host via `POST /mcp-servers/probe` on web.
+ * probe runs on the itzterm-server host via `POST /mcp-servers/probe` on web.
  *
  * Delegates to the canonical `acp-mcp-probe.ts` facade so the transport-facade
  * (`acpApi`) and the standalone facade share ONE contract: never throws on a

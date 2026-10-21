@@ -73,7 +73,7 @@ export function DiagnosticsSection(): React.JSX.Element {
               />
               <ActionRow
                 label="Log folder"
-                description="Open the folder that holds the Termul logs."
+                description="Open the folder that holds the itzTerm logs."
                 action="Show folder"
                 actionLabel="Show log folder"
                 icon={<FolderOpen size={13} />}
@@ -104,8 +104,8 @@ export function DiagnosticsSection(): React.JSX.Element {
           <SettingsCard>
             <SettingsRow
               id={rowId('server-version')}
-              label={`termul-server ${APP_VERSION}`}
-              description="The web client is served by the termul-server and updates together with it. Reload the page after the server updates."
+              label={`itzterm-server ${APP_VERSION}`}
+              description="The web client is served by the itzterm-server and updates together with it. Reload the page after the server updates."
             />
           </SettingsCard>
         </SettingsGroup>

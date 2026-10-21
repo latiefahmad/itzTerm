@@ -12,7 +12,7 @@
 export const DORMANT_RING_BYTE_CAP = 256 * 1024 // 256KB
 export const DORMANT_RING_CHUNK_CAP = 256
 
-const OVERFLOW_NOTICE = '[termul: dropped output due to backpressure]\r\n'
+const OVERFLOW_NOTICE = '[itzterm: dropped output due to backpressure]\r\n'
 
 export interface DormantRingState {
   chunks: Uint8Array[]

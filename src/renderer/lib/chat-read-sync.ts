@@ -1,7 +1,7 @@
 /**
  * Renderer facade for the host's shared chat last-read markers. Every carrier
  * speaks `/ws` (the desktop over its IPC Channel), so one client serves the
- * desktop, a shared-live phone and a `termul-server` browser alike.
+ * desktop, a shared-live phone and a `itzterm-server` browser alike.
  */
 import type {
   ChatReadMark,

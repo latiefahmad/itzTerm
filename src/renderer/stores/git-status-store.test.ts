@@ -1,4 +1,4 @@
-﻿import type { GitCommitContext, GitStatusDetail } from '@shared/types/ipc.types'
+import type { GitCommitContext, GitStatusDetail } from '@shared/types/ipc.types'
 import { platform } from '@tauri-apps/plugin-os'
 import { toast } from 'sonner'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -563,9 +563,9 @@ describe('git-status-store canonical keys', () => {
   })
 
   it('deepestTrackedKey picks the deepest segment-bounded containing key', () => {
-    const keys = ['c:/proj', 'c:/proj/.termul/worktrees/feat', 'c:/pro']
-    expect(deepestTrackedKey('C:\\proj\\.termul\\worktrees\\feat\\src', keys)).toBe(
-      'c:/proj/.termul/worktrees/feat'
+    const keys = ['c:/proj', 'c:/proj/.itzterm/worktrees/feat', 'c:/pro']
+    expect(deepestTrackedKey('C:\\proj\\.itzterm\\worktrees\\feat\\src', keys)).toBe(
+      'c:/proj/.itzterm/worktrees/feat'
     )
     expect(deepestTrackedKey('C:/proj/src/a.ts', keys)).toBe('c:/proj')
     expect(deepestTrackedKey('C:/project/a.ts', keys)).toBeNull()
@@ -959,7 +959,7 @@ describe('countGitStatuses', () => {
 })
 
 describe('git-status-store write block for unresolved working copies', () => {
-  const GONE = '/proj/.termul/worktrees/gone'
+  const GONE = '/proj/.itzterm/worktrees/gone'
 
   beforeEach(() => {
     useProjectStore.setState({

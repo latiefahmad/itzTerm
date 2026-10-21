@@ -24,7 +24,7 @@ pub(super) fn handle_mark_chat_read(id: String, payload: &Value, relay: &WsRelay
         Ok(parsed) => parsed,
         Err(error) => {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 "mark_chat_read refused: failure=malformed_payload"
             );
             return WsReply::err(
@@ -37,7 +37,7 @@ pub(super) fn handle_mark_chat_read(id: String, payload: &Value, relay: &WsRelay
     let session = redact_session_id(&parsed.session_id);
     let Some(head) = relay.log_head(&parsed.session_id) else {
         warn!(
-            target: "termul::web::ws",
+            target: "itzterm::web::ws",
             session = %session,
             "mark_chat_read refused: failure=not_found"
         );
@@ -52,7 +52,7 @@ pub(super) fn handle_mark_chat_read(id: String, payload: &Value, relay: &WsRelay
     let mark = match outcome {
         MarkOutcome::Moved(mark) => {
             info!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 session = %session,
                 seq = mark.seq,
                 "chat read marker moved"
@@ -62,7 +62,7 @@ pub(super) fn handle_mark_chat_read(id: String, payload: &Value, relay: &WsRelay
         }
         MarkOutcome::Unchanged(mark) => {
             debug!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 session = %session,
                 seq = mark.seq,
                 requested = parsed.seq,
@@ -72,7 +72,7 @@ pub(super) fn handle_mark_chat_read(id: String, payload: &Value, relay: &WsRelay
         }
         MarkOutcome::OtherEpoch(mark) => {
             info!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 session = %session,
                 requested = parsed.seq,
                 "chat read ignored: it was against another log epoch than the session's"

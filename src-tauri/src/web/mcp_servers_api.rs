@@ -18,7 +18,7 @@ use crate::web::ws::AppState;
 pub(crate) const MAX_REGISTRY_BYTES: usize = 1024 * 1024;
 pub(crate) const FILE_NAME: &str = "mcp-servers.json";
 
-/// Resolve `{project_root}/.termul/mcp-servers.json`.
+/// Resolve `{project_root}/.itzterm/mcp-servers.json`.
 ///
 /// Shared by the web `PUT /mcp-servers` handler, the OAuth start authorization
 /// and the desktop `remote_sync_mcp_registry` Tauri command so the
@@ -26,7 +26,7 @@ pub(crate) const FILE_NAME: &str = "mcp-servers.json";
 /// registry sync gap). Every caller names the project (`projectId`); there is
 /// no single host project root.
 pub(crate) fn registry_path(project_root: &Path) -> PathBuf {
-    project_root.join(".termul").join(FILE_NAME)
+    project_root.join(".itzterm").join(FILE_NAME)
 }
 
 /// The `?projectId=` query of `GET`/`PUT /mcp-servers`.
@@ -111,7 +111,7 @@ pub async fn put(
     Query(query): Query<McpProjectQuery>,
     Json(value): Json<Value>,
 ) -> Json<IpcBody<()>> {
-    // F-004: this route writes {project_root}/.termul/mcp-servers.json — a
+    // F-004: this route writes {project_root}/.itzterm/mcp-servers.json — a
     // host-state mutation that also defines MCP stdio commands the host later
     // spawns. It must carry the SAME `check_local_only` guard as every other
     // mutation route (fs/git writes, workspace, /acp/install, /projects/*):

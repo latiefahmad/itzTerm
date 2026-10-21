@@ -27,7 +27,7 @@ async function openTerminalsApp(page: Page): Promise<void> {
 
 async function openMobileApp(page: Page): Promise<void> {
   await page.goto(`${DEMO_BASE_URL}/#token=${DEMO_TOKEN}`)
-  await page.waitForFunction((t) => localStorage.getItem('termul.webAuthToken') === t, DEMO_TOKEN)
+  await page.waitForFunction((t) => localStorage.getItem('itzterm.webAuthToken') === t, DEMO_TOKEN)
   await page.goto(`${DEMO_BASE_URL}/#/`)
   await page
     .getByRole('button', { name: /^Open menu/ })

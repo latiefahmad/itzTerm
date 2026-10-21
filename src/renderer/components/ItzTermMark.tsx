@@ -1,11 +1,11 @@
 /**
- * Termul brand mark.
+ * itzTerm brand mark.
  *
  * Inline SVG so it can inherit the current text color via `currentColor`,
  * which keeps it legible on both light and dark themes. Source artwork lives
- * at `landing/public/termul.svg` (white fill); this is the theme-aware variant.
+ * at `landing/public/itzterm.svg` (white fill); this is the theme-aware variant.
  */
-export function TermulMark({
+export function ItzTermMark({
   size = 22,
   className
 }: {
@@ -19,7 +19,7 @@ export function TermulMark({
       viewBox="0 0 569 507"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label="Termul"
+      aria-label="itzTerm"
       className={className}
       style={{ fillRule: 'evenodd', clipRule: 'evenodd' }}
     >

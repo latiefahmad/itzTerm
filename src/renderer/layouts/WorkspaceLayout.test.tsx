@@ -160,7 +160,7 @@ vi.mock('@/stores/app-settings-store', () => ({
   useConfirmTerminalClose: vi.fn(() => true),
   useUpdateAppSetting: vi.fn(() => vi.fn()),
   useDefaultProjectColor: vi.fn(() => 'blue'),
-  useColorTheme: vi.fn(() => 'termul'),
+  useColorTheme: vi.fn(() => 'itzterm'),
   useAppearanceMode: vi.fn(() => 'dark')
 }))
 
@@ -578,7 +578,7 @@ describe('WorkspaceLayout - Empty States', () => {
       canvasId: 'cv0123456789abcdef',
       baseUrl: '',
       canvasToken: 'cafe',
-      pinTag: 'termul-v1',
+      pinTag: 'itzterm-v1',
       docKey: '/workspace/p/design.figcraft',
       mountSeq: 3,
       evicted: [],

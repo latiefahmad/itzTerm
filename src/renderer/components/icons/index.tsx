@@ -142,14 +142,14 @@ import {
   type SVGProps
 } from 'react'
 
-export interface TermulIconProps extends SVGProps<SVGSVGElement> {
+export interface ItzTermIconProps extends SVGProps<SVGSVGElement> {
   size?: number | string
 }
 
-export type TermulIcon = ForwardRefExoticComponent<TermulIconProps & RefAttributes<SVGSVGElement>>
+export type ItzTermIcon = ForwardRefExoticComponent<ItzTermIconProps & RefAttributes<SVGSVGElement>>
 
-function hugeIcon(name: string, icon: IconSvgElement): TermulIcon {
-  const Icon = forwardRef<SVGSVGElement, TermulIconProps>(function TermulIcon(
+function hugeIcon(name: string, icon: IconSvgElement): ItzTermIcon {
+  const Icon = forwardRef<SVGSVGElement, ItzTermIconProps>(function ItzTermIcon(
     { size = 24, strokeWidth, children: _children, ...props },
     ref
   ) {
@@ -165,7 +165,7 @@ function hugeIcon(name: string, icon: IconSvgElement): TermulIcon {
         strokeWidth={safeStrokeWidth}
         aria-hidden={props['aria-label'] ? undefined : true}
         focusable="false"
-        data-termul-icon={name}
+        data-itzterm-icon={name}
         {...props}
       />
     )
@@ -315,7 +315,7 @@ export const XCircle = hugeIcon('XCircle', CancelCircleIcon)
 export const Zap = hugeIcon('Zap', ZapIcon)
 
 // The stop button fills this square, so this glyph stays in the app.
-export const Square = forwardRef<SVGSVGElement, TermulIconProps>(function Square(
+export const Square = forwardRef<SVGSVGElement, ItzTermIconProps>(function Square(
   { size = 24, strokeWidth, children: _children, ...props },
   ref
 ) {
@@ -336,7 +336,7 @@ export const Square = forwardRef<SVGSVGElement, TermulIconProps>(function Square
       viewBox="0 0 24 24"
       width={size}
       height={size}
-      data-termul-icon="Square"
+      data-itzterm-icon="Square"
       {...props}
     >
       <rect x="4" y="4" width="16" height="16" rx="1" />

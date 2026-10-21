@@ -601,7 +601,7 @@ pub struct AppState {
     /// Operator opt-in: admit non-loopback peers on the loopback-guarded
     /// write routes (fs/git/workspace/projects/host-state). Default `false`
     /// (the CWE-306 guard stays on); set `true` only by the standalone
-    /// `termul-server` `--allow-remote-writes` flag. The desktop shared-live
+    /// `itzterm-server` `--allow-remote-writes` flag. The desktop shared-live
     /// host leaves this `false` (LAN clients stay view-only for mutations).
     pub allow_remote_writes: bool,
     /// Deployment-mode deny: when `true`, the write guard refuses ALL write
@@ -609,7 +609,7 @@ pub struct AppState {
     /// Set `true` by the desktop shared-live host — it binds localhost and a
     /// cloudflared quick-tunnel forwards public traffic to it from a loopback
     /// source, so `is_loopback()` cannot distinguish cloudflared-forwarded
-    /// requests from genuine local callers. The standalone `termul-server`
+    /// requests from genuine local callers. The standalone `itzterm-server`
     /// sets this `false` (its `--allow-remote-writes` opt-in is the
     /// admission path there). Closes the cloudflared loopback bypass.
     pub shared_live_writes_denied: bool,

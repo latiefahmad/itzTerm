@@ -297,13 +297,13 @@ jobs:
       - name: Assert dist-web/index.html exists
         run: test -f dist-web/index.html && test -s dist-web/index.html
 
-      - name: Build termul-server (native host)
+      - name: Build itzterm-server (native host)
         working-directory: src-tauri
-        run: cargo build --bin termul-server --features standalone-server
+        run: cargo build --bin itzterm-server --features standalone-server
 
-      - name: Clippy termul-server (feature on)
+      - name: Clippy itzterm-server (feature on)
         working-directory: src-tauri
-        run: cargo clippy --bin termul-server --features standalone-server -- -D warnings
+        run: cargo clippy --bin itzterm-server --features standalone-server -- -D warnings
 
   rust-windows-check:
     name: Rust Windows Smoke Check
@@ -348,9 +348,9 @@ jobs:
         working-directory: src-tauri
         run: cargo check --all-targets
 
-      - name: Build termul-server (Windows host)
+      - name: Build itzterm-server (Windows host)
         working-directory: src-tauri
-        run: cargo build --bin termul-server --features standalone-server
+        run: cargo build --bin itzterm-server --features standalone-server
 
   build-check:
     name: Verify Tauri Frontend Build

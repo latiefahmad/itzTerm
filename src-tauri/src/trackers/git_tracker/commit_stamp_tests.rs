@@ -1,5 +1,5 @@
 //! Behavior of the commit stamp against real repositories: only a real trailer
-//! is a stamp, a bounded search is not capped, and two Termul commits naming
+//! is a stamp, a bounded search is not capped, and two itzTerm commits naming
 //! one `expectedHead` cannot both land.
 
 use super::*;
@@ -16,7 +16,7 @@ fn run(cwd: &std::path::Path, args: &[&str]) -> String {
 
 fn repo(tag: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!(
-        "termul-commit-stamp-{tag}-{}-{}",
+        "itzterm-commit-stamp-{tag}-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -47,7 +47,7 @@ fn a_prose_line_that_looks_like_the_stamp_is_not_a_stamp() {
     // The look-alike sits in the body, not in the final trailer paragraph.
     run(
         &repo,
-        &["commit", "-qm", "spoofed\n\nTermul-Command-Id: victim-1\n\nmore prose follows"],
+        &["commit", "-qm", "spoofed\n\nitzTerm-Command-Id: victim-1\n\nmore prose follows"],
     );
     assert_eq!(find_stamped_commit(cwd, "victim-1", None), None);
 

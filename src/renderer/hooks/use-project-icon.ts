@@ -31,7 +31,7 @@ import { useProjectStore } from '@/stores/project-store'
  *
  * Transport-neutral: `gitApi.getProjectIcon` branches on `isTauriContext()`
  * (`project_icon_resolve` invoke vs `POST /project/icon`), so the hook covers
- * desktop, shared-live web clients, and `termul-server` browser/mobile.
+ * desktop, shared-live web clients, and `itzterm-server` browser/mobile.
  */
 
 const STALE_MS = 24 * 60 * 60 * 1000

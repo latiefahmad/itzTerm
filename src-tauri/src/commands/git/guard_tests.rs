@@ -274,7 +274,7 @@ fn start_ref_classification() {
 // Worktree removal
 // ---------------------------------------------------------------------------
 
-/// A repo with a managed worktree at `<repo>/.termul/worktrees/<name>`.
+/// A repo with a managed worktree at `<repo>/.itzterm/worktrees/<name>`.
 fn repo_with_worktree(dir: &tempfile::TempDir, name: &str) -> Option<(PathBuf, PathBuf)> {
     let repo = dir.path().join("repo");
     std::fs::create_dir_all(&repo).unwrap();
@@ -286,7 +286,7 @@ fn repo_with_worktree(dir: &tempfile::TempDir, name: &str) -> Option<(PathBuf, P
     git(&repo, &["commit", "--allow-empty", "-qm", "init"]);
     // git rejects the `\\?\` verbatim paths `canonicalize` yields on Windows,
     // so it gets the plain path and the canonical forms are taken afterwards.
-    let worktree = repo.join(".termul/worktrees").join(name);
+    let worktree = repo.join(".itzterm/worktrees").join(name);
     std::fs::create_dir_all(worktree.parent().unwrap()).unwrap();
     git(&repo, &["worktree", "add", "-q", "-b", name, worktree.to_str().unwrap()]);
     Some((std::fs::canonicalize(repo).unwrap(), std::fs::canonicalize(worktree).unwrap()))

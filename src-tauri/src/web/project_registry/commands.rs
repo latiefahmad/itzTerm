@@ -157,12 +157,12 @@ impl ProjectHost<'_> {
     /// Reserved id, unusable path, `Duplicate`, or a failed registry write.
     pub async fn add(&self, req: AddProject) -> Result<ProjectSummary, ProjectCommandError> {
         if req.id == UNASSIGNED_PROJECT_ID {
-            tracing::warn!(target: "termul::web::project_registry", "add_project: reserved project id refused");
+            tracing::warn!(target: "itzterm::web::project_registry", "add_project: reserved project id refused");
             return Err(ProjectCommandError::Reserved);
         }
         let canonical = validate_root_path(Path::new(&req.path)).map_err(|reason| {
             tracing::warn!(
-                target: "termul::web::project_registry",
+                target: "itzterm::web::project_registry",
                 project_id = %req.id,
                 "add_project: invalid root path"
             );
@@ -180,7 +180,7 @@ impl ProjectHost<'_> {
             notify_changed(self.relay, self.registry);
         }
         tracing::info!(
-            target: "termul::web::project_registry",
+            target: "itzterm::web::project_registry",
             project_id = %req.id,
             changed = committed.changed,
             "add_project: project registered"
@@ -201,12 +201,12 @@ impl ProjectHost<'_> {
         let canonical = match req.path.as_deref() {
             Some(path) => {
                 if req.project_id == UNASSIGNED_PROJECT_ID {
-                    tracing::warn!(target: "termul::web::project_registry", "update_project: reserved project id refused");
+                    tracing::warn!(target: "itzterm::web::project_registry", "update_project: reserved project id refused");
                     return Err(ProjectCommandError::Reserved);
                 }
                 Some(validate_root_path(Path::new(path)).map_err(|reason| {
                     tracing::warn!(
-                        target: "termul::web::project_registry",
+                        target: "itzterm::web::project_registry",
                         project_id = %req.project_id,
                         "update_project: invalid root path"
                     );
@@ -254,7 +254,7 @@ impl ProjectHost<'_> {
             notify_changed(self.relay, self.registry);
         }
         tracing::info!(
-            target: "termul::web::project_registry",
+            target: "itzterm::web::project_registry",
             project_id = %req.project_id,
             archived = archiving,
             moved = moving,
@@ -280,7 +280,7 @@ impl ProjectHost<'_> {
             notify_changed(self.relay, self.registry);
         }
         tracing::info!(
-            target: "termul::web::project_registry",
+            target: "itzterm::web::project_registry",
             project_id,
             removed = committed.value,
             "remove_project: project removed"
@@ -311,7 +311,7 @@ impl ProjectHost<'_> {
         if !bound.is_empty() {
             if !cascade {
                 tracing::warn!(
-                    target: "termul::web::project_registry",
+                    target: "itzterm::web::project_registry",
                     project_id,
                     sessions = bound.sessions.len(),
                     terminals = bound.terminals.len(),
@@ -323,7 +323,7 @@ impl ProjectHost<'_> {
                 });
             }
             tracing::info!(
-                target: "termul::web::project_registry",
+                target: "itzterm::web::project_registry",
                 project_id,
                 sessions = bound.sessions.len(),
                 terminals = bound.terminals.len(),
@@ -332,7 +332,7 @@ impl ProjectHost<'_> {
             let leftovers = busy::stop_all(self.acp, self.pty, project_id, &bound).await;
             if !leftovers.is_empty() {
                 tracing::warn!(
-                    target: "termul::web::project_registry",
+                    target: "itzterm::web::project_registry",
                     project_id,
                     sessions = leftovers.sessions.len(),
                     terminals = leftovers.terminals.len(),
@@ -362,7 +362,7 @@ pub fn set_default_project(
         notify_changed(relay, registry);
     }
     tracing::info!(
-        target: "termul::web::project_registry",
+        target: "itzterm::web::project_registry",
         project_id,
         "set_default_project: host default updated"
     );
@@ -384,7 +384,7 @@ pub fn import_projects(
     if committed.value {
         notify_changed(relay, registry);
         tracing::info!(
-            target: "termul::web::project_registry",
+            target: "itzterm::web::project_registry",
             projects = registry.len(),
             "project registry import completed"
         );

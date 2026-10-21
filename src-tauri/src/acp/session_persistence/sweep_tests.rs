@@ -3,7 +3,7 @@ use serde_json::json;
 
 fn temp_dir(label: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-sweep-{label}-{}-{}",
+        "itzterm-sweep-{label}-{}-{}",
         std::process::id(),
         now_millis()
     ));

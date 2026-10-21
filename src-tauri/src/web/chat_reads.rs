@@ -1,7 +1,7 @@
 //! Shared last-read markers for agent chats.
 //!
 //! Each renderer banks a chat's "New activity" dot itself, but reading the chat
-//! on any surface (a desktop pane, a shared-live phone, a `termul-server`
+//! on any surface (a desktop pane, a shared-live phone, a `itzterm-server`
 //! browser) must clear the dot on every surface. The host keeps, per session,
 //! the newest session-log seq a surface has read, and serves it to every
 //! `chat_reads` watcher. A renderer clears its dot once the marker reaches the

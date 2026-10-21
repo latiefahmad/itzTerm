@@ -20,8 +20,8 @@ import {
 import { isTauriContext } from '@/lib/tauri-runtime'
 import { normalizePath } from '@/lib/working-copy'
 
-export const LEGACY_EXPLORER_WIDTH_KEY = 'termul:file-explorer-width'
-export const LEGACY_SSH_HEIGHT_KEY = 'termul-ssh-panel-height'
+export const LEGACY_EXPLORER_WIDTH_KEY = 'itzterm:file-explorer-width'
+export const LEGACY_SSH_HEIGHT_KEY = 'itzterm-ssh-panel-height'
 
 /** Raw legacy values; each is `null`/`undefined` when it was absent. */
 export interface LegacyShellLayoutSources {

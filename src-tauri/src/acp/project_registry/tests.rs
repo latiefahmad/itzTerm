@@ -11,7 +11,7 @@ use std::path::PathBuf;
 /// no `tempfile` dev-dep). Caller must `cleanup` it.
 fn tempdir_like(label: &str) -> PathBuf {
     let p = std::env::temp_dir().join(format!(
-        "termul-registry-{label}-{}-{}",
+        "itzterm-registry-{label}-{}-{}",
         std::process::id(),
         now_nanos()
     ));

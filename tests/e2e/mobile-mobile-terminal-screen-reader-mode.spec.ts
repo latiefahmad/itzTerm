@@ -8,7 +8,7 @@ import { E2E_BASE_URL, E2E_TOKEN, storeKey, storeRead, storeWrite, wsRequest } f
 /**
  * Terminal screen reader mode E2E (spec-mobile-terminal-screen-reader-mode,
  * L-28): a phone-sized browser drives the web client's mobile shell against a
- * REAL termul-server and a REAL PTY, and checks what jsdom cannot — the
+ * REAL itzterm-server and a REAL PTY, and checks what jsdom cannot — the
  * Switch row in App Preferences at 390px, the setting travelling through the
  * server-side `settings/app` store (the web half of the shared persistence
  * facade), and a genuine xterm instance growing (or not growing) its
@@ -178,7 +178,7 @@ async function bootMobileShell(page: Page): Promise<void> {
   const projectName = await registerActiveProject()
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)

@@ -381,8 +381,8 @@ describe('StatusBar', () => {
     it('shows no branch picker and no counts when the working copy is unresolved', () => {
       wcRef.current = {
         state: 'unresolved',
-        key: '/home/user/test-project/.termul/worktrees/gone',
-        path: '/home/user/test-project/.termul/worktrees/gone'
+        key: '/home/user/test-project/.itzterm/worktrees/gone',
+        path: '/home/user/test-project/.itzterm/worktrees/gone'
       }
       renderWithProviders(<StatusBar project={mockProject} />)
       expect(screen.queryByLabelText('Switch git branch')).toBeNull()
@@ -395,11 +395,11 @@ describe('StatusBar', () => {
     it('shows the unresolved path instead of the project folder', () => {
       wcRef.current = {
         state: 'unresolved',
-        key: '/home/user/test-project/.termul/worktrees/gone',
-        path: '/home/user/test-project/.termul/worktrees/gone'
+        key: '/home/user/test-project/.itzterm/worktrees/gone',
+        path: '/home/user/test-project/.itzterm/worktrees/gone'
       }
       renderWithProviders(<StatusBar project={mockProject} />)
-      expect(screen.getByText('~/test-project/.termul/worktrees/gone')).toBeDefined()
+      expect(screen.getByText('~/test-project/.itzterm/worktrees/gone')).toBeDefined()
       expect(screen.queryByText('~/test-project')).toBeNull()
     })
 
@@ -526,7 +526,7 @@ describe('StatusBar', () => {
     it('hides the remote access trigger on web (#843)', () => {
       // Desktop-only surface (desktop shared-live host status): jsdom has
       // no __TAURI_INTERNALS__, so isTauriContext() is false here and the
-      // trigger must not render at all on a termul-served web page.
+      // trigger must not render at all on a itzterm-served web page.
       renderWithProviders(<StatusBar project={mockProject} />)
 
       expect(screen.queryByLabelText('Remote terminal access')).toBeNull()

@@ -2,15 +2,15 @@ import { defineConfig, devices } from 'playwright/test'
 import { E2E_BASE_URL, E2E_DEVICE_ID } from './helpers'
 
 /**
- * E2E tests for the termul-server web client (long-running agent survival
+ * E2E tests for the itzterm-server web client (long-running agent survival
  * across chat close, tab switch, project switch, and browser reload).
  *
  * Run it with `bun run test:e2e`. CI runs it in `.github/workflows/e2e.yml`.
  *
  * Requires from the environment (the global-setup enforces these):
  * - A freshly built `dist-web/` (bun run build:web).
- * - A release `termul-server` binary at src-tauri/target/release/termul-server
- *   (cargo build --release --bin termul-server --features standalone-server).
+ * - A release `itzterm-server` binary at src-tauri/target/release/itzterm-server
+ *   (cargo build --release --bin itzterm-server --features standalone-server).
  *
  * The suite is NOT self-starting: global-setup spawns one isolated server
  * (loopback, throwaway state dir) and seeds a deterministic fake ACP agent
@@ -29,11 +29,11 @@ const baseURL = E2E_BASE_URL
  * Every browser context (the test fixtures and `browser.newContext()` alike)
  * starts with the suite's fixed `deviceId`, so the device-scoped store keys a
  * spec seeds through the WS helpers are the ones the page reads. A spec that
- * needs a second device overrides `termul.deviceId` with an init script.
+ * needs a second device overrides `itzterm.deviceId` with an init script.
  */
 const storageState = {
   cookies: [],
-  origins: [{ origin: baseURL, localStorage: [{ name: 'termul.deviceId', value: E2E_DEVICE_ID }] }]
+  origins: [{ origin: baseURL, localStorage: [{ name: 'itzterm.deviceId', value: E2E_DEVICE_ID }] }]
 }
 
 export default defineConfig({
@@ -43,7 +43,7 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
-  // One worker: a single shared termul-server instance holds all live
+  // One worker: a single shared itzterm-server instance holds all live
   // sessions; parallel browser contexts are created inside tests where the
   // scenario needs them (tab switching), the rest stays sequential.
   workers: 1,

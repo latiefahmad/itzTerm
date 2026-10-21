@@ -58,7 +58,7 @@ fn tempdir_like(label: &str) -> PathBuf {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let p = std::env::temp_dir().join(format!(
-        "termul-config-{label}-{}-{nanos}",
+        "itzterm-config-{label}-{}-{nanos}",
         std::process::id()
     ));
     std::fs::create_dir_all(&p).expect("create tempdir_like");
@@ -174,13 +174,13 @@ fn from_args_defaults() {
 #[test]
 fn from_args_project_root_is_a_removed_flag_that_only_seeds() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECT_ROOT"]);
-    std::env::remove_var("TERMUL_PROJECT_ROOT");
+    let saved = save_env(&["ITZTERM_PROJECT_ROOT"]);
+    std::env::remove_var("ITZTERM_PROJECT_ROOT");
     let none = ServerConfig::from_args(Vec::<&str>::new()).expect("defaults");
     let dir = tempdir_like("seed-root-flag");
     let flagged =
         ServerConfig::from_args(["--project-root", dir.to_str().unwrap()]).expect("flag parses");
-    std::env::set_var("TERMUL_PROJECT_ROOT", &dir);
+    std::env::set_var("ITZTERM_PROJECT_ROOT", &dir);
     let from_env = ServerConfig::from_args(Vec::<&str>::new()).expect("env parses");
     restore_env(saved);
 
@@ -198,13 +198,13 @@ fn from_args_project_root_is_a_removed_flag_that_only_seeds() {
     assert!(warnings[0].contains("removed option"));
 
     assert_eq!(from_env.seed_project_root.as_deref(), Some(canonical.as_path()));
-    assert!(from_env.deprecation_warnings.iter().any(|w| w.contains("$TERMUL_PROJECT_ROOT")));
+    assert!(from_env.deprecation_warnings.iter().any(|w| w.contains("$ITZTERM_PROJECT_ROOT")));
     cleanup(&dir);
 }
 
 #[test]
 fn from_args_bad_project_root_fails_fast() {
-    let missing = std::env::temp_dir().join("termul-no-such-seed-root-dir");
+    let missing = std::env::temp_dir().join("itzterm-no-such-seed-root-dir");
     let err = ServerConfig::from_args(["--project-root", missing.to_str().unwrap()])
         .expect_err("a missing seed root must abort");
     assert!(matches!(err, ParseCliError::Message(_)));
@@ -462,7 +462,7 @@ fn from_args_unknown_option() {
 // parsed and ignored like the removed permission flags.
 #[test]
 fn from_args_removed_workspace_manifests_dir_parses_and_warns_once() {
-    let cfg = ServerConfig::from_args(["--workspace-manifests-dir", "/var/lib/termul/manifests"])
+    let cfg = ServerConfig::from_args(["--workspace-manifests-dir", "/var/lib/itzterm/manifests"])
         .expect("the removed flag still parses");
     let warnings: Vec<_> = cfg
         .deprecation_warnings
@@ -470,7 +470,7 @@ fn from_args_removed_workspace_manifests_dir_parses_and_warns_once() {
         .filter(|warning| warning.contains("--workspace-manifests-dir"))
         .collect();
     assert_eq!(warnings.len(), 1);
-    assert!(warnings[0].contains("'/var/lib/termul/manifests'"));
+    assert!(warnings[0].contains("'/var/lib/itzterm/manifests'"));
     // A missing or empty value never aborts startup, and the next flag keeps its own value.
     for args in [
         vec!["--workspace-manifests-dir"],
@@ -486,10 +486,10 @@ fn from_args_removed_workspace_manifests_dir_parses_and_warns_once() {
 #[test]
 fn from_args_accepts_store_file() {
     let cfg =
-        ServerConfig::from_args(["--store-file", "/var/lib/termul/store.json"]).expect("parse");
+        ServerConfig::from_args(["--store-file", "/var/lib/itzterm/store.json"]).expect("parse");
     assert_eq!(
         cfg.store_file,
-        Some(PathBuf::from("/var/lib/termul/store.json"))
+        Some(PathBuf::from("/var/lib/itzterm/store.json"))
     );
     // Other defaults stay intact.
     assert_eq!(cfg.host, "127.0.0.1");
@@ -514,16 +514,16 @@ fn from_args_rejects_empty_store_file() {
 
 #[test]
 fn from_args_accepts_state_dir_and_prefers_it() {
-    let cfg = ServerConfig::from_args(["--state-dir", "/var/lib/termul-state"]).expect("parse");
+    let cfg = ServerConfig::from_args(["--state-dir", "/var/lib/itzterm-state"]).expect("parse");
     assert_eq!(
         cfg.state_dir.as_deref(),
-        Some(Path::new("/var/lib/termul-state"))
+        Some(Path::new("/var/lib/itzterm-state"))
     );
     // The override wins over every env-based branch — this is the
     // onboard-launched server agreeing with the wizard's printed path.
     assert_eq!(
         cfg.service_account_state_dir(),
-        PathBuf::from("/var/lib/termul-state")
+        PathBuf::from("/var/lib/itzterm-state")
     );
 }
 
@@ -540,11 +540,11 @@ fn from_args_missing_state_dir_value() {
 
 #[test]
 fn from_args_accepts_projects_file() {
-    let cfg = ServerConfig::from_args(["--projects-file", "/var/lib/termul/projects.json"])
+    let cfg = ServerConfig::from_args(["--projects-file", "/var/lib/itzterm/projects.json"])
         .expect("parse");
     assert_eq!(
         cfg.projects_file,
-        Some(PathBuf::from("/var/lib/termul/projects.json"))
+        Some(PathBuf::from("/var/lib/itzterm/projects.json"))
     );
     // Other defaults stay intact.
     assert_eq!(cfg.host, "127.0.0.1");
@@ -577,7 +577,7 @@ fn from_args_rejects_empty_projects_file() {
 
 // Patch 15: `service_account_state_dir` filters out empty env var values
 // so an empty `XDG_STATE_HOME` / `HOME` / `LOCALAPPDATA` does not produce
-// a relative `./termul` dir.
+// a relative `./itzterm` dir.
 #[test]
 fn service_account_state_dir_falls_through_empty_env_var() {
     let cfg = ServerConfig {
@@ -606,7 +606,7 @@ fn service_account_state_dir_falls_through_empty_env_var() {
     // test runner, so we assert the contract indirectly: the resolved
     // path is EITHER under $HOME / $XDG_STATE_HOME (when set + non-empty)
     // OR falls back to the OS temp dir. In both cases it must NOT be a
-    // relative `./termul` path (which would be CWD-dependent).
+    // relative `./itzterm` path (which would be CWD-dependent).
     let resolved = cfg.service_account_state_dir();
     assert!(
         resolved.is_absolute(),
@@ -617,7 +617,7 @@ fn service_account_state_dir_falls_through_empty_env_var() {
 
 // --- allow_remote_writes opt-in (CWE-306 guard relaxation) ---
 
-// `from_args` reads `TERMUL_SERVER_ALLOW_REMOTE_WRITES` from the real
+// `from_args` reads `ITZTERM_SERVER_ALLOW_REMOTE_WRITES` from the real
 // process env. These env-mutating tests are NOT parallel-safe, so
 // serialize them with a shared lock (mirrors `acp::host_mcp::child`'s
 // `ENV_LOCK` pattern). The lock also protects `from_args_defaults_to_guarded`,
@@ -626,7 +626,7 @@ fn service_account_state_dir_falls_through_empty_env_var() {
 static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 fn clear_remote_writes_env() {
-    std::env::remove_var("TERMUL_SERVER_ALLOW_REMOTE_WRITES");
+    std::env::remove_var("ITZTERM_SERVER_ALLOW_REMOTE_WRITES");
 }
 
 #[test]
@@ -676,12 +676,12 @@ fn from_args_flag_enables() {
 fn from_args_env_enables_true() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     clear_remote_writes_env();
-    std::env::set_var("TERMUL_SERVER_ALLOW_REMOTE_WRITES", "true");
+    std::env::set_var("ITZTERM_SERVER_ALLOW_REMOTE_WRITES", "true");
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
     clear_remote_writes_env();
     assert!(
         cfg.allow_remote_writes,
-        "TERMUL_SERVER_ALLOW_REMOTE_WRITES=true must enable"
+        "ITZTERM_SERVER_ALLOW_REMOTE_WRITES=true must enable"
     );
 }
 
@@ -689,7 +689,7 @@ fn from_args_env_enables_true() {
 fn from_args_invalid_env_stays_guarded() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     clear_remote_writes_env();
-    std::env::set_var("TERMUL_SERVER_ALLOW_REMOTE_WRITES", "yes");
+    std::env::set_var("ITZTERM_SERVER_ALLOW_REMOTE_WRITES", "yes");
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
     clear_remote_writes_env();
     assert!(
@@ -702,7 +702,7 @@ fn from_args_invalid_env_stays_guarded() {
 fn from_args_cli_wins_over_env_false() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     clear_remote_writes_env();
-    std::env::set_var("TERMUL_SERVER_ALLOW_REMOTE_WRITES", "false");
+    std::env::set_var("ITZTERM_SERVER_ALLOW_REMOTE_WRITES", "false");
     let cfg = ServerConfig::from_args(["--allow-remote-writes"]).expect("parse");
     clear_remote_writes_env();
     assert!(
@@ -713,7 +713,7 @@ fn from_args_cli_wins_over_env_false() {
 // --- web auth token (CAP-1 interim gate) ---
 
 fn clear_web_auth_env() {
-    std::env::remove_var("TERMUL_WEB_AUTH_TOKEN");
+    std::env::remove_var("ITZTERM_WEB_AUTH_TOKEN");
 }
 
 #[test]
@@ -755,7 +755,7 @@ fn from_args_missing_web_auth_token_value() {
 fn from_args_web_auth_token_env_fallback() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     clear_web_auth_env();
-    std::env::set_var("TERMUL_WEB_AUTH_TOKEN", "env-token");
+    std::env::set_var("ITZTERM_WEB_AUTH_TOKEN", "env-token");
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
     clear_web_auth_env();
     assert_eq!(
@@ -768,19 +768,19 @@ fn from_args_web_auth_token_env_fallback() {
 fn from_args_web_auth_token_empty_env_ignored() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     clear_web_auth_env();
-    std::env::set_var("TERMUL_WEB_AUTH_TOKEN", "");
+    std::env::set_var("ITZTERM_WEB_AUTH_TOKEN", "");
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
     clear_web_auth_env();
     assert!(
         cfg.web_auth_token.is_none(),
-        "an empty TERMUL_WEB_AUTH_TOKEN must be ignored (no token)"
+        "an empty ITZTERM_WEB_AUTH_TOKEN must be ignored (no token)"
     );
 }
 
 // --- projects_file env/default resolution (QA remediation story 2) ---
 //
 // `from_args` resolves `projects_file` from `--projects-file`, then
-// `$TERMUL_PROJECTS_FILE`, then the platform state dir via
+// `$ITZTERM_PROJECTS_FILE`, then the platform state dir via
 // `default_projects_file()`. These env-mutating tests serialize on the
 // shared `ENV_LOCK` (same process-global env as the allow_remote_writes
 // tests) and save/restore every var they touch so sibling tests see an
@@ -804,15 +804,15 @@ fn restore_env(saved: Vec<(String, Option<std::ffi::OsString>)>) {
 #[test]
 fn from_args_projects_file_flag_wins_over_env() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE"]);
-    std::env::set_var("TERMUL_PROJECTS_FILE", "/tmp/termul-env/projects.json");
-    let cfg = ServerConfig::from_args(["--projects-file", "/tmp/termul-flag/projects.json"])
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE"]);
+    std::env::set_var("ITZTERM_PROJECTS_FILE", "/tmp/itzterm-env/projects.json");
+    let cfg = ServerConfig::from_args(["--projects-file", "/tmp/itzterm-flag/projects.json"])
         .expect("parse");
     restore_env(saved);
     assert_eq!(
         cfg.projects_file,
-        Some(PathBuf::from("/tmp/termul-flag/projects.json")),
-        "explicit --projects-file must win over $TERMUL_PROJECTS_FILE"
+        Some(PathBuf::from("/tmp/itzterm-flag/projects.json")),
+        "explicit --projects-file must win over $ITZTERM_PROJECTS_FILE"
     );
 }
 
@@ -820,17 +820,17 @@ fn from_args_projects_file_flag_wins_over_env() {
 #[test]
 fn from_args_projects_file_env_wins_over_state_dir() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE", "XDG_STATE_HOME"]);
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE", "XDG_STATE_HOME"]);
     let state = tempdir_like("projects-env-wins");
     std::env::set_var("XDG_STATE_HOME", &state);
-    std::env::set_var("TERMUL_PROJECTS_FILE", "/tmp/termul-env/projects.json");
+    std::env::set_var("ITZTERM_PROJECTS_FILE", "/tmp/itzterm-env/projects.json");
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
     restore_env(saved);
     cleanup(&state);
     assert_eq!(
         cfg.projects_file,
-        Some(PathBuf::from("/tmp/termul-env/projects.json")),
-        "$TERMUL_PROJECTS_FILE must win over the state-dir default"
+        Some(PathBuf::from("/tmp/itzterm-env/projects.json")),
+        "$ITZTERM_PROJECTS_FILE must win over the state-dir default"
     );
 }
 
@@ -838,18 +838,18 @@ fn from_args_projects_file_env_wins_over_state_dir() {
 #[test]
 fn from_args_projects_file_defaults_to_state_dir() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE", "XDG_STATE_HOME"]);
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE", "XDG_STATE_HOME"]);
     let state = tempdir_like("projects-default");
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
     std::env::set_var("XDG_STATE_HOME", &state);
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
     restore_env(saved);
-    let expected = state.join("termul").join("projects.json");
+    let expected = state.join("itzterm").join("projects.json");
     cleanup(&state);
     assert_eq!(
         cfg.projects_file,
         Some(expected),
-        "no flag/env must default to $XDG_STATE_HOME/termul/projects.json"
+        "no flag/env must default to $XDG_STATE_HOME/itzterm/projects.json"
     );
 }
 
@@ -857,18 +857,18 @@ fn from_args_projects_file_defaults_to_state_dir() {
 #[test]
 fn from_args_projects_file_empty_env_ignored() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE", "XDG_STATE_HOME"]);
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE", "XDG_STATE_HOME"]);
     let state = tempdir_like("projects-empty-env");
-    std::env::set_var("TERMUL_PROJECTS_FILE", "   ");
+    std::env::set_var("ITZTERM_PROJECTS_FILE", "   ");
     std::env::set_var("XDG_STATE_HOME", &state);
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
     restore_env(saved);
-    let expected = state.join("termul").join("projects.json");
+    let expected = state.join("itzterm").join("projects.json");
     cleanup(&state);
     assert_eq!(
         cfg.projects_file,
         Some(expected),
-        "whitespace-only $TERMUL_PROJECTS_FILE must be ignored in favor of the default"
+        "whitespace-only $ITZTERM_PROJECTS_FILE must be ignored in favor of the default"
     );
 }
 
@@ -876,7 +876,7 @@ fn from_args_projects_file_empty_env_ignored() {
 fn from_args_web_auth_token_cli_wins_over_env() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     clear_web_auth_env();
-    std::env::set_var("TERMUL_WEB_AUTH_TOKEN", "env-token");
+    std::env::set_var("ITZTERM_WEB_AUTH_TOKEN", "env-token");
     let cfg = ServerConfig::from_args(["--web-auth-token", "flag-token"]).expect("parse");
     clear_web_auth_env();
     assert_eq!(
@@ -888,17 +888,17 @@ fn from_args_web_auth_token_cli_wins_over_env() {
 #[test]
 fn default_projects_file_trims_padded_env() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE"]);
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE"]);
     std::env::set_var(
-        "TERMUL_PROJECTS_FILE",
-        "  /tmp/termul-padded/projects.json  ",
+        "ITZTERM_PROJECTS_FILE",
+        "  /tmp/itzterm-padded/projects.json  ",
     );
     let resolved = default_projects_file();
     restore_env(saved);
     assert_eq!(
         resolved,
-        Some(PathBuf::from("/tmp/termul-padded/projects.json")),
-        "padded $TERMUL_PROJECTS_FILE must be trimmed"
+        Some(PathBuf::from("/tmp/itzterm-padded/projects.json")),
+        "padded $ITZTERM_PROJECTS_FILE must be trimmed"
     );
 }
 
@@ -906,9 +906,9 @@ fn default_projects_file_trims_padded_env() {
 #[test]
 fn default_projects_file_relative_xdg_falls_back_to_home() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE", "XDG_STATE_HOME", "HOME"]);
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE", "XDG_STATE_HOME", "HOME"]);
     let home = tempdir_like("projects-relative-xdg");
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
     // The XDG base-dir spec requires XDG_STATE_HOME to be absolute; a
     // relative value is invalid and must fall through to the HOME-based
     // fallback rather than resolving CWD-relative.
@@ -916,7 +916,7 @@ fn default_projects_file_relative_xdg_falls_back_to_home() {
     std::env::set_var("HOME", &home);
     let resolved = default_projects_file();
     restore_env(saved);
-    let expected = home.join(".local/state/termul/projects.json");
+    let expected = home.join(".local/state/itzterm/projects.json");
     cleanup(&home);
     assert_eq!(
         resolved,
@@ -929,17 +929,17 @@ fn default_projects_file_relative_xdg_falls_back_to_home() {
 #[test]
 fn default_projects_file_empty_xdg_falls_back_to_home() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE", "XDG_STATE_HOME", "HOME"]);
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE", "XDG_STATE_HOME", "HOME"]);
     let home = tempdir_like("projects-empty-xdg");
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
     // Empty-string env vars must be filtered (Patch-15 parity with
     // service_account_state_dir): an empty XDG_STATE_HOME must NOT
-    // produce a CWD-relative "termul/projects.json".
+    // produce a CWD-relative "itzterm/projects.json".
     std::env::set_var("XDG_STATE_HOME", "");
     std::env::set_var("HOME", &home);
     let resolved = default_projects_file();
     restore_env(saved);
-    let expected = home.join(".local/state/termul/projects.json");
+    let expected = home.join(".local/state/itzterm/projects.json");
     cleanup(&home);
     assert_eq!(
         resolved,
@@ -952,8 +952,8 @@ fn default_projects_file_empty_xdg_falls_back_to_home() {
 #[test]
 fn default_projects_file_none_when_no_state_dir() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE", "XDG_STATE_HOME", "HOME"]);
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE", "XDG_STATE_HOME", "HOME"]);
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
     std::env::remove_var("XDG_STATE_HOME");
     std::env::remove_var("HOME");
     let resolved = default_projects_file();
@@ -967,7 +967,7 @@ fn default_projects_file_none_when_no_state_dir() {
 #[test]
 fn from_args_accepts_allowed_origins_flag() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    std::env::remove_var("TERMUL_ALLOWED_ORIGINS");
+    std::env::remove_var("ITZTERM_ALLOWED_ORIGINS");
     let cfg = ServerConfig::from_args([
         "--allowed-origins",
         "https://public.example, http://127.0.0.1:9000",
@@ -981,7 +981,7 @@ fn from_args_accepts_allowed_origins_flag() {
 #[test]
 fn from_args_rejects_wildcard_allowed_origins() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    std::env::remove_var("TERMUL_ALLOWED_ORIGINS");
+    std::env::remove_var("ITZTERM_ALLOWED_ORIGINS");
     assert!(matches!(
         ServerConfig::from_args(["--allowed-origins", "*"]),
         Err(ParseCliError::Message(_))
@@ -995,16 +995,16 @@ fn from_args_rejects_wildcard_allowed_origins() {
 #[test]
 fn from_args_allowed_origins_env_fallback() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    std::env::set_var("TERMUL_ALLOWED_ORIGINS", "https://tunnel.example");
+    std::env::set_var("ITZTERM_ALLOWED_ORIGINS", "https://tunnel.example");
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
-    std::env::remove_var("TERMUL_ALLOWED_ORIGINS");
+    std::env::remove_var("ITZTERM_ALLOWED_ORIGINS");
     assert!(cfg.allowed_origins.contains("https://tunnel.example"));
 }
 
 #[test]
 fn from_args_repeats_allowed_origins_flag() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    std::env::remove_var("TERMUL_ALLOWED_ORIGINS");
+    std::env::remove_var("ITZTERM_ALLOWED_ORIGINS");
     let cfg = ServerConfig::from_args([
         "--allowed-origins",
         "https://a.example",
@@ -1019,10 +1019,10 @@ fn from_args_repeats_allowed_origins_flag() {
 #[test]
 fn from_args_allowed_origins_cli_replaces_env() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    std::env::set_var("TERMUL_ALLOWED_ORIGINS", "https://from-env.example");
+    std::env::set_var("ITZTERM_ALLOWED_ORIGINS", "https://from-env.example");
     let cfg =
         ServerConfig::from_args(["--allowed-origins", "https://from-flag.example"]).expect("parse");
-    std::env::remove_var("TERMUL_ALLOWED_ORIGINS");
+    std::env::remove_var("ITZTERM_ALLOWED_ORIGINS");
     assert!(cfg.allowed_origins.contains("https://from-flag.example"));
     assert!(!cfg.allowed_origins.contains("https://from-env.example"));
 }
@@ -1031,8 +1031,8 @@ fn from_args_allowed_origins_cli_replaces_env() {
 #[test]
 fn from_args_projects_file_none_when_no_state_dir() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_PROJECTS_FILE", "XDG_STATE_HOME", "HOME"]);
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
+    let saved = save_env(&["ITZTERM_PROJECTS_FILE", "XDG_STATE_HOME", "HOME"]);
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
     std::env::remove_var("XDG_STATE_HOME");
     std::env::remove_var("HOME");
     // Pass --project-root + --sessions-dir explicitly so the missing
@@ -1041,7 +1041,7 @@ fn from_args_projects_file_none_when_no_state_dir() {
         "--project-root",
         "/tmp",
         "--sessions-dir",
-        "/tmp/termul-no-state-sessions",
+        "/tmp/itzterm-no-state-sessions",
     ])
     .expect("parse");
     restore_env(saved);
@@ -1058,16 +1058,16 @@ fn from_args_projects_file_none_when_no_state_dir() {
 fn from_args_state_dir_derives_sessions_and_projects_defaults() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     let saved = save_env(&[
-        "TERMUL_SESSIONS_DIR",
-        "TERMUL_PROJECTS_FILE",
+        "ITZTERM_SESSIONS_DIR",
+        "ITZTERM_PROJECTS_FILE",
         "XDG_STATE_HOME",
         "HOME",
     ]);
     // QA repro (#839 / #879): HOME and XDG_STATE_HOME are both set, so the
     // platform default WOULD resolve under one of those trees. `--state-dir`
     // alone (no --sessions-dir / --projects-file) must still win.
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
     let home = tempdir_like("state-dir-derived-home");
     let xdg = tempdir_like("state-dir-derived-xdg");
     std::env::set_var("HOME", &home);
@@ -1083,8 +1083,8 @@ fn from_args_state_dir_derives_sessions_and_projects_defaults() {
     restore_env(saved);
     let expected_sessions = state.join("sessions");
     let expected_projects = state.join("projects.json");
-    let home_sessions = home.join(".local/state/termul/sessions");
-    let xdg_sessions = xdg.join("termul/sessions");
+    let home_sessions = home.join(".local/state/itzterm/sessions");
+    let xdg_sessions = xdg.join("itzterm/sessions");
     cleanup(&state);
     cleanup(&home);
     cleanup(&xdg);
@@ -1107,13 +1107,13 @@ fn from_args_state_dir_derives_sessions_and_projects_defaults() {
 fn from_args_state_dir_does_not_override_explicit_flags() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     let saved = save_env(&[
-        "TERMUL_SESSIONS_DIR",
-        "TERMUL_PROJECTS_FILE",
+        "ITZTERM_SESSIONS_DIR",
+        "ITZTERM_PROJECTS_FILE",
         "XDG_STATE_HOME",
         "HOME",
     ]);
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
     std::env::remove_var("XDG_STATE_HOME");
     let home = tempdir_like("state-dir-explicit-home");
     std::env::set_var("HOME", &home);
@@ -1122,9 +1122,9 @@ fn from_args_state_dir_does_not_override_explicit_flags() {
         "--state-dir",
         state.to_str().unwrap(),
         "--sessions-dir",
-        "/tmp/termul-explicit-sessions",
+        "/tmp/itzterm-explicit-sessions",
         "--projects-file",
-        "/tmp/termul-explicit-projects.json",
+        "/tmp/itzterm-explicit-projects.json",
     ])
     .expect("parse");
     restore_env(saved);
@@ -1132,12 +1132,12 @@ fn from_args_state_dir_does_not_override_explicit_flags() {
     cleanup(&home);
     assert_eq!(
         cfg.sessions_dir,
-        Some(PathBuf::from("/tmp/termul-explicit-sessions")),
+        Some(PathBuf::from("/tmp/itzterm-explicit-sessions")),
         "explicit --sessions-dir must win over --state-dir derivation"
     );
     assert_eq!(
         cfg.projects_file,
-        Some(PathBuf::from("/tmp/termul-explicit-projects.json")),
+        Some(PathBuf::from("/tmp/itzterm-explicit-projects.json")),
         "explicit --projects-file must win over --state-dir derivation"
     );
 }
@@ -1147,22 +1147,22 @@ fn from_args_state_dir_does_not_override_explicit_flags() {
 fn from_args_without_state_dir_keeps_home_defaults() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     let saved = save_env(&[
-        "TERMUL_SESSIONS_DIR",
-        "TERMUL_PROJECTS_FILE",
+        "ITZTERM_SESSIONS_DIR",
+        "ITZTERM_PROJECTS_FILE",
         "XDG_STATE_HOME",
         "HOME",
-        "TERMUL_PROJECT_ROOT",
+        "ITZTERM_PROJECT_ROOT",
     ]);
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
-    std::env::remove_var("TERMUL_PROJECT_ROOT");
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
+    std::env::remove_var("ITZTERM_PROJECT_ROOT");
     std::env::remove_var("XDG_STATE_HOME");
     let home = tempdir_like("no-state-dir-home");
     std::env::set_var("HOME", &home);
     let cfg = ServerConfig::from_args(Vec::<&str>::new()).expect("parse");
     restore_env(saved);
-    let expected_sessions = home.join(".local/state/termul/sessions");
-    let expected_projects = home.join(".local/state/termul/projects.json");
+    let expected_sessions = home.join(".local/state/itzterm/sessions");
+    let expected_projects = home.join(".local/state/itzterm/projects.json");
     cleanup(&home);
     assert_eq!(
         cfg.sessions_dir,
@@ -1182,23 +1182,23 @@ fn from_args_without_state_dir_keeps_home_defaults() {
 fn from_args_without_state_dir_keeps_xdg_defaults() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     let saved = save_env(&[
-        "TERMUL_SESSIONS_DIR",
-        "TERMUL_PROJECTS_FILE",
+        "ITZTERM_SESSIONS_DIR",
+        "ITZTERM_PROJECTS_FILE",
         "XDG_STATE_HOME",
         "HOME",
-        "TERMUL_PROJECT_ROOT",
+        "ITZTERM_PROJECT_ROOT",
     ]);
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
-    std::env::remove_var("TERMUL_PROJECTS_FILE");
-    std::env::remove_var("TERMUL_PROJECT_ROOT");
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
+    std::env::remove_var("ITZTERM_PROJECTS_FILE");
+    std::env::remove_var("ITZTERM_PROJECT_ROOT");
     let home = tempdir_like("no-state-dir-xdg-home");
     let xdg = tempdir_like("no-state-dir-xdg");
     std::env::set_var("HOME", &home);
     std::env::set_var("XDG_STATE_HOME", &xdg);
     let cfg = ServerConfig::from_args(["--project-root", home.to_str().unwrap()]).expect("parse");
     restore_env(saved);
-    let expected_sessions = xdg.join("termul/sessions");
-    let expected_projects = xdg.join("termul/projects.json");
+    let expected_sessions = xdg.join("itzterm/sessions");
+    let expected_projects = xdg.join("itzterm/projects.json");
     cleanup(&home);
     cleanup(&xdg);
     assert_eq!(
@@ -1218,13 +1218,13 @@ fn from_args_without_state_dir_keeps_xdg_defaults() {
 fn from_args_specific_env_still_wins_without_state_dir() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     let saved = save_env(&[
-        "TERMUL_SESSIONS_DIR",
-        "TERMUL_PROJECTS_FILE",
+        "ITZTERM_SESSIONS_DIR",
+        "ITZTERM_PROJECTS_FILE",
         "XDG_STATE_HOME",
         "HOME",
     ]);
-    std::env::set_var("TERMUL_SESSIONS_DIR", "/tmp/termul-env-sessions");
-    std::env::set_var("TERMUL_PROJECTS_FILE", "/tmp/termul-env-projects.json");
+    std::env::set_var("ITZTERM_SESSIONS_DIR", "/tmp/itzterm-env-sessions");
+    std::env::set_var("ITZTERM_PROJECTS_FILE", "/tmp/itzterm-env-projects.json");
     std::env::remove_var("XDG_STATE_HOME");
     let home = tempdir_like("env-wins-home");
     std::env::set_var("HOME", &home);
@@ -1233,13 +1233,13 @@ fn from_args_specific_env_still_wins_without_state_dir() {
     cleanup(&home);
     assert_eq!(
         cfg.sessions_dir,
-        Some(PathBuf::from("/tmp/termul-env-sessions")),
-        "without --state-dir, $TERMUL_SESSIONS_DIR still wins"
+        Some(PathBuf::from("/tmp/itzterm-env-sessions")),
+        "without --state-dir, $ITZTERM_SESSIONS_DIR still wins"
     );
     assert_eq!(
         cfg.projects_file,
-        Some(PathBuf::from("/tmp/termul-env-projects.json")),
-        "without --state-dir, $TERMUL_PROJECTS_FILE still wins"
+        Some(PathBuf::from("/tmp/itzterm-env-projects.json")),
+        "without --state-dir, $ITZTERM_PROJECTS_FILE still wins"
     );
 }
 
@@ -1248,16 +1248,16 @@ fn from_args_specific_env_still_wins_without_state_dir() {
 fn from_args_specific_env_wins_over_state_dir_derivation() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
     let saved = save_env(&[
-        "TERMUL_SESSIONS_DIR",
-        "TERMUL_PROJECTS_FILE",
+        "ITZTERM_SESSIONS_DIR",
+        "ITZTERM_PROJECTS_FILE",
         "XDG_STATE_HOME",
         "HOME",
     ]);
     // CodeRabbit: specific environment settings must resolve BEFORE the
     // --state-dir defaults, or an operator's explicit env var is silently
     // redirected into the state dir.
-    std::env::set_var("TERMUL_SESSIONS_DIR", "/tmp/termul-env-sessions");
-    std::env::set_var("TERMUL_PROJECTS_FILE", "/tmp/termul-env-projects.json");
+    std::env::set_var("ITZTERM_SESSIONS_DIR", "/tmp/itzterm-env-sessions");
+    std::env::set_var("ITZTERM_PROJECTS_FILE", "/tmp/itzterm-env-projects.json");
     std::env::remove_var("XDG_STATE_HOME");
     let home = tempdir_like("env-vs-state-home");
     std::env::set_var("HOME", &home);
@@ -1268,13 +1268,13 @@ fn from_args_specific_env_wins_over_state_dir_derivation() {
     cleanup(&home);
     assert_eq!(
         cfg.sessions_dir,
-        Some(PathBuf::from("/tmp/termul-env-sessions")),
-        "$TERMUL_SESSIONS_DIR must win over the --state-dir derivation"
+        Some(PathBuf::from("/tmp/itzterm-env-sessions")),
+        "$ITZTERM_SESSIONS_DIR must win over the --state-dir derivation"
     );
     assert_eq!(
         cfg.projects_file,
-        Some(PathBuf::from("/tmp/termul-env-projects.json")),
-        "$TERMUL_PROJECTS_FILE must win over the --state-dir derivation"
+        Some(PathBuf::from("/tmp/itzterm-env-projects.json")),
+        "$ITZTERM_PROJECTS_FILE must win over the --state-dir derivation"
     );
 }
 
@@ -1285,14 +1285,14 @@ fn from_args_specific_env_wins_over_state_dir_derivation() {
 #[test]
 fn default_sessions_dir_empty_xdg_falls_back_to_home() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
+    let saved = save_env(&["ITZTERM_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
     let home = tempdir_like("sessions-empty-xdg");
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
     std::env::set_var("XDG_STATE_HOME", "");
     std::env::set_var("HOME", &home);
     let resolved = default_sessions_dir();
     restore_env(saved);
-    let expected = home.join(".local/state/termul/sessions");
+    let expected = home.join(".local/state/itzterm/sessions");
     cleanup(&home);
     assert_eq!(
         resolved,
@@ -1305,14 +1305,14 @@ fn default_sessions_dir_empty_xdg_falls_back_to_home() {
 #[test]
 fn default_sessions_dir_relative_xdg_falls_back_to_home() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
+    let saved = save_env(&["ITZTERM_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
     let home = tempdir_like("sessions-relative-xdg");
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
     std::env::set_var("XDG_STATE_HOME", "relative/state");
     std::env::set_var("HOME", &home);
     let resolved = default_sessions_dir();
     restore_env(saved);
-    let expected = home.join(".local/state/termul/sessions");
+    let expected = home.join(".local/state/itzterm/sessions");
     cleanup(&home);
     assert_eq!(
         resolved,
@@ -1325,11 +1325,11 @@ fn default_sessions_dir_relative_xdg_falls_back_to_home() {
 #[test]
 fn default_sessions_dir_relative_home_is_rejected() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
+    let saved = save_env(&["ITZTERM_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
     // CodeRabbit: a relative HOME would produce a CWD-relative sessions
     // path — the documented safeguard must reject it (resolution then
     // falls to the --state-dir derivation or fails loudly).
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
     std::env::remove_var("XDG_STATE_HOME");
     std::env::set_var("HOME", "relative/home");
     let resolved = default_sessions_dir();
@@ -1344,8 +1344,8 @@ fn default_sessions_dir_relative_home_is_rejected() {
 #[test]
 fn default_sessions_dir_empty_home_yields_none_not_cwd_relative() {
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
+    let saved = save_env(&["ITZTERM_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
     std::env::set_var("XDG_STATE_HOME", "");
     std::env::set_var("HOME", "");
     let resolved = default_sessions_dir();
@@ -1363,8 +1363,8 @@ fn from_args_state_dir_sessions_dir_must_be_dir_if_exists() {
     // so a regression that prefers the platform default would resolve a
     // different path and miss this failure.
     let _g = ENV_LOCK.lock().expect("ENV_LOCK poisoned");
-    let saved = save_env(&["TERMUL_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
-    std::env::remove_var("TERMUL_SESSIONS_DIR");
+    let saved = save_env(&["ITZTERM_SESSIONS_DIR", "XDG_STATE_HOME", "HOME"]);
+    std::env::remove_var("ITZTERM_SESSIONS_DIR");
     std::env::remove_var("XDG_STATE_HOME");
     let home = tempdir_like("state-dir-file-conflict-home");
     std::env::set_var("HOME", &home);

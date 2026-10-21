@@ -315,7 +315,7 @@ async fn session_reopen_times_out_instead_of_hanging() {
 }
 
 /// The production reopen budget resolves to the 60s default and honors the
-/// `TERMUL_ACP_SESSION_REOPEN_TIMEOUT_SECS` diagnostic override contract
+/// `ITZTERM_ACP_SESSION_REOPEN_TIMEOUT_SECS` diagnostic override contract
 /// (mirrors `session_new_timeout`). Only the default path is asserted —
 /// mutating process env in a test would race other tests.
 #[test]
@@ -323,7 +323,7 @@ fn session_reopen_timeout_defaults_to_constant() {
     // Shared with the real-loop harness, which clears/restores these env vars
     // and resolves these timeouts while a mock agent runs: never interleave.
     let _serial = super::real_loop_tests::TIMEOUT_TEST_LOCK.blocking_lock();
-    if std::env::var("TERMUL_ACP_SESSION_REOPEN_TIMEOUT_SECS").is_err() {
+    if std::env::var("ITZTERM_ACP_SESSION_REOPEN_TIMEOUT_SECS").is_err() {
         assert_eq!(session_reopen_timeout(), SESSION_REOPEN_TIMEOUT);
     }
     assert_eq!(SESSION_REOPEN_TIMEOUT, Duration::from_secs(60));
@@ -940,7 +940,7 @@ fn turn_timeout_override_takes_effect_when_no_env_var() {
     let _serial = super::real_loop_tests::TIMEOUT_TEST_LOCK.blocking_lock();
     // The env var is usually absent in the test runner; when it IS set
     // (operator machine), it correctly masks the UI override — skip there.
-    if std::env::var("TERMUL_ACP_TURN_TIMEOUT_SECS").is_ok() {
+    if std::env::var("ITZTERM_ACP_TURN_TIMEOUT_SECS").is_ok() {
         return;
     }
     set_turn_timeout_override(Some(42));
@@ -961,7 +961,7 @@ fn turn_idle_timeout_precedence_env_beats_override_beats_default() {
     // Shared with the real-loop tests, which run turns under their own idle
     // window: neither side may observe the other's override/env var.
     let _serial = super::real_loop_tests::TIMEOUT_TEST_LOCK.blocking_lock();
-    let preexisting = std::env::var("TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS").ok();
+    let preexisting = std::env::var("ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS").ok();
     if preexisting.is_none() {
         set_turn_idle_timeout_override(Some(42));
         assert_eq!(turn_idle_timeout(), Some(Duration::from_secs(42)));
@@ -969,13 +969,13 @@ fn turn_idle_timeout_precedence_env_beats_override_beats_default() {
         assert_eq!(turn_idle_timeout(), None);
     }
 
-    std::env::set_var("TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS", "60");
+    std::env::set_var("ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS", "60");
     set_turn_idle_timeout_override(Some(1800));
     assert_eq!(turn_idle_timeout(), Some(Duration::from_secs(60)));
 
     match preexisting {
-        Some(v) => std::env::set_var("TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS", v),
-        None => std::env::remove_var("TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS"),
+        Some(v) => std::env::set_var("ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS", v),
+        None => std::env::remove_var("ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS"),
     }
     set_turn_idle_timeout_override(None);
 }
@@ -988,7 +988,7 @@ fn session_new_timeout_override_takes_effect_when_no_env_var() {
     // Shared with the real-loop harness, which clears/restores these env vars
     // and resolves these timeouts while a mock agent runs: never interleave.
     let _serial = super::real_loop_tests::TIMEOUT_TEST_LOCK.blocking_lock();
-    if std::env::var("TERMUL_ACP_SESSION_NEW_TIMEOUT_SECS").is_ok() {
+    if std::env::var("ITZTERM_ACP_SESSION_NEW_TIMEOUT_SECS").is_ok() {
         return;
     }
     set_session_new_timeout_override(Some(42));
@@ -1006,7 +1006,7 @@ fn session_reopen_timeout_override_takes_effect_when_no_env_var() {
     // Shared with the real-loop harness, which clears/restores these env vars
     // and resolves these timeouts while a mock agent runs: never interleave.
     let _serial = super::real_loop_tests::TIMEOUT_TEST_LOCK.blocking_lock();
-    if std::env::var("TERMUL_ACP_SESSION_REOPEN_TIMEOUT_SECS").is_ok() {
+    if std::env::var("ITZTERM_ACP_SESSION_REOPEN_TIMEOUT_SECS").is_ok() {
         return;
     }
     set_session_reopen_timeout_override(Some(42));
@@ -1048,7 +1048,7 @@ fn temp_dir_with_cwd(tag: &str) -> (PathBuf, PathBuf) {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let root = std::env::temp_dir().join(format!("termul-promote-{tag}-{stamp}"));
+    let root = std::env::temp_dir().join(format!("itzterm-promote-{tag}-{stamp}"));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     (root, cwd)
@@ -2449,8 +2449,8 @@ fn delete_logout_and_extra_roots_follow_advertised_capabilities() {
     caps.session_capabilities.additional_directories = Some(Default::default());
     assert!(gate_delete_session(&caps).is_ok());
     assert!(gate_logout(&caps).is_ok());
-    let work = std::env::temp_dir().join("termul-acp-work");
-    let other = std::env::temp_dir().join("termul-acp-other");
+    let work = std::env::temp_dir().join("itzterm-acp-work");
+    let other = std::env::temp_dir().join("itzterm-acp-other");
     let extras = vec![
         work.to_string_lossy().into_owned(),
         other.to_string_lossy().into_owned(),

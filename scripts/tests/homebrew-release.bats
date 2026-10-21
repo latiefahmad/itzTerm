@@ -4,7 +4,7 @@ load "helpers.bash"
 
 setup() {
   make_tmp
-  source "$TERMUL_TEST_REPO_ROOT/scripts/release/homebrew.sh"
+  source "$ITZTERM_TEST_REPO_ROOT/scripts/release/homebrew.sh"
 }
 
 teardown() {
@@ -48,12 +48,12 @@ teardown() {
 }
 
 @test "resolves exact DMG checksums" {
-  local checksums="$TERMUL_TEST_TMP_DIR/SHA256SUMS.txt"
+  local checksums="$ITZTERM_TEST_TMP_DIR/SHA256SUMS.txt"
   local arm_sha="$(printf 'a%.0s' {1..64})"
   local intel_sha="$(printf 'b%.0s' {1..64})"
   cat >"$checksums" <<EOF
-$arm_sha  Termul.Manager_0.4.8_aarch64.dmg
-$intel_sha *Termul.Manager_0.4.8_x64.dmg
+$arm_sha  itzTerm.Manager_0.4.8_aarch64.dmg
+$intel_sha *itzTerm.Manager_0.4.8_x64.dmg
 EOF
 
   run resolve_dmg_checksums "$checksums" "0.4.8"
@@ -63,27 +63,27 @@ EOF
 }
 
 @test "checksum resolution propagates missing malformed and duplicate errors" {
-  local checksums="$TERMUL_TEST_TMP_DIR/SHA256SUMS.txt"
+  local checksums="$ITZTERM_TEST_TMP_DIR/SHA256SUMS.txt"
   local arm_sha="$(printf 'a%.0s' {1..64})"
   local intel_sha="$(printf 'b%.0s' {1..64})"
 
-  printf '%s  %s\n' "$arm_sha" "Termul.Manager_0.4.8_aarch64.dmg" >"$checksums"
+  printf '%s  %s\n' "$arm_sha" "itzTerm.Manager_0.4.8_aarch64.dmg" >"$checksums"
   run resolve_dmg_checksums "$checksums" "0.4.8"
   [ "$status" -ne 0 ]
   [[ "$output" == *"x64.dmg"* ]]
 
   cat >"$checksums" <<EOF
-not-a-hash  Termul.Manager_0.4.8_aarch64.dmg
-$intel_sha  Termul.Manager_0.4.8_x64.dmg
+not-a-hash  itzTerm.Manager_0.4.8_aarch64.dmg
+$intel_sha  itzTerm.Manager_0.4.8_x64.dmg
 EOF
   run resolve_dmg_checksums "$checksums" "0.4.8"
   [ "$status" -ne 0 ]
   [[ "$output" == *"aarch64.dmg"* ]]
 
   cat >"$checksums" <<EOF
-$arm_sha  Termul.Manager_0.4.8_aarch64.dmg
-$arm_sha  Termul.Manager_0.4.8_aarch64.dmg
-$intel_sha  Termul.Manager_0.4.8_x64.dmg
+$arm_sha  itzTerm.Manager_0.4.8_aarch64.dmg
+$arm_sha  itzTerm.Manager_0.4.8_aarch64.dmg
+$intel_sha  itzTerm.Manager_0.4.8_x64.dmg
 EOF
   run resolve_dmg_checksums "$checksums" "0.4.8"
   [ "$status" -ne 0 ]
@@ -91,21 +91,21 @@ EOF
 }
 
 @test "generates the exact v0.4.8 xattr exception and omits it for future releases" {
-  local legacy="$TERMUL_TEST_TMP_DIR/termul-0.4.8.rb"
-  local future="$TERMUL_TEST_TMP_DIR/termul-0.4.9.rb"
+  local legacy="$ITZTERM_TEST_TMP_DIR/itzterm-0.4.8.rb"
+  local future="$ITZTERM_TEST_TMP_DIR/itzterm-0.4.9.rb"
   local arm_sha="6be298c2c2c8562b340b069357e8b5d6c3838791ac77c089114004db6a663e69"
   local intel_sha="72b1d5ab617dcc72c021ec4524ec90a8607870d2011fa83686c4ccda185854c8"
 
   write_homebrew_cask "$legacy" "0.4.8" "$arm_sha" "$intel_sha"
   [ "$(grep -Fc 'com.apple.quarantine' "$legacy")" -eq 1 ]
-  grep -Fq 'args: ["-dr", "com.apple.quarantine", "#{appdir}/Termul Manager.app"]' "$legacy"
+  grep -Fq 'args: ["-dr", "com.apple.quarantine", "#{appdir}/itzTerm.app"]' "$legacy"
 
   write_homebrew_cask "$future" "0.4.9" "$arm_sha" "$intel_sha"
   ! grep -Fq 'com.apple.quarantine' "$future"
 }
 
 @test "prerelease metadata path does not require a Homebrew token" {
-  local workflow="$TERMUL_TEST_REPO_ROOT/.github/workflows/publish-homebrew.yml"
+  local workflow="$ITZTERM_TEST_REPO_ROOT/.github/workflows/publish-homebrew.yml"
   local metadata_section
   local checksums_section
   metadata_section="$(sed -n '/release_metadata:/,/checksums:/p' "$workflow")"
@@ -119,8 +119,8 @@ EOF
 }
 
 @test "release workflows preserve permissions token flow portability and tap serialization" {
-  local release_workflow="$TERMUL_TEST_REPO_ROOT/.github/workflows/release.yml"
-  local homebrew_workflow="$TERMUL_TEST_REPO_ROOT/.github/workflows/publish-homebrew.yml"
+  local release_workflow="$ITZTERM_TEST_REPO_ROOT/.github/workflows/release.yml"
+  local homebrew_workflow="$ITZTERM_TEST_REPO_ROOT/.github/workflows/publish-homebrew.yml"
 
   grep -Fq 'group: publish-homebrew-tap' "$homebrew_workflow"
   grep -Fq 'GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}' "$homebrew_workflow"
@@ -139,19 +139,19 @@ EOF
 }
 
 @test "generate_sha256sums writes bare-name entries and skips signatures and manifests" {
-  local dir="$TERMUL_TEST_TMP_DIR/assets"
-  local names="$TERMUL_TEST_TMP_DIR/names.txt"
-  local out="$TERMUL_TEST_TMP_DIR/SHA256SUMS.txt"
+  local dir="$ITZTERM_TEST_TMP_DIR/assets"
+  local names="$ITZTERM_TEST_TMP_DIR/names.txt"
+  local out="$ITZTERM_TEST_TMP_DIR/SHA256SUMS.txt"
   mkdir -p "$dir"
-  printf 'app-image-bytes' >"$dir/Termul.Manager_0.4.11_amd64.AppImage"
-  printf 'sig-bytes' >"$dir/Termul.Manager_0.4.11_amd64.AppImage.sig"
+  printf 'app-image-bytes' >"$dir/itzTerm.Manager_0.4.11_amd64.AppImage"
+  printf 'sig-bytes' >"$dir/itzTerm.Manager_0.4.11_amd64.AppImage.sig"
   printf '{}' >"$dir/latest.json"
-  printf 'server-bytes' >"$dir/termul-server"
+  printf 'server-bytes' >"$dir/itzterm-server"
   cat >"$names" <<NAMES
-Termul.Manager_0.4.11_amd64.AppImage
-Termul.Manager_0.4.11_amd64.AppImage.sig
+itzTerm.Manager_0.4.11_amd64.AppImage
+itzTerm.Manager_0.4.11_amd64.AppImage.sig
 latest.json
-termul-server
+itzterm-server
 NAMES
 
   run generate_sha256sums "$dir" "$names" "$out"
@@ -161,8 +161,8 @@ NAMES
   local expected_appimage_sha expected_server_sha
   expected_appimage_sha="$(printf 'app-image-bytes' | shasum -a 256 | awk '{print $1}')"
   expected_server_sha="$(printf 'server-bytes' | shasum -a 256 | awk '{print $1}')"
-  grep -Fq "$expected_appimage_sha  Termul.Manager_0.4.11_amd64.AppImage" "$out"
-  grep -Fq "$expected_server_sha  termul-server" "$out"
+  grep -Fq "$expected_appimage_sha  itzTerm.Manager_0.4.11_amd64.AppImage" "$out"
+  grep -Fq "$expected_server_sha  itzterm-server" "$out"
 
   # Signatures and updater manifests are not checksummed.
   [ "$(grep -c '' "$out")" -eq 2 ]
@@ -172,39 +172,39 @@ NAMES
 
 @test "generate_sha256sums refuses filenames that do not match published asset names" {
   # Regression for #546: v0.4.10 shipped SHA256SUMS entries named
-  # "Termul Manager_..." (product display name with a space) while the
-  # published assets are "Termul.Manager_..." — the installer's exact-match
+  # "itzTerm_..." (product display name with a space) while the
+  # published assets are "itzTerm.Manager_..." — the installer's exact-match
   # lookup then fails with "checksum not found".
-  local dir="$TERMUL_TEST_TMP_DIR/assets"
-  local names="$TERMUL_TEST_TMP_DIR/names.txt"
-  local out="$TERMUL_TEST_TMP_DIR/SHA256SUMS.txt"
+  local dir="$ITZTERM_TEST_TMP_DIR/assets"
+  local names="$ITZTERM_TEST_TMP_DIR/names.txt"
+  local out="$ITZTERM_TEST_TMP_DIR/SHA256SUMS.txt"
   mkdir -p "$dir"
-  printf 'app-image-bytes' >"$dir/Termul Manager_0.4.10_amd64.AppImage"
-  printf 'Termul.Manager_0.4.10_amd64.AppImage' >"$names"
+  printf 'app-image-bytes' >"$dir/itzTerm_0.4.10_amd64.AppImage"
+  printf 'itzTerm.Manager_0.4.10_amd64.AppImage' >"$names"
 
   run generate_sha256sums "$dir" "$names" "$out"
   [ "$status" -ne 0 ]
   [[ "$output" == *"not a published release asset name"* ]]
-  [[ "$output" == *"Termul Manager_0.4.10_amd64.AppImage"* ]]
+  [[ "$output" == *"itzTerm_0.4.10_amd64.AppImage"* ]]
 
   # Nothing may be written when validation fails.
   [ ! -s "$out" ]
   # The atomic-write temp file must be cleaned up too.
-  [ -z "$(find "$TERMUL_TEST_TMP_DIR" -maxdepth 1 -name 'SHA256SUMS.txt.tmp.*' -print -quit)" ]
+  [ -z "$(find "$ITZTERM_TEST_TMP_DIR" -maxdepth 1 -name 'SHA256SUMS.txt.tmp.*' -print -quit)" ]
 }
 
 @test "generate_sha256sums leaves no partial output when a valid asset sorts before a mismatched one" {
   # CodeRabbit review: a valid asset processed before the failure must not
   # leave partial checksum output behind, and a previously published
   # checksum file must survive the failed regeneration.
-  local dir="$TERMUL_TEST_TMP_DIR/assets"
-  local names="$TERMUL_TEST_TMP_DIR/names.txt"
-  local out="$TERMUL_TEST_TMP_DIR/SHA256SUMS.txt"
+  local dir="$ITZTERM_TEST_TMP_DIR/assets"
+  local names="$ITZTERM_TEST_TMP_DIR/names.txt"
+  local out="$ITZTERM_TEST_TMP_DIR/SHA256SUMS.txt"
   mkdir -p "$dir"
-  # "AAA..." sorts before "Termul Manager...", so the valid asset is
+  # "AAA..." sorts before "itzTerm...", so the valid asset is
   # checksummed first and the mismatch then aborts the run.
   printf 'deb-bytes' >"$dir/AAA_valid.deb"
-  printf 'app-image-bytes' >"$dir/Termul Manager_0.4.10_amd64.AppImage"
+  printf 'app-image-bytes' >"$dir/itzTerm_0.4.10_amd64.AppImage"
   printf 'AAA_valid.deb' >"$names"
 
   printf 'old-checksum-content\n' >"$out"
@@ -215,13 +215,13 @@ NAMES
 
   # The prior checksum file is untouched — no partial write, no clobber.
   [ "$(cat "$out")" = "old-checksum-content" ]
-  [ -z "$(find "$TERMUL_TEST_TMP_DIR" -maxdepth 1 -name 'SHA256SUMS.txt.tmp.*' -print -quit)" ]
+  [ -z "$(find "$ITZTERM_TEST_TMP_DIR" -maxdepth 1 -name 'SHA256SUMS.txt.tmp.*' -print -quit)" ]
 }
 
 @test "generate_sha256sums requires assets and a nonempty expected-names list" {
-  local dir="$TERMUL_TEST_TMP_DIR/empty-assets"
-  local names="$TERMUL_TEST_TMP_DIR/names.txt"
-  local out="$TERMUL_TEST_TMP_DIR/SHA256SUMS.txt"
+  local dir="$ITZTERM_TEST_TMP_DIR/empty-assets"
+  local names="$ITZTERM_TEST_TMP_DIR/names.txt"
+  local out="$ITZTERM_TEST_TMP_DIR/SHA256SUMS.txt"
   mkdir -p "$dir"
   : >"$names"
 
@@ -229,14 +229,14 @@ NAMES
   [ "$status" -ne 0 ]
   [[ "$output" == *"missing or empty"* ]]
 
-  printf 'Termul.Manager_0.4.11_amd64.AppImage' >"$names"
+  printf 'itzTerm.Manager_0.4.11_amd64.AppImage' >"$names"
   run generate_sha256sums "$dir" "$names" "$out"
   [ "$status" -ne 0 ]
   [[ "$output" == *"No binary release assets"* ]]
 }
 
 @test "generated cask does not declare a depends_on macos requirement" {
-  local cask="$TERMUL_TEST_TMP_DIR/termul-0.4.9.rb"
+  local cask="$ITZTERM_TEST_TMP_DIR/itzterm-0.4.9.rb"
   local arm_sha="6be298c2c2c8562b340b069357e8b5d6c3838791ac77c089114004db6a663e69"
   local intel_sha="72b1d5ab617dcc72c021ec4524ec90a8607870d2011fa83686c4ccda185854c8"
 

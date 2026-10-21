@@ -1,4 +1,4 @@
-/** OpenCode-compatible desktop theme schema (subset used by Termul). */
+/** OpenCode-compatible desktop theme schema (subset used by itzTerm). */
 
 export interface ThemePalette {
   neutral: string
@@ -59,14 +59,14 @@ export interface ThemeChrome {
   secondaryForeground: string
   /** Muted copy. The AA solver may lift this. */
   mutedForeground: string
-  /** Hairline borders carry elevation. Termul light only. */
+  /** Hairline borders carry elevation. itzTerm light only. */
   flatElevation?: boolean
 }
 
 export interface ThemeVariant {
   palette: ThemePalette
   overrides?: ThemeSyntaxOverrides
-  /** Termul dark and Termul light. Other themes keep derived surfaces. */
+  /** itzTerm dark and itzTerm light. Other themes keep derived surfaces. */
   chrome?: ThemeChrome
 }
 
@@ -104,7 +104,7 @@ export interface ResolvedSyntaxColors {
   link: string
 }
 
-export const COLOR_THEME_CHANGED_EVENT = 'termul:color-theme-changed'
+export const COLOR_THEME_CHANGED_EVENT = 'itzterm:color-theme-changed'
 
 export interface ColorThemeChangedDetail {
   themeId: string

@@ -99,7 +99,7 @@ describe('useGitSheetStore', () => {
   it('stays closed, toasts and reconciles once when the active chat sits in an unlisted worktree', () => {
     seedActiveTab(CHAT_TAB)
     sessionsRef.current = {
-      s1: mockAcpSession({ id: 's1', cwd: '/repo/.termul/worktrees/gone/src' })
+      s1: mockAcpSession({ id: 's1', cwd: '/repo/.itzterm/worktrees/gone/src' })
     }
     useGitSheetStore.getState().openGitSheet()
     useGitSheetStore.getState().openGitSheet()

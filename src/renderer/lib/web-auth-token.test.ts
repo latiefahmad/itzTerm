@@ -33,7 +33,7 @@ describe('web-auth-token', () => {
   it('reads the #token= URL fragment and persists it to localStorage', () => {
     setUrl('#token=abc123')
     expect(getWebAuthToken()).toBe('abc123')
-    expect(window.localStorage.getItem('termul.webAuthToken')).toBe('abc123')
+    expect(window.localStorage.getItem('itzterm.webAuthToken')).toBe('abc123')
   })
 
   it('falls back to the persisted token on later loads without the fragment', () => {
@@ -44,19 +44,19 @@ describe('web-auth-token', () => {
   })
 
   it('a fresh #token= fragment overrides the persisted one', () => {
-    window.localStorage.setItem('termul.webAuthToken', 'old')
+    window.localStorage.setItem('itzterm.webAuthToken', 'old')
     setUrl('#token=new')
     expect(getWebAuthToken()).toBe('new')
-    expect(window.localStorage.getItem('termul.webAuthToken')).toBe('new')
+    expect(window.localStorage.getItem('itzterm.webAuthToken')).toBe('new')
   })
 
   it('authHeader builds the Bearer header from the resolved token', () => {
-    window.localStorage.setItem('termul.webAuthToken', 's3cret')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret')
     expect(authHeader()).toEqual({ Authorization: 'Bearer s3cret' })
   })
 
   it('clearWebAuthToken removes the persisted token', () => {
-    window.localStorage.setItem('termul.webAuthToken', 's3cret')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret')
     clearWebAuthToken()
     expect(getWebAuthToken()).toBeNull()
     expect(authHeader()).toBeUndefined()
@@ -65,13 +65,13 @@ describe('web-auth-token', () => {
   it('an empty #token= fragment is ignored', () => {
     setUrl('#token=')
     expect(getWebAuthToken()).toBeNull()
-    expect(window.localStorage.getItem('termul.webAuthToken')).toBeNull()
+    expect(window.localStorage.getItem('itzterm.webAuthToken')).toBeNull()
   })
 
   it('a query-string ?token= is NOT honored (query leaks into logs/Referer)', () => {
     setUrl('?token=abc123')
     expect(getWebAuthToken()).toBeNull()
-    expect(window.localStorage.getItem('termul.webAuthToken')).toBeNull()
+    expect(window.localStorage.getItem('itzterm.webAuthToken')).toBeNull()
     // The query string is left untouched — the server never accepted it.
     expect(window.location.search).toBe('?token=abc123')
   })
@@ -82,7 +82,7 @@ describe('web-auth-token', () => {
     expect(window.location.search).toBe('?foo=bar')
     expect(window.location.hash).toBe('#view=x')
     // The persisted copy survives the strip — reloads keep working.
-    expect(window.localStorage.getItem('termul.webAuthToken')).toBe('abc123')
+    expect(window.localStorage.getItem('itzterm.webAuthToken')).toBe('abc123')
   })
 
   it('a storage write failure still returns the fragment token for this session', () => {
@@ -105,7 +105,7 @@ describe('web-auth-token', () => {
   })
 
   it('prefers the session-cached fragment token over a stale persisted value', () => {
-    window.localStorage.setItem('termul.webAuthToken', 'old')
+    window.localStorage.setItem('itzterm.webAuthToken', 'old')
     // The fragment bootstrap cannot be persisted (storage write fails), so
     // localStorage keeps the STALE token…
     setUrl('#token=new')
@@ -114,7 +114,7 @@ describe('web-auth-token', () => {
     })
     expect(getWebAuthToken()).toBe('new')
     vi.restoreAllMocks()
-    expect(window.localStorage.getItem('termul.webAuthToken')).toBe('old')
+    expect(window.localStorage.getItem('itzterm.webAuthToken')).toBe('old')
     // …but the fresher session-cached fragment token wins on later calls.
     expect(getWebAuthToken()).toBe('new')
   })
@@ -182,7 +182,7 @@ describe('insecure-transport warning', () => {
 
   it('warns loudly once per session on a plaintext non-loopback origin', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    window.localStorage.setItem('termul.webAuthToken', 's3cret')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret')
     stubLocation('http:', '192.168.1.20')
     // Dynamic import: vi.resetModules (beforeEach) clears the registry so the
     // once-per-session latch starts fresh per test.
@@ -201,7 +201,7 @@ describe('insecure-transport warning', () => {
 
   it('reports the warning to the durable frontend log (host only, redacted)', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {})
-    window.localStorage.setItem('termul.webAuthToken', 's3cret')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret')
     stubLocation('http:', 'nas.lan')
     const mod = await import('./web-auth-token')
     mod.getWebAuthToken()
@@ -219,7 +219,7 @@ describe('insecure-transport warning', () => {
 
   it('stays silent on plaintext LOOPBACK origins', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    window.localStorage.setItem('termul.webAuthToken', 's3cret')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret')
     stubLocation('http:', 'localhost')
     const mod = await import('./web-auth-token')
     expect(mod.getWebAuthToken()).toBe('s3cret')
@@ -229,7 +229,7 @@ describe('insecure-transport warning', () => {
 
   it('stays silent on TLS origins, even non-loopback', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    window.localStorage.setItem('termul.webAuthToken', 's3cret')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret')
     stubLocation('https:', 'nas.lan')
     const mod = await import('./web-auth-token')
     expect(mod.getWebAuthToken()).toBe('s3cret')

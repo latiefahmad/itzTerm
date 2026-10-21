@@ -2,10 +2,10 @@ import {
   Bug,
   FolderTree,
   GitBranch,
+  type ItzTermIcon,
   Search,
   Settings,
-  TerminalSquare,
-  type TermulIcon
+  TerminalSquare
 } from '@/components/icons'
 
 /** A bottom-sheet action row: the `MobileFileExplorer` pattern at the 44px touch floor. */
@@ -32,7 +32,7 @@ export interface ShellNavigationActions {
 
 export interface ShellNavigationRow {
   label: string
-  Icon: TermulIcon
+  Icon: ItzTermIcon
   run: () => void
 }
 
@@ -43,7 +43,7 @@ export interface ShellNavigationRow {
  * header ✎ already is New terminal there.
  */
 export function visibleNavigationRows(actions: ShellNavigationActions): ShellNavigationRow[] {
-  const rows: Array<{ label: string; Icon: TermulIcon; run: (() => void) | undefined }> = [
+  const rows: Array<{ label: string; Icon: ItzTermIcon; run: (() => void) | undefined }> = [
     { label: 'Git changes', Icon: GitBranch, run: actions.onOpenGitChanges },
     { label: 'Files', Icon: FolderTree, run: actions.onOpenFiles },
     { label: 'Command palette', Icon: Search, run: actions.onOpenCommandPalette },

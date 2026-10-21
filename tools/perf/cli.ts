@@ -27,7 +27,7 @@ import { soakScenario } from './scenarios/soak.ts'
 import { streamStormScenario } from './scenarios/stream-storm.ts'
 import { type PerfRunResult, summarize } from './types.ts'
 
-const USAGE = `Termul perf toolkit
+const USAGE = `itzTerm perf toolkit
 
 Usage: node tools/perf/cli.ts <command> [flags]
 
@@ -43,7 +43,7 @@ Commands:
                   requires --yes). --minutes 30 --switch-every-sec 120
   compare         Two result dirs → per-metric min/median deltas + verdicts.
                   --base tools/perf/results/<id> --against tools/perf/results/<id2>
-  browser         CAP-7 secondary lane against termul-server (stream-storm,
+  browser         CAP-7 secondary lane against itzterm-server (stream-storm,
                   project-switch). --server http://127.0.0.1:3000
   self-test       Fake-agent determinism + report/compare smoke. No app.
 
@@ -53,7 +53,7 @@ Shared flags:
   --keep-state    Keep the per-run scratch user-data dir after teardown
 
 Environment:
-  TERMUL_PERF_PROFILING=1   Build with the react-dom/profiling alias
+  ITZTERM_PERF_PROFILING=1   Build with the react-dom/profiling alias
                             (vite.config.tauri.ts gate) for release-grade commit timing.
   PERF_AGENT_TRACE=1        Fake agent logs each emitted update (stderr JSONL).
 `

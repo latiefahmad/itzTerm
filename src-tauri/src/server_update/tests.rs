@@ -158,15 +158,15 @@ fn channel_parse_recognizes_known_values() {
 fn channel_manifest_urls_match_hosting_scheme() {
     assert_eq!(
         UpdateChannel::Stable.manifest_url(),
-        "https://github.com/gnoviawan/termul/releases/latest/download/latest-stable.json"
+        "https://github.com/latiefahmad/itzTerm/releases/latest/download/latest-stable.json"
     );
     assert_eq!(
         UpdateChannel::Insider.manifest_url(),
-        "https://github.com/gnoviawan/termul/releases/download/insider/latest-insider.json"
+        "https://github.com/latiefahmad/itzTerm/releases/download/insider/latest-insider.json"
     );
     assert_eq!(
         UpdateChannel::Nightly.manifest_url(),
-        "https://github.com/gnoviawan/termul/releases/download/nightly/latest-nightly.json"
+        "https://github.com/latiefahmad/itzTerm/releases/download/nightly/latest-nightly.json"
     );
 }
 
@@ -175,17 +175,17 @@ fn channel_manifest_urls_match_hosting_scheme() {
 #[test]
 fn validate_binary_url_accepts_github_origin() {
     validate_binary_url(
-        "https://github.com/gnoviawan/termul/releases/download/nightly/termul-server",
+        "https://github.com/latiefahmad/itzTerm/releases/download/nightly/itzterm-server",
     )
-    .expect("termul github origin accepted");
+    .expect("itzterm github origin accepted");
 }
 
 #[test]
 fn validate_binary_url_accepts_aarch64_asset() {
     validate_binary_url(
-        "https://github.com/gnoviawan/termul/releases/download/nightly/termul-server-linux-aarch64",
+        "https://github.com/latiefahmad/itzTerm/releases/download/nightly/itzterm-server-linux-aarch64",
     )
-    .expect("aarch64 asset on the termul github origin accepted");
+    .expect("aarch64 asset on the itzterm github origin accepted");
 }
 
 #[test]
@@ -199,7 +199,7 @@ fn server_platform_key_matches_target_arch() {
 
 #[test]
 fn validate_binary_url_rejects_foreign_origin() {
-    let err = validate_binary_url("https://example.com/termul-server")
+    let err = validate_binary_url("https://example.com/itzterm-server")
         .expect_err("foreign origin rejected");
     assert!(
         err.to_string().contains("outside the allowed origin"),
@@ -209,7 +209,7 @@ fn validate_binary_url_rejects_foreign_origin() {
 
 #[test]
 fn validate_binary_url_rejects_plain_http() {
-    let err = validate_binary_url("http://github.com/gnoviawan/termul/x")
+    let err = validate_binary_url("http://github.com/latiefahmad/itzTerm/x")
         .expect_err("plain http rejected");
     assert!(
         err.to_string().contains("outside the allowed origin"),
@@ -220,7 +220,7 @@ fn validate_binary_url_rejects_plain_http() {
 // --- swap decision: don't swap on verify failure ---
 
 fn write_current_binary(dir: &Path, contents: &[u8]) -> PathBuf {
-    let bin = dir.join("termul-server");
+    let bin = dir.join("itzterm-server");
     fs::write(&bin, contents).expect("write current binary");
     make_executable(&bin, None).expect("chmod current binary");
     bin

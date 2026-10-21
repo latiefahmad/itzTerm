@@ -63,7 +63,7 @@ fn app_with_registry(registry: Arc<crate::web::project_registry::ProjectRegistry
 
 #[tokio::test]
 async fn put_then_get_round_trips_registry() {
-    let dir = std::env::temp_dir().join(format!("termul-mcp-api-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("itzterm-mcp-api-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir).await;
     let app = test_app(dir.clone());
     let loopback = std::net::SocketAddr::from(([127, 0, 0, 1], 54321));
@@ -102,7 +102,7 @@ async fn put_then_get_round_trips_registry() {
 
 #[tokio::test]
 async fn rejects_non_array_payload() {
-    let dir = std::env::temp_dir().join(format!("termul-mcp-api-invalid-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("itzterm-mcp-api-invalid-{}", std::process::id()));
     let app = test_app(dir.clone());
     let loopback = std::net::SocketAddr::from(([127, 0, 0, 1], 54321));
     let response = app
@@ -132,7 +132,7 @@ async fn rejects_non_array_payload() {
 /// routes returned FORBIDDEN.
 #[tokio::test]
 async fn put_refused_from_non_loopback_peer() {
-    let dir = std::env::temp_dir().join(format!("termul-mcp-api-guard-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("itzterm-mcp-api-guard-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir).await;
     let app = test_app(dir.clone());
     let remote = std::net::SocketAddr::from(([192, 168, 1, 50], 40000));
@@ -157,7 +157,7 @@ async fn put_refused_from_non_loopback_peer() {
     assert_eq!(value["code"], "FORBIDDEN");
     // The registry file must not exist — the guard fired before the write.
     assert!(
-        !dir.join(".termul").join(FILE_NAME).exists(),
+        !dir.join(".itzterm").join(FILE_NAME).exists(),
         "guard must fire before the registry is persisted"
     );
     let _ = fs::remove_dir_all(dir).await;
@@ -169,7 +169,7 @@ async fn put_refused_from_non_loopback_peer() {
 #[tokio::test]
 async fn put_refused_in_shared_live_mode() {
     let dir =
-        std::env::temp_dir().join(format!("termul-mcp-api-sharedlive-{}", std::process::id()));
+        std::env::temp_dir().join(format!("itzterm-mcp-api-sharedlive-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir).await;
     // The registered default project's directory must exist (same shape as `test_app`).
     std::fs::create_dir_all(&dir).expect("create project dir");
@@ -219,7 +219,7 @@ async fn put_refused_in_shared_live_mode() {
     assert_eq!(value["success"], false, "shared-live denies all writes");
     assert_eq!(value["code"], "FORBIDDEN");
     assert!(
-        !dir.join(".termul").join(FILE_NAME).exists(),
+        !dir.join(".itzterm").join(FILE_NAME).exists(),
         "shared-live guard must fire before the registry is persisted"
     );
     let _ = fs::remove_dir_all(dir).await;
@@ -231,7 +231,7 @@ async fn put_refused_in_shared_live_mode() {
 /// disconnect refuse them too.
 #[tokio::test]
 async fn unknown_archived_and_pathless_projects_are_not_found() {
-    let dir = std::env::temp_dir().join(format!("termul-mcp-api-notfound-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("itzterm-mcp-api-notfound-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("create dir");
     let registry = crate::web::project_registry::ProjectRegistry::seeded_for_test(&dir);
     // Archiving the seeded project keeps it listed but takes it out of the boundary.
@@ -287,7 +287,7 @@ async fn unknown_archived_and_pathless_projects_are_not_found() {
         }
     }
     assert!(
-        !dir.join(".termul").exists(),
+        !dir.join(".itzterm").exists(),
         "nothing may be written for a project that cannot own a file"
     );
     let _ = std::fs::remove_dir_all(dir);
@@ -298,7 +298,7 @@ async fn unknown_archived_and_pathless_projects_are_not_found() {
 /// refused for project B.
 #[tokio::test]
 async fn oauth_start_authorizes_against_the_named_projects_file_only() {
-    let base = std::env::temp_dir().join(format!("termul-mcp-api-two-{}", std::process::id()));
+    let base = std::env::temp_dir().join(format!("itzterm-mcp-api-two-{}", std::process::id()));
     let (dir_a, dir_b) = (base.join("a"), base.join("b"));
     std::fs::create_dir_all(&dir_a).expect("create a");
     std::fs::create_dir_all(&dir_b).expect("create b");
@@ -333,8 +333,8 @@ async fn oauth_start_authorizes_against_the_named_projects_file_only() {
         .await
         .unwrap();
     assert_eq!(body_json(response).await["success"], true);
-    assert!(dir_a.join(".termul").join(FILE_NAME).exists());
-    assert!(!dir_b.join(".termul").exists(), "B's file is untouched");
+    assert!(dir_a.join(".itzterm").join(FILE_NAME).exists());
+    assert!(!dir_b.join(".itzterm").exists(), "B's file is untouched");
 
     // Each project reads back only its own file.
     for (id, expected_len) in [("pa", 1), ("pb", 0)] {

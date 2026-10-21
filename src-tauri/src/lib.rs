@@ -7,14 +7,14 @@ mod agentation;
 mod browser_automation;
 mod browser_tab_manager;
 // Canvas mode: shared, Tauri-free bundle server + persistence. Compiled
-// unconditionally so the standalone `termul-server` mounts the same routes.
+// unconditionally so the standalone `itzterm-server` mounts the same routes.
 pub mod canvas;
 mod commands;
 // One host per durable path (AD-14): sidecar `File::try_lock` locks taken before
-// any store opens. Tauri-free so the desktop and `termul-server` share it.
+// any store opens. Tauri-free so the desktop and `itzterm-server` share it.
 pub mod data_lock;
 // Bug-report diagnostics bundle + `gh` submit: Tauri-free core so the
-// desktop and `termul-server` share it (like `data_lock`/`server_update`).
+// desktop and `itzterm-server` share it (like `data_lock`/`server_update`).
 pub mod diagnostics;
 mod exit_cleanup;
 mod logging;
@@ -26,12 +26,12 @@ mod project_icon;
 mod pty;
 mod remote;
 mod secure_storage;
-// Opt-in `termul-server` self-update subsystem. The library module itself is
+// Opt-in `itzterm-server` self-update subsystem. The library module itself is
 // intentionally NOT feature-gated so its full test suite — including signature
 // verification — runs under the spec's default `cargo test` gate. Only the
 // standalone binary wiring (server_main.rs) is gated by `standalone-server`.
 pub mod server_update;
-// Guided setup + background launch for the standalone `termul-server`. Like
+// Guided setup + background launch for the standalone `itzterm-server`. Like
 // `server_update`, the library module is intentionally NOT feature-gated so
 // its test suite runs under the spec's default `cargo test` gate; only the
 // standalone binary wiring (server_main.rs `--onboard` branch) is gated by
@@ -88,11 +88,11 @@ const MENU_EVENT_CLOSE_TAB: &str = "menu:close-tab";
 const MENU_EVENT_CHECK_FOR_UPDATES_TRIGGERED: &str = "updater:check-for-updates-triggered";
 
 // Tray menu IDs
-const TRAY_ID: &str = "termul-tray";
+const TRAY_ID: &str = "itzterm-tray";
 const TRAY_MENU_SHOW: &str = "tray-show";
 const TRAY_MENU_QUIT: &str = "tray-quit";
 const TRAY_QUIT_REQUESTED_EVENT: &str = "tray:quit-requested";
-const LEARN_MORE_URL: &str = "https://github.com/gnoviawan/termul";
+const LEARN_MORE_URL: &str = "https://github.com/latiefahmad/itzTerm";
 const DEFAULT_ZOOM_FACTOR: f64 = 1.0;
 const MIN_ZOOM_FACTOR: f64 = 0.5;
 const MAX_ZOOM_FACTOR: f64 = 3.0;
@@ -167,8 +167,8 @@ pub use acp::{
 // + `host_mcp::child::run()` through this re-export (the `acp` module itself is
 // private). See `acp/host_mcp/mod.rs` + spec `spec-acp-host-todo-plan-tool.md`.
 pub use acp::host_mcp;
-// Local-only Claude admin CLI for the standalone `termul-server`
-// (`termul-server claude ...`): same re-export pattern as `host_mcp` — the
+// Local-only Claude admin CLI for the standalone `itzterm-server`
+// (`itzterm-server claude ...`): same re-export pattern as `host_mcp` — the
 // `acp` module is private, so `server_main.rs` reaches `claude_admin::run()`
 // through this path (mirrors how `onboard::run()` is dispatched).
 pub use acp::claude_admin;
@@ -841,8 +841,8 @@ fn show_log_action_error<R: tauri::Runtime>(app: &tauri::AppHandle<R>, message: 
         .show(|_| {});
 }
 
-/// AD-14 / AD-18 startup refusal: another Termul host owns the data directory,
-/// or a store was written by a newer Termul. Nothing else may open that data,
+/// AD-14 / AD-18 startup refusal: another itzTerm host owns the data directory,
+/// or a store was written by a newer itzTerm. Nothing else may open that data,
 /// so hide the (still empty) windows, show a native error dialog and exit
 /// non-zero once the user acknowledges it. `setup` returns right after this,
 /// so no store, agent or terminal is ever started.
@@ -853,7 +853,7 @@ fn refuse_startup<R: tauri::Runtime>(app: &tauri::AppHandle<R>, message: &str) {
     }
     app.dialog()
         .message(message)
-        .title("Termul cannot start")
+        .title("itzTerm cannot start")
         .kind(MessageDialogKind::Error)
         .show(|_| std::process::exit(1));
 }
@@ -878,7 +878,7 @@ fn export_log_file<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result<(), S
     app.dialog()
         .file()
         .add_filter("Log Files", &["log"])
-        .set_file_name("termul.log")
+        .set_file_name("itzterm.log")
         .save_file(move |file_path| {
             if let Some(tauri_plugin_dialog::FilePath::Path(dest_path)) = file_path {
                 match std::fs::copy(&log_path, &dest_path) {
@@ -990,7 +990,7 @@ fn export_log_to_default<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> Result
         }
     };
 
-    let dest_path = default_dir.join("termul.log");
+    let dest_path = default_dir.join("itzterm.log");
     let app_handle = app.clone();
 
     tauri::async_runtime::spawn(async move {
@@ -1203,7 +1203,7 @@ pub fn run() {
                     let store = store.with_legacy_manifests(web::store::legacy_manifests_dir(
                         &app_data_dir,
                     ));
-                    // The retired plugin-store file `termul-data.json` moves
+                    // The retired plugin-store file `itzterm-data.json` moves
                     // into the first device that reaches the store over the
                     // desktop carrier (renamed afterwards).
                     let store = store
@@ -1257,7 +1257,7 @@ pub fn run() {
                     handle
                         .dialog()
                         .message(format!(
-                            "Termul could not read its saved project list ({error}). {dialog_note}"
+                            "itzTerm could not read its saved project list ({error}). {dialog_note}"
                         ))
                         .title("Project list unavailable")
                         .kind(MessageDialogKind::Error)
@@ -1402,7 +1402,7 @@ pub fn run() {
             // so every non-ephemeral session becomes durable at the host
             // event/session layer regardless of which client created it. The
             // sessions root is desktop-private: NEVER share it with a
-            // standalone `termul-server` on the same machine (two processes on
+            // standalone `itzterm-server` on the same machine (two processes on
             // one JSONL store would corrupt both). The persistence must exist
             // BEFORE any agent spawn — driver threads clone it at spawn time.
             let sessions_root = handle
@@ -1458,7 +1458,7 @@ pub fn run() {
 
             // CAP-6 / Story 8: open the host-owned ACP catalog root under
             // `<app_data_dir>/acp-catalog`. The desktop owns its own root —
-            // NEVER shared with a standalone `termul-server` on the same
+            // NEVER shared with a standalone `itzterm-server` on the same
             // machine. The catalog embeds the trusted `agents.json` at build
             // time, optionally augments with the explicitly-approved CDN
             // registry snapshot, probes real runtime availability, and
@@ -1496,7 +1496,7 @@ pub fn run() {
             // CAP-6 / Story 9: open the host-owned verified-atomic ACP install
             // root. The desktop owns its own root under
             // `<app_data_dir>/acp-registry-binaries` (NEVER shared with a
-            // standalone `termul-server` on the same machine). The install
+            // standalone `itzterm-server` on the same machine). The install
             // service downloads + verifies (sha256) + extracts + atomically
             // activates ACP agent archives resolved from the catalog, records
             // an installed-agents manifest, and exposes `install_agent(agentId)`
@@ -1597,7 +1597,7 @@ pub fn run() {
             // The one host-owned idle-agent reaper for the desktop process
             // (probe-based; see `web::agent_reaper`). Never started from
             // `serve_router`, whose shared-live toggle reuses these agents.
-            // `$TERMUL_AGENT_IDLE_REAP_SECS` wins; otherwise App Preferences
+            // `$ITZTERM_AGENT_IDLE_REAP_SECS` wins; otherwise App Preferences
             // can change the window on the next sweep.
             let idle_window = web::config::desktop_agent_idle_window_secs();
             web::agent_reaper::install_agent_idle_baseline(
@@ -1613,7 +1613,7 @@ pub fn run() {
             // Desktop browser-automation host: drives the visible browser
             // pane via BrowserTabManager; registered globally so host_mcp
             // FrameKind::Browser frames dispatch here. Without registration
-            // (termul-server, tests) the tool fails closed.
+            // (itzterm-server, tests) the tool fails closed.
             browser_automation::set_browser_host(
                 browser_automation::DesktopBrowserHost::new(
                     handle.clone(),
@@ -1722,9 +1722,9 @@ pub fn run() {
                 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem};
                 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 
-                let show_item = MenuItemBuilder::with_id(TRAY_MENU_SHOW, "Show Termul")
+                let show_item = MenuItemBuilder::with_id(TRAY_MENU_SHOW, "Show itzTerm")
                     .build(app)?;
-                let quit_item = MenuItemBuilder::with_id(TRAY_MENU_QUIT, "Quit Termul")
+                let quit_item = MenuItemBuilder::with_id(TRAY_MENU_QUIT, "Quit itzTerm")
                     .build(app)?;
                 let separator = PredefinedMenuItem::separator(app)?;
 
@@ -1735,7 +1735,7 @@ pub fn run() {
                     .build()?;
 
                 let _tray = TrayIconBuilder::with_id(TRAY_ID)
-                    .tooltip("Termul Manager")
+                    .tooltip("itzTerm")
                     .icon(app.default_window_icon().cloned().unwrap())
                     .menu(&tray_menu)
                     .show_menu_on_left_click(false)

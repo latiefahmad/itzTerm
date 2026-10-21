@@ -6,11 +6,11 @@ import {
   FileEdit,
   FolderEdit,
   Hand,
+  type ItzTermIcon,
   Maps,
   MessageQuestion,
   ShieldAlert,
-  Sparkles,
-  type TermulIcon
+  Sparkles
 } from '@/components/icons'
 import type { SessionMode } from '@/lib/acp-api'
 import { cn } from '@/lib/utils'
@@ -20,7 +20,7 @@ export type ModeRisk = 'ask' | 'act' | 'danger' | 'other'
 
 interface ModeKind {
   risk: ModeRisk
-  icon: TermulIcon
+  icon: ItzTermIcon
 }
 
 /**

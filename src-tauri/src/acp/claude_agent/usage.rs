@@ -1,7 +1,7 @@
 //! Claude Account usage: a cached read of each Account's usage windows through
 //! the Claude Agent SDK that ships with the managed Claude ACP package. The
 //! probe runs Claude with the Account's own config dir, so Claude Code reads
-//! and refreshes its own login; Termul never sees a token.
+//! and refreshes its own login; itzTerm never sees a token.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -27,7 +27,7 @@ import { pathToFileURL } from 'node:url'
 const out = (value) => { process.stdout.write(JSON.stringify(value) + '\n'); process.exit(0) }
 setTimeout(() => out({ error: 'Claude usage timed out' }), 25000).unref()
 try {
-  const { query } = await import(pathToFileURL(process.env.TERMUL_CLAUDE_SDK).href)
+  const { query } = await import(pathToFileURL(process.env.ITZTERM_CLAUDE_SDK).href)
   const idle = (async function* () { await new Promise(() => {}) })()
   const q = query({ prompt: idle, options: { persistSession: false, mcpServers: {}, strictMcpConfig: true, settingSources: [] } })
   await q.initializationResult()
@@ -85,7 +85,7 @@ impl ClaudeUsageProbe for SystemClaudeUsageProbe {
             .args(["--input-type=module", "-e", PROBE_SCRIPT])
             .current_dir(std::env::temp_dir())
             .env("PATH", path)
-            .env("TERMUL_CLAUDE_SDK", sdk)
+            .env("ITZTERM_CLAUDE_SDK", sdk)
             .env_remove(ANTHROPIC_API_KEY_ENV)
             .kill_on_drop(true)
             .stdin(std::process::Stdio::null())

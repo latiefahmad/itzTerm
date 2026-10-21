@@ -82,7 +82,7 @@ struct TempState {
 impl TempState {
     fn new() -> Self {
         let state_dir =
-            std::env::temp_dir().join(format!("termul-claude-auth-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("itzterm-claude-auth-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&state_dir).unwrap();
         Self { state_dir }
     }
@@ -175,7 +175,7 @@ fn claude_status_is_the_single_policy_source() {
     assert_eq!(status, SupportedAcpAgentStatus::NeedsRuntime);
     assert_eq!(
             reason,
-            Some("Claude Agent ACP requires Node.js 22 or newer. Install or upgrade Node.js, then restart Termul.")
+            Some("Claude Agent ACP requires Node.js 22 or newer. Install or upgrade Node.js, then restart itzTerm.")
         );
 
     let (status, reason) = claude_status(
@@ -185,7 +185,7 @@ fn claude_status_is_the_single_policy_source() {
     assert_eq!(status, SupportedAcpAgentStatus::NeedsRuntime);
     assert_eq!(
             reason,
-            Some("Claude Agent ACP requires npm. Install npm alongside Node.js 22 or newer, then restart Termul.")
+            Some("Claude Agent ACP requires npm. Install npm alongside Node.js 22 or newer, then restart itzTerm.")
         );
 
     let (status, reason) = claude_status(

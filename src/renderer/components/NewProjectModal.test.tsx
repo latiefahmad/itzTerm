@@ -729,7 +729,7 @@ describe('NewProjectModal (web-mode · existing .git detection after create)', (
 
   function routeFilesystem(dotGit: DotGit) {
     mockFetch.mockImplementation(async (url: string) => {
-      const u = new URL(String(url), 'http://termul.test')
+      const u = new URL(String(url), 'http://itzterm.test')
       const target = u.searchParams.get('path')
       if (u.pathname.endsWith('/shells')) {
         return jsonResponse({
@@ -782,7 +782,7 @@ describe('NewProjectModal (web-mode · existing .git detection after create)', (
 
   const probedPaths = () =>
     mockFetch.mock.calls
-      .map(([url]) => new URL(String(url), 'http://termul.test'))
+      .map(([url]) => new URL(String(url), 'http://itzterm.test'))
       .filter((u) => u.searchParams.get('path') === DOT_GIT)
       .map((u) => u.pathname.replace(/^.*\/fs\//, 'fs/'))
 

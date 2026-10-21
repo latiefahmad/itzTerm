@@ -65,7 +65,7 @@ describe('SSHResizableSection height (shell-layout store)', () => {
     expect(useShellLayoutStore.getState().sshSectionHeight).toBe(400)
     fireEvent.mouseUp(document)
 
-    expect(setItem).not.toHaveBeenCalledWith('termul-ssh-panel-height', expect.anything())
+    expect(setItem).not.toHaveBeenCalledWith('itzterm-ssh-panel-height', expect.anything())
     setItem.mockRestore()
   })
 })

@@ -40,7 +40,7 @@ fn temp_dir(label: &str) -> TempRoot {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let path = std::env::temp_dir().join(format!("termul-epoch-{label}-{nanos}"));
+    let path = std::env::temp_dir().join(format!("itzterm-epoch-{label}-{nanos}"));
     std::fs::create_dir_all(&path).unwrap();
     TempRoot(path)
 }

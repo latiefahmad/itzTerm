@@ -261,7 +261,7 @@ pub(crate) fn resolve_rg_path_from(cwd: Option<&Path>, exe_dir: Option<&Path>) -
 }
 
 pub(crate) fn resolve_rg_path() -> (String, String) {
-    let from_env = std::env::var("TERMUL_RG_PATH")
+    let from_env = std::env::var("ITZTERM_RG_PATH")
         .ok()
         .filter(|v| !v.trim().is_empty());
     if let Some(path) = from_env {

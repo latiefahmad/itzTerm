@@ -1,11 +1,11 @@
-# Termul Manager - API Contracts
+# itzTerm - API Contracts
 
 **Date:** 2026-05-09
 **Surface:** Internal Tauri command and event API
 
 ## Overview
 
-Termul Manager does not expose a public HTTP API. Its primary integration surface is an **internal IPC contract** between the React renderer and the Rust/Tauri runtime.
+itzTerm does not expose a public HTTP API. Its primary integration surface is an **internal IPC contract** between the React renderer and the Rust/Tauri runtime.
 
 This contract is implemented through:
 
@@ -183,7 +183,7 @@ Runs rollback logic for a migration.
 
 ## Desktop ACP Chat History Commands
 
-The host owns durable chat history. The desktop and `termul-server` both write every non-ephemeral session to `SessionPersistence` (`src-tauri/src/acp/session_persistence/`), and the desktop keeps it under `<app data dir>/acp-sessions`. `acp_history_list`, `acp_history_get`, `acp_history_get_tail` and `acp_history_delete` read and change that store. `SessionPayload` is `{ metadata, messages, toolCalls? }`. `toolCalls` mirrors the session's ACP tool calls so a reopened or resumed chat restores its tool cards. Persisted tool calls drop `rawOutput` and unknown fields, normalize mid-flight statuses to `failed`, keep only the most recent calls, and stay within a per-call serialized byte budget (`sanitizeToolCallsForPersistence`).
+The host owns durable chat history. The desktop and `itzterm-server` both write every non-ephemeral session to `SessionPersistence` (`src-tauri/src/acp/session_persistence/`), and the desktop keeps it under `<app data dir>/acp-sessions`. `acp_history_list`, `acp_history_get`, `acp_history_get_tail` and `acp_history_delete` read and change that store. `SessionPayload` is `{ metadata, messages, toolCalls? }`. `toolCalls` mirrors the session's ACP tool calls so a reopened or resumed chat restores its tool cards. Persisted tool calls drop `rawOutput` and unknown fields, normalize mid-flight statuses to `failed`, keep only the most recent calls, and stay within a per-call serialized byte budget (`sanitizeToolCallsForPersistence`).
 
 The renderer-authored store under `<app data dir>/acp-chat-history` (`ChatHistoryStore`) is legacy. The one-shot renderer wipe migration is the only caller of `acp_history_save`, `acp_history_flush`, `acp_history_mark_legacy_import_complete`, `acp_history_list_legacy` and `acp_history_get_legacy`. Each of them is listed in the command table above. After every legacy write the host imports the new entries into `SessionPersistence` (`import_chat_history`), so a following `acp_history_list` returns what the migration saved. The migration deletes the old Tauri Store ACP keys only after `acp_history_list_legacy` and `acp_history_get_legacy` return what it wrote. Unrelated preferences stay.
 
@@ -266,7 +266,7 @@ and, before creating a session (`create_session`), runs `authenticate_agent`
 - no method (or only empty/whitespace ids) → unchanged spawn → `session/new` flow.
 
 For the default `agent` auth type the provider owns the login UX (it may open its
-own browser); Termul never invents a client-side login-URL redirect. Apart
+own browser); itzTerm never invents a client-side login-URL redirect. Apart
 from the opt-in Factory key described below, it does not store provider
 credentials. The `authenticate` invoke uses `{ agentId, methodId }`.
 
@@ -283,7 +283,7 @@ return only whether a key is stored. Subsequent Factory Droid spawns overlay the
 stored key, leaving active processes and sessions untouched. A missing or
 unusable OS secret store rejects saving, but browser Login and explicitly
 configured environment keys still work. The web endpoints require an enabled
-Termul web-auth gate; the browser only submits a key over HTTPS or loopback.
+itzTerm web-auth gate; the browser only submits a key over HTTPS or loopback.
 Factory Login remains an explicit choice even with a stored key.
 The key form is offered when Factory requests authentication, not in the
 agent picker after an existing browser login. Saving checks through a
@@ -293,13 +293,13 @@ The bundled Factory launcher uses `droid exec --output-format acp`. The host
 also upgrades the old `acp-daemon` argument when spawning a registry-backed
 Factory config, including saved configs and remote catalog entries: the old
 mode initializes but its Droid child exits with code 1 at `session/new` when
-Termul attaches its plan MCP server.
+itzTerm attaches its plan MCP server.
 Factory Droid may acknowledge `session/set_config_option` with `{}` rather than
 the ACP-required `configOptions` snapshot. Only for this agent, the host
 interprets that response as success without a snapshot; desktop and web
 clients retain their known options and update the chosen value locally.
 Creating another Factory session in the same Droid process resets the model
-of its existing sessions. Termul therefore does not refill a Factory warm
+of its existing sessions. itzTerm therefore does not refill a Factory warm
 session after launch; a later chat uses a new Droid process while keeping
 earlier sessions alive. Login remains available in the auth-required banner,
 not as a permanent composer button once a session is ready.
@@ -307,7 +307,7 @@ With no stored Factory key, a new Droid process tries `session/new` using the
 CLI's existing browser-login state before offering the auth-required banner.
 
 **2a. Terminal auth methods (headless login).** Clicking a `terminal` method in the
-auth banner spawns an ordinary termul terminal tab (`kind:'shell'`, titled
+auth banner spawns an ordinary itzterm terminal tab (`kind:'shell'`, titled
 `Sign in — <agent>`) running the agent binary with the method's `args`/`env` in the
 session cwd. Exit code 0 → `authenticate(methodId)` runs and session creation
 proceeds; non-zero → toast and the banner stays. No live PTY is killed or
@@ -409,11 +409,11 @@ These are the `acp_*`, `claude_accounts_*`, `ws_channel_*` and `codex_cli_auth_s
 | `acp_mcp_oauth_start` | Starts the MCP OAuth flow for a server URL. Discovers the endpoints, registers a PKCE client, opens the authorization URL in the system browser, waits for the redirect on a local HTTP server, and stores the token. Desktop only. |
 | `acp_mcp_oauth_has_token` | Returns whether a stored OAuth token exists for a server URL. Does not check the token's validity. |
 | `acp_mcp_oauth_disconnect` | Deletes the stored OAuth token for a server URL. |
-| `acp_set_turn_timeout` | Sets or clears (`null`) the hard turn timeout override, in seconds. `TERMUL_ACP_TURN_TIMEOUT_SECS` takes precedence. |
-| `acp_set_turn_idle_timeout` | Sets or clears the turn idle timeout override. `0` is rejected. `TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS` takes precedence. |
-| `acp_set_session_new_timeout` | Sets or clears the `session/new` timeout override. `0` is rejected. `TERMUL_ACP_SESSION_NEW_TIMEOUT_SECS` takes precedence. |
-| `acp_set_session_reopen_timeout` | Sets or clears the `session/load` and `session/resume` timeout override. `0` is rejected. `TERMUL_ACP_SESSION_REOPEN_TIMEOUT_SECS` takes precedence. |
-| `acp_set_agent_idle_window` | Sets or clears the App Preferences override of how long an idle agent stays alive. `0` is rejected. `TERMUL_AGENT_IDLE_REAP_SECS` and a locked server window take precedence. Browser equivalent: `POST /host/agent-idle-window`. |
+| `acp_set_turn_timeout` | Sets or clears (`null`) the hard turn timeout override, in seconds. `ITZTERM_ACP_TURN_TIMEOUT_SECS` takes precedence. |
+| `acp_set_turn_idle_timeout` | Sets or clears the turn idle timeout override. `0` is rejected. `ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS` takes precedence. |
+| `acp_set_session_new_timeout` | Sets or clears the `session/new` timeout override. `0` is rejected. `ITZTERM_ACP_SESSION_NEW_TIMEOUT_SECS` takes precedence. |
+| `acp_set_session_reopen_timeout` | Sets or clears the `session/load` and `session/resume` timeout override. `0` is rejected. `ITZTERM_ACP_SESSION_REOPEN_TIMEOUT_SECS` takes precedence. |
+| `acp_set_agent_idle_window` | Sets or clears the App Preferences override of how long an idle agent stays alive. `0` is rejected. `ITZTERM_AGENT_IDLE_REAP_SECS` and a locked server window take precedence. Browser equivalent: `POST /host/agent-idle-window`. |
 | `acp_get_agent_idle_window` | Returns the idle window in use as `{secs, source}`, with `source` one of `env`, `operator`, `setting` or `default`. Browser equivalent: `GET /host/agent-idle-window`. |
 | `acp_fetch_registry_snapshot` | The registry check behind "Check for updates". Takes `forceRefresh?`, shares the catalog's snapshot cache, and fails when the host has no catalog store. `/ws` equivalent: `fetch_acp_registry_snapshot`. |
 | `acp_install_registry_binary` | Legacy desktop-only install of a registry release archive (`agentId`, `archiveUrl`, `cmd`, `args?`) into `<app data dir>/acp-registry-binaries/<agentId>`. The archive URL must be `https`. The verified install is `install_acp_agent`. |
@@ -593,14 +593,14 @@ The event names live in `src-tauri/src/acp/events.rs` and `ACP_EVENTS` in `src/r
 
 See `docs/acp-agent-plan-compliance.md` for registry compliance tiers and agent vendor expectations.
 
-#### Persisted plan snapshot (`termul-plan` fence)
+#### Persisted plan snapshot (`itzterm-plan` fence)
 
 When a turn ends (`_onPromptComplete` in `src/renderer/stores/acp-store.ts`), the renderer
 snapshots the live `plans[sessionId]` onto the just-finished assistant message's `blocks` as
-a fenced code block with language `termul-plan`:
+a fenced code block with language `itzterm-plan`:
 
 ````md
-```termul-plan
+```itzterm-plan
 [{"content":"Read AC file","status":"completed","priority":"high"},{"content":"Fix bug","status":"in_progress","priority":"high"}]
 ```
 ````
@@ -637,11 +637,11 @@ from the plan store (logged `source: 'planRehydrate'`); the agent can still emit
 >   the oldest *finished* calls drop, in-flight ones are always retained, and every install
 >   path (reopen/resume/recovery) applies the same cap.
 > - **Tool raw output clamp** — a string `rawOutput` ≥ 32 KiB clamps to 32 KiB +
->   a `[termul: tool output truncated]` marker on live update (logged once per toolCallId
+>   a `[itzterm: tool output truncated]` marker on live update (logged once per toolCallId
 >   without content; non-string values pass through).
 
-The `termul-plan` fence is rendered inline inside historical (non-streaming) messages by
-`TermulPlanRenderer` (`src/renderer/components/chat/ChatMarkdownPlanFence.tsx`) as a read-only
+The `itzterm-plan` fence is rendered inline inside historical (non-streaming) messages by
+`ItzTermPlanRenderer` (`src/renderer/components/chat/ChatMarkdownPlanFence.tsx`) as a read-only
 `PlanPanel`. The live streaming turn shows the sticky `PlanPanel` pinned in `AgentChatPanel`
 instead — the inline renderer is gated to `!streaming` so an in-flight turn never renders a
 duplicate plan UI.
@@ -746,17 +746,17 @@ The project list, the chat-history index, the agent roster, a project's file cha
 
 ### Store keys by surface
 
-Every surface keeps its state in the host store through the same `store_read` / `store_write` / `store_delete` requests and the same scopes: `device/<deviceId>/<key>` (this device only), `shared/lww/<key>` and `shared/cas/<key>`. A browser or phone sends them over `/ws`; the desktop sends them over its Tauri Channel carrier (`ws_channel_open`, `ws_channel_send`, `ws_channel_close`) to the host store it runs in the same process, so the 256 KiB value cap, the per-device byte budget, the revisions and the shared-key watch apply to the desktop too. The desktop's store connection presents no token (the process boundary is the auth) and reconnects on demand after the host ends an idle connection. The desktop plugin-store file `termul-data.json` is no longer an authority.
+Every surface keeps its state in the host store through the same `store_read` / `store_write` / `store_delete` requests and the same scopes: `device/<deviceId>/<key>` (this device only), `shared/lww/<key>` and `shared/cas/<key>`. A browser or phone sends them over `/ws`; the desktop sends them over its Tauri Channel carrier (`ws_channel_open`, `ws_channel_send`, `ws_channel_close`) to the host store it runs in the same process, so the 256 KiB value cap, the per-device byte budget, the revisions and the shared-key watch apply to the desktop too. The desktop's store connection presents no token (the process boundary is the auth) and reconnects on demand after the host ends an idle connection. The desktop plugin-store file `itzterm-data.json` is no longer an authority.
 
-The host reads `<app data dir>/termul-data.json` once at startup and keeps it as a pending import. The first device whose `store_*` request arrives over the desktop carrier takes it over, in one write, before that request runs:
+The host reads `<app data dir>/itzterm-data.json` once at startup and keeps it as a pending import. The first device whose `store_*` request arrives over the desktop carrier takes it over, in one write, before that request runs:
 
 - A shared key (the table in `legacy.rs`, pinned equal to `KEY_SCOPES`) becomes `shared/lww/<key>` or `shared/cas/<key>`, only where the store holds no value and the key was not deleted on purpose.
 - Every other key becomes `device/<deviceId>/<key>` (`editor-state/<projectId>` as `workspace/<projectId>`), only where the partition holds none. A value written without the `{"_version":1,"data":…}` wrapper gets it.
 - A value over the 256 KiB cap is skipped with a warning. Keys that do not fit the device byte budget, or the 10 MiB file cap, are dropped with a warning, the largest first.
-- The store records `host.desktopImported = {deviceId, atMs}`, then the file is renamed to `termul-data.json.imported-<unix time>` (`-1`, `-2` when that name is taken). It is a backup and is never deleted. A failed write fails the request that triggered it, leaves the file and the pending import in place, and the next request tries again. A corrupt or unreadable file is skipped with a warning and left in place.
+- The store records `host.desktopImported = {deviceId, atMs}`, then the file is renamed to `itzterm-data.json.imported-<unix time>` (`-1`, `-2` when that name is taken). It is a backup and is never deleted. A failed write fails the request that triggered it, leaves the file and the pending import in place, and the next request tries again. A corrupt or unreadable file is skipped with a warning and left in place.
 - `/ws` devices of the same host (shared-live clients) never take the import. A desktop that never connects over the carrier cannot import.
 
-Small device-local files stay in their own plugin-store files and are not part of the host store: the what's-new and skipped-version records, the update channel, and the backup and rollback metadata. The one-shot migrations still read the legacy files they migrate from (`termul-sessions.json`, the old project record).
+Small device-local files stay in their own plugin-store files and are not part of the host store: the what's-new and skipped-version records, the update channel, and the backup and rollback metadata. The one-shot migrations still read the legacy files they migrate from (`itzterm-sessions.json`, the old project record).
 
 ### Per-project workspace record
 
@@ -764,7 +764,7 @@ A project's open files and pane layout live only in the device's own store key `
 
 ### Project registry commands
 
-One durable `ProjectRegistry` per host owns the project list: `termul-server` keeps it in its projects file, the desktop in `<app data dir>/projects.json` (locked beside `store.json`, opened once at setup, **not** cleared by `remote_server_stop`). Every command below runs through one host command service: it validates, writes the candidate to disk (temp file, fsync, rename) and only then swaps memory, so a failed write replies an error and changes nothing; then it publishes the new state to every `projects` watcher.
+One durable `ProjectRegistry` per host owns the project list: `itzterm-server` keeps it in its projects file, the desktop in `<app data dir>/projects.json` (locked beside `store.json`, opened once at setup, **not** cleared by `remote_server_stop`). Every command below runs through one host command service: it validates, writes the candidate to disk (temp file, fsync, rename) and only then swaps memory, so a failed write replies an error and changes nothing; then it publishes the new state to every `projects` watcher.
 
 | `/ws` request | HTTP | Request fields | Reply |
 | --- | --- | --- | --- |
@@ -776,12 +776,12 @@ One durable `ProjectRegistry` per host owns the project list: `termul-server` ke
 - Add, update and remove are idempotent by `projectId`, so they carry no ledger `commandId`. Archiving or removing the default project clears the default; the default only changes through `set_default_project`.
 - `project_busy` (HTTP `IpcBody.code` `PROJECT_BUSY`): removing or archiving a project, or moving its root with `update_project` `path` (the working directories of what is bound to it would leave the root), that still has live sessions (host-stamped `projectId`) or terminals is refused and nothing changes. `err.details` (HTTP `details`) is `{"sessions":[sessionId…],"terminals":[terminalId…]}`. With `cascade: true` (HTTP: `?cascade=true` on DELETE, `"cascade":true` in the PUT body) the host cancels and closes the bound sessions (an agent is stopped only when no other session uses it), force-kills the bound terminals, drops the project's fs watches, then removes or archives the project; session/terminal events fan out through their usual paths. If something cannot be stopped the project stays and `project_busy` lists the leftovers. While a remove or archive runs, `create_session` and terminal `spawn` for that project are refused `project_busy`.
 - `WsError` gains the optional `details` field (additive; today only `project_busy` sets it) and `IpcBody` the same `details`.
-- Registry file: schema 4 (`imported: bool` added to v3). A v1-v3 file loads and is copied to `<name>.pre-v4-<ts>.bak` before its first rewrite; a newer schema is refused and never overwritten; a corrupt file is copied to `<name>.corrupt-<ts>.bak`. The synthetic seed project (only from the removed `--project-root` / `$TERMUL_PROJECT_ROOT`) lives in memory only; the desktop never seeds one.
+- Registry file: schema 4 (`imported: bool` added to v3). A v1-v3 file loads and is copied to `<name>.pre-v4-<ts>.bak` before its first rewrite; a newer schema is refused and never overwritten; a corrupt file is copied to `<name>.corrupt-<ts>.bak`. The synthetic seed project (only from the removed `--project-root` / `$ITZTERM_PROJECT_ROOT`) lives in memory only; the desktop never seeds one.
 - Tauri: `project_registry_import({projects: ProjectSummary[], defaultProjectId?}) -> {imported: boolean}` is the desktop's one-shot import of the renderer's old project list. It runs only while the file says nothing was imported, adds ids that are not registered (existing ids are kept, never overwritten), applies the default only when none is set (the synthetic seed does not count as one) and sets `imported` durably even for an empty list; a repeat replies `{imported: false}`. The renderer imports once at the first desktop start after the upgrade, then deletes its old `projects` key and keeps its per-project settings, groups and order under the device key `project-prefs`. `remote_sync_projects` (full-list push) and `set_host_default_project` no longer exist: the renderer, on the browser and the desktop alike, reads the list from the `projects` watch and changes it with the `/ws` requests above (`path` on `update_project` moves a root).
 
 ### MCP and OAuth operations name a project
 
-The MCP server list is a file per project, `{project root}/.termul/mcp-servers.json`; there is no single host project root. Every operation names `projectId`, resolved through `ProjectRegistry::canonical_root`: an unknown, archived or pathless project (or one whose folder is gone) is refused `NOT_FOUND` and nothing is read or written.
+The MCP server list is a file per project, `{project root}/.itzterm/mcp-servers.json`; there is no single host project root. Every operation names `projectId`, resolved through `ProjectRegistry::canonical_root`: an unknown, archived or pathless project (or one whose folder is gone) is refused `NOT_FOUND` and nothing is read or written.
 
 | Operation | HTTP | Request | Reply |
 | --- | --- | --- | --- |
@@ -793,7 +793,7 @@ The MCP server list is a file per project, `{project root}/.termul/mcp-servers.j
 
 - OAuth tokens stay keyed by server URL and are host-global (`acp/mcp_oauth.rs`): a token is the host's credential for that URL, not a project's. `status` and `disconnect` validate the project but read and delete the one URL-keyed token.
 - Tauri: `remote_sync_mcp_registry({projectId, registry})` writes that project's file (same refusal as above, no default-project or home-directory fallback). The desktop OAuth/probe commands (`acp_mcp_oauth_*`, `acp_probe_mcp_server`) authorize and write nothing, so they take the server URL / config only. `POST /mcp-servers/probe` is unchanged.
-- `--project-root` (and `$TERMUL_PROJECT_ROOT`) are removed options: still parsed for one minor release with a startup warning, they only seed one in-memory project while the registry has no usable project. No flag, no seed; the onboard wizard no longer asks for a root.
+- `--project-root` (and `$ITZTERM_PROJECT_ROOT`) are removed options: still parsed for one minor release with a startup warning, they only seed one in-memory project while the registry has no usable project. No flag, no seed; the onboard wizard no longer asks for a root.
 
 ### Host offline
 

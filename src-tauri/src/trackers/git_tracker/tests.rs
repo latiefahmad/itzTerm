@@ -12,7 +12,7 @@ fn resolve_executable_returns_unresolved_name_unchanged() {
     // A bare name that does not exist on PATH should come back unchanged so
     // the spawn still produces a meaningful "not found" error rather than
     // silently rewriting to something else.
-    let unlikely = "termul-nonexistent-agent-xyz";
+    let unlikely = "itzterm-nonexistent-agent-xyz";
     assert_eq!(resolve_executable(unlikely), unlikely);
 }
 
@@ -628,7 +628,7 @@ fn unique_temp_dir(tag: &str) -> std::path::PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    let dir = std::env::temp_dir().join(format!("termul-git-it-{tag}-{pid}-{n}-{nanos}"));
+    let dir = std::env::temp_dir().join(format!("itzterm-git-it-{tag}-{pid}-{n}-{nanos}"));
     std::fs::create_dir_all(&dir).expect("create temp dir");
     dir
 }

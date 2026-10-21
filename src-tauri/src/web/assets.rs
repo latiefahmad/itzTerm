@@ -4,7 +4,7 @@
 //!   `tower_http::services::ServeDir` from repo-root `dist-web/` (path resolved
 //!   from `CARGO_MANIFEST_DIR`, not process CWD) so Vite output changes are
 //!   served without a cargo rebuild.
-//! - **Release** (`dist-web/` NOT on disk, e.g. a shipped `termul-server` or
+//! - **Release** (`dist-web/` NOT on disk, e.g. a shipped `itzterm-server` or
 //!   desktop binary on a user/VPS machine): serve from the embedded
 //!   [`Assets`] (rust-embed) so the binary is self-contained (no CDN, no disk
 //!   dependency). SPA `index.html` fallback for the hash-router client.
@@ -166,7 +166,7 @@ pub async fn shell_no_cache_headers(request: Request, next: Next) -> Response {
 }
 
 /// Embedded web bundle (rust-embed). Compiled into BOTH the standalone
-/// `termul-server` binary and the desktop app — the desktop's in-process
+/// `itzterm-server` binary and the desktop app — the desktop's in-process
 /// shared-live server serves the SAME embedded bundle in a release install
 /// (no `dist-web/` on disk). `#[allow_missing]` keeps dev/CI-compile green
 /// when the bundle is absent; the release build fails clearly via `build.rs`
@@ -332,7 +332,7 @@ fn opaque_tags(list: &str) -> impl Iterator<Item = &str> {
 /// `scripts/canvas/fetch-figcraft-bundle.mjs` into `canvas/bundle/` before a
 /// release build and served under `/canvas/<id>/` by
 /// [`crate::canvas::static_server`]. Same mechanism as [`Assets`], so the
-/// desktop binary and `termul-server` carry one copy each with no Tauri
+/// desktop binary and `itzterm-server` carry one copy each with no Tauri
 /// resources. `#[allow_missing]` keeps dev/CI compiling without the fetch;
 /// requests then get the typed [`CODE_BUNDLE_MISSING`] response.
 #[derive(rust_embed::Embed)]
@@ -346,7 +346,7 @@ pub const CODE_BUNDLE_MISSING: &str = "BUNDLE_MISSING";
 /// Dev-only directory override for the bundle. Compiled out of release
 /// builds, which read the embedded set only (spine AD-22).
 #[cfg(debug_assertions)]
-pub const CANVAS_BUNDLE_DIR_ENV: &str = "TERMUL_FIGCRAFT_BUNDLE";
+pub const CANVAS_BUNDLE_DIR_ENV: &str = "ITZTERM_FIGCRAFT_BUNDLE";
 
 struct BundleFile {
     mime: &'static str,

@@ -28,7 +28,7 @@ async function drive(ctx: ScenarioContext): Promise<void> {
   const withAgentStream = flags['with-agent-stream'] === true
   // --- setup: seed a project (terminals need a live project context) -----
   const seed = await ctx.beginPhase('seed-project')
-  const projectDir = path.join(process.env.TEMP ?? 'C:\\temp', 'termul-perf-project')
+  const projectDir = path.join(process.env.TEMP ?? 'C:\\temp', 'itzterm-perf-project')
   mkdirSync(projectDir, { recursive: true })
   await seedPerfProject(ctx.handle, projectDir)
   await reloadRenderer(ctx.handle)

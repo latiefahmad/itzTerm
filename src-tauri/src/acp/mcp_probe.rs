@@ -544,7 +544,7 @@ async fn check_oauth_required(url: &str, headers: &[McpNameValuePair]) -> Option
         "params": {
             "protocolVersion": "2024-11-05",
             "capabilities": {},
-            "clientInfo": { "name": "termul-probe", "version": "0.1" }
+            "clientInfo": { "name": "itzterm-probe", "version": "0.1" }
         }
     });
     let mut request = client.post(url).json(&body);

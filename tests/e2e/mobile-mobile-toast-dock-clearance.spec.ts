@@ -181,7 +181,7 @@ async function bootWorkspace(
   const warmedUp = watchAgentWarmup(page)
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)
@@ -655,7 +655,7 @@ test('a chat hidden behind an editor tab releases the clearance and it returns w
 // ---------------------------------------------------------------------------
 
 /**
- * A Windows termul-server lists directory entries with the canonical verbatim
+ * A Windows itzterm-server lists directory entries with the canonical verbatim
  * prefix (`\\?\C:\...`) while the project root is the plain `C:\...`, so the
  * Files sheet cannot place an entry under its root there. A pre-existing
  * server path-format quirk outside this goal (a POSIX server never emits it):
@@ -686,7 +686,7 @@ test('with no dock on screen the property is absent and the toast sits 12px abov
   // Open the file from the Files sheet (header ⋯ → Files → the file row).
   await page.getByRole('button', { name: 'More', exact: true }).tap()
   await page
-    .getByRole('dialog', { name: 'Termul' })
+    .getByRole('dialog', { name: 'itzTerm' })
     .getByRole('button', { name: 'Files', exact: true })
     .tap()
   const files = page.getByRole('dialog', { name: project.name })

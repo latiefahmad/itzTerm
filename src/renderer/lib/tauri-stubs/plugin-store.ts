@@ -17,7 +17,7 @@
  * The class shape and method signatures are preserved so every existing
  * consumer unblocks without per-consumer edits.
  */
-const STORAGE_PREFIX = 'termul-store:'
+const STORAGE_PREFIX = 'itzterm-store:'
 
 /** Escape `:` in a namespace so a namespace containing `::` (e.g. `a::b`)
  * can't make `clear('a')` prefix-match into `a::b`'s keys. Keys are NOT

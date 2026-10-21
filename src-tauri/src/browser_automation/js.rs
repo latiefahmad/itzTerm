@@ -3,7 +3,7 @@
 //! `browser_agent_eval_result` (see `wrap_eval`).
 //!
 //! Ref model: `snapshot` registers interactive elements as `@eN` in
-//! `window.__termulBrowserRefs` with a structural `sel` fingerprint +
+//! `window.__itztermBrowserRefs` with a structural `sel` fingerprint +
 //! role/name. `resolve_ref` re-queries the fingerprint so a navigated/rebuilt
 //! DOM surfaces as `stale_ref` instead of clicking the wrong node. The
 //! Rust-side per-tab epoch is a counter that rides snapshot replies so an
@@ -14,7 +14,7 @@ use serde_json::Value;
 
 /// Wrap `expr` so its completion value posts back via the tab-scoped result
 /// command. The expression runs in the page main world. `__TAURI_INTERNALS__`
-/// is installed in every Termul child webview (same mechanism the URL poller
+/// is installed in every itzTerm child webview (same mechanism the URL poller
 /// uses), but in the 2026-10-03 field session this reply path failed for
 /// every observation call on mounted agent tabs — the failure is specific to
 /// the agent-tab context/timing and the root cause is unconfirmed (see
@@ -42,10 +42,10 @@ pub fn wrap_eval(tab_id: &str, nonce: &str, expr: &str) -> String {
 }
 
 /// Shared prelude installed on demand: ref registry + helpers. Idempotent —
-/// `__termulBrowser` is created once per document.
+/// `__itztermBrowser` is created once per document.
 const PRELUDE: &str = r#"
-if (!window.__termulBrowser) {
-  window.__termulBrowser = (function () {
+if (!window.__itztermBrowser) {
+  window.__itztermBrowser = (function () {
     var INTERACTIVE =
       'a[href],button,input,select,textarea,summary,' +
       '[role=button],[role=link],[role=textbox],[role=checkbox],[role=switch],[role=combobox],[role=listbox],[role=menuitem],[role=tab],[role=slider],[role=searchbox],' +
@@ -131,7 +131,7 @@ if (!window.__termulBrowser) {
 /// caller (truncate in Rust).
 pub const SNAPSHOT: &str = r#"(function(){
   PRELUDE
-  var B = window.__termulBrowser;
+  var B = window.__itztermBrowser;
   B.refs = {}; B.nextRef = 1;
   var lines = [];
   var MAX_LINES = 800;
@@ -188,7 +188,7 @@ pub fn resolve_ref(ref_id: &str, epoch: u64) -> String {
     format!(
         r#"(function(){{
   {PRELUDE}
-  var B=window.__termulBrowser;
+  var B=window.__itztermBrowser;
   var fp=B.refs[{r}];
   if(!fp) return {{error:'stale_ref: '+{r}+' not in this document'}};
   var el;
@@ -210,7 +210,7 @@ pub fn dom_click(ref_id: &str, epoch: u64) -> String {
     format!(
         r#"(function(){{
   {PRELUDE}
-  var B=window.__termulBrowser;
+  var B=window.__itztermBrowser;
   var fp=B.refs[{r}];
   if(!fp) return {{error:'stale_ref: '+{r}+' not in this document'}};
   var el; try{{el=document.querySelector(fp.sel);}}catch(e){{el=null;}}
@@ -234,7 +234,7 @@ pub fn fill_ref(ref_id: &str, value: &str, epoch: u64) -> String {
     format!(
         r#"(function(){{
   {PRELUDE}
-  var B=window.__termulBrowser;
+  var B=window.__itztermBrowser;
   var fp=B.refs[{r}];
   if(!fp) return {{error:'stale_ref: '+{r}+' not in this document'}};
   var el; try{{el=document.querySelector(fp.sel);}}catch(e){{el=null;}}
@@ -270,7 +270,7 @@ pub fn interaction(action: &str, args: &Value, epoch: u64) -> String {
             format!(
                 r#"(function(){{
   {PRELUDE}
-  var B=window.__termulBrowser;
+  var B=window.__itztermBrowser;
   var el=document.activeElement;
   if({ref_part}){{
     var fp=B.refs[{ref_part}];
@@ -298,7 +298,7 @@ pub fn interaction(action: &str, args: &Value, epoch: u64) -> String {
             format!(
                 r#"(function(){{
   {PRELUDE}
-  var B=window.__termulBrowser;
+  var B=window.__itztermBrowser;
   var el=document.activeElement&&document.activeElement!==document.body?document.activeElement:null;
   if({ref_part}){{
     var fp=B.refs[{ref_part}];
@@ -322,7 +322,7 @@ pub fn interaction(action: &str, args: &Value, epoch: u64) -> String {
             format!(
                 r#"(function(){{
   {PRELUDE}
-  var B=window.__termulBrowser;
+  var B=window.__itztermBrowser;
   if({ref_part}){{
     var fp=B.refs[{ref_part}];
     if(!fp) return {{error:'stale_ref'}};
@@ -339,7 +339,7 @@ pub fn interaction(action: &str, args: &Value, epoch: u64) -> String {
             format!(
                 r#"(function(){{
   {PRELUDE}
-  var B=window.__termulBrowser;
+  var B=window.__itztermBrowser;
   var fp=B.refs[{ref_part}];
   if(!fp) return {{error:'stale_ref'}};
   var el=document.querySelector(fp.sel);

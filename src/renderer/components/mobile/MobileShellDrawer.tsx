@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ConnectionStatusIndicator } from '@/components/ConnectionStatusIndicator'
 import { findVisibleQuestionFocusTarget } from '@/components/chat/use-approval-dock'
+import { ItzTermMark } from '@/components/ItzTermMark'
 import {
   Camera,
   ChevronDown,
@@ -9,15 +10,14 @@ import {
   FolderGit2,
   FolderTree,
   History,
+  type ItzTermIcon,
   MessageSquare,
   Plus,
   Search,
   Settings,
-  TerminalSquare,
-  type TermulIcon
+  TerminalSquare
 } from '@/components/icons'
 import { ProjectIcon } from '@/components/ProjectIcon'
-import { TermulMark } from '@/components/TermulMark'
 import { Button } from '@/components/ui/button'
 import { CountBadge } from '@/components/ui/count-badge'
 import { FOCUS_RING_CLASS } from '@/components/ui/panel-styles'
@@ -80,7 +80,7 @@ const resolveNavigationFocus = (): HTMLElement | null => {
 }
 
 /** The drawer's section nav rows, Claude-app style, at the top of the drawer. */
-const SECTION_NAV: ReadonlyArray<{ section: MobileSection; label: string; Icon: TermulIcon }> = [
+const SECTION_NAV: ReadonlyArray<{ section: MobileSection; label: string; Icon: ItzTermIcon }> = [
   { section: 'chats', label: 'Chats', Icon: MessageSquare },
   { section: 'terminals', label: 'Terminals', Icon: TerminalSquare },
   { section: 'editors', label: 'Editors', Icon: FileCode }
@@ -312,15 +312,15 @@ export function MobileShellDrawer({
           <div className="flex min-h-11 items-center gap-2 pr-10">
             {isTauriContext() ? (
               <>
-                <TermulMark size={20} className="ml-2 shrink-0" />
+                <ItzTermMark size={20} className="ml-2 shrink-0" />
                 <SheetTitle ref={titleRef} tabIndex={-1} className="text-base font-semibold">
-                  Termul
+                  itzTerm
                 </SheetTitle>
               </>
             ) : (
               <>
                 <SheetTitle ref={titleRef} tabIndex={-1} className="sr-only">
-                  Termul
+                  itzTerm
                 </SheetTitle>
                 <div className="min-w-0 flex-1">
                   <DrawerProjectRow

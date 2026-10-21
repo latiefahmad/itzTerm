@@ -1,6 +1,6 @@
 //! Refresh `Path` / `PATH` from OS sources before PTY spawn.
 //!
-//! Termul's GUI process keeps a snapshot of the environment from launch time.
+//! itzTerm's GUI process keeps a snapshot of the environment from launch time.
 //! Global installs and registry updates are invisible until we re-read PATH here.
 
 use std::collections::HashMap;
@@ -10,7 +10,7 @@ use std::sync::OnceLock;
 /// Marker the login-shell probe appends so `parse_login_path_output` can find
 /// the resolved PATH. Consumed by the Unix probe path (and its tests).
 #[cfg_attr(not(unix), allow(dead_code))]
-const PATH_PROBE_MARKER: &str = "__TERMUL_LOGIN_PATH__=";
+const PATH_PROBE_MARKER: &str = "__ITZTERM_LOGIN_PATH__=";
 
 /// Process-lifetime cache for the OS-probed PATH, so `fresh_path()` does not
 /// spawn a login shell (Unix) or read the registry (Windows) on every agent
@@ -165,7 +165,7 @@ fn probe_unix_login_path() -> Option<String> {
             .and_then(|s| s.to_str())
             .unwrap_or("?");
         tracing::warn!(
-            target: "termul::env_refresh",
+            target: "itzterm::env_refresh",
             shell_basename,
             "login PATH probe skipped: shell path is not a trusted absolute executable"
         );
@@ -184,12 +184,12 @@ fn probe_unix_login_path() -> Option<String> {
         "bash" | "zsh" => run_shell_path_probe(
             &shell,
             "-ilc",
-            "printf '\\n__TERMUL_LOGIN_PATH__=%s\\n' \"$PATH\"",
+            "printf '\\n__ITZTERM_LOGIN_PATH__=%s\\n' \"$PATH\"",
         )?,
         "fish" => run_shell_path_probe(
             &shell,
             "-ilc",
-            "printf '\\n__TERMUL_LOGIN_PATH__=%s\\n' (string join : $PATH)",
+            "printf '\\n__ITZTERM_LOGIN_PATH__=%s\\n' (string join : $PATH)",
         )?,
         // POSIX sh/dash/ash/ksh/busybox: source startup files with stdout
         // redirected so profile banners are not captured as PATH segments.
@@ -198,7 +198,7 @@ fn probe_unix_login_path() -> Option<String> {
         "sh" | "dash" | "ash" | "ksh" | "busybox" => {
             const POSIX_SCRIPT: &str = ". /etc/profile >/dev/null 2>/dev/null; \
                 . \"$HOME/.profile\" >/dev/null 2>/dev/null; \
-                printf '\\n__TERMUL_LOGIN_PATH__=%s\\n' \"$PATH\"";
+                printf '\\n__ITZTERM_LOGIN_PATH__=%s\\n' \"$PATH\"";
             let mut cmd = Command::new(&shell);
             // BusyBox selects applets by argv[1]; `busybox -l -c` is invalid.
             if shell_name == "busybox" {
@@ -216,7 +216,7 @@ fn probe_unix_login_path() -> Option<String> {
                 Ok(o) => o,
                 Err(e) => {
                     tracing::warn!(
-                        target: "termul::env_refresh",
+                        target: "itzterm::env_refresh",
                         shell_basename = shell_name,
                         error = %e,
                         "login PATH probe failed: could not spawn shell"
@@ -227,7 +227,7 @@ fn probe_unix_login_path() -> Option<String> {
         }
         other => {
             tracing::warn!(
-                target: "termul::env_refresh",
+                target: "itzterm::env_refresh",
                 shell_basename = other,
                 "login PATH probe skipped: unsupported shell for PATH probing"
             );
@@ -237,7 +237,7 @@ fn probe_unix_login_path() -> Option<String> {
 
     if !output.status.success() {
         tracing::warn!(
-            target: "termul::env_refresh",
+            target: "itzterm::env_refresh",
             shell_basename = shell_name,
             exit_code = ?output.status.code(),
             "login PATH probe failed: shell exited non-zero"
@@ -247,7 +247,7 @@ fn probe_unix_login_path() -> Option<String> {
 
     let Some(path) = parse_login_path_output(&output.stdout) else {
         tracing::warn!(
-            target: "termul::env_refresh",
+            target: "itzterm::env_refresh",
             shell_basename = shell_name,
             "login PATH probe failed: shell returned no PATH marker"
         );
@@ -401,7 +401,7 @@ fn run_shell_path_probe_with_env(
         Ok(o) => Some(o),
         Err(e) => {
             tracing::warn!(
-                target: "termul::env_refresh",
+                target: "itzterm::env_refresh",
                 shell_basename = shell_name,
                 error = %e,
                 "login PATH probe failed: could not spawn shell"

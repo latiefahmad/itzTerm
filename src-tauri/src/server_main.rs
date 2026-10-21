@@ -1,7 +1,7 @@
-//! Standalone headless `termul-server` binary (Story 1.2).
+//! Standalone headless `itzterm-server` binary (Story 1.2).
 //!
 //! Constructs an [`AcpManager`] with a [`WsRelaySink`] stub (no Tauri
-//! `AppHandle`) and serves the Axum skeleton from `termul_manager_lib::web`.
+//! `AppHandle`) and serves the Axum skeleton from `itzterm_manager_lib::web`.
 //! Live WS relay + static-embed serving are wired via the shared `web` module.
 //!
 //! Path is intentionally **outside** `src/bin/` so Tauri's bundler stage-2
@@ -11,26 +11,26 @@
 //!
 //! This is a CONSOLE server — do NOT add `windows_subsystem = "windows"`.
 
-use termul_manager_lib::data_lock::StandalonePaths;
+use itzterm_manager_lib::data_lock::StandalonePaths;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::Duration;
 
-use termul_manager_lib::server_update::{
+use itzterm_manager_lib::server_update::{
     check_and_apply_update, current_version, embedded_public_key, is_update_enabled,
     restart_binary, restore_previous, UpdateChannel, UpdateOptions, UpdateOutcome,
     SERVER_PLATFORM_KEY,
 };
-use termul_manager_lib::web::auth::{resolve as resolve_web_auth, WebAuthResolution};
-use termul_manager_lib::web::config::ParseCliError;
-use termul_manager_lib::web::{
+use itzterm_manager_lib::web::auth::{resolve as resolve_web_auth, WebAuthResolution};
+use itzterm_manager_lib::web::config::ParseCliError;
+use itzterm_manager_lib::web::{
     serve, PermissionRendezvous, ProjectRegistry, QuestionRendezvous, ServerConfig,
     WsRelaySink,
 };
-use termul_manager_lib::web::project_registry::RootCheck;
-use termul_manager_lib::web::store::{legacy_manifests_dir, StorePolicy, WebStore};
-use termul_manager_lib::{
+use itzterm_manager_lib::web::project_registry::RootCheck;
+use itzterm_manager_lib::web::store::{legacy_manifests_dir, StorePolicy, WebStore};
+use itzterm_manager_lib::{
     AcpCatalogService, AcpInstallService, AcpManager, CwdTracker, ExitCodeTracker,
     GitTracker, PtyManager, SessionPersistence, TerminalEventHub,
 };
@@ -40,7 +40,7 @@ use tracing_subscriber::EnvFilter;
 fn main() -> ExitCode {
     // Marks this process as the headless server. Windows agent spawns read it
     // to hide browser login (`NO_BROWSER=1`). Desktop builds never set it.
-    std::env::set_var("TERMUL_SERVER", "1");
+    std::env::set_var("ITZTERM_SERVER", "1");
     let raw_args: Vec<String> = std::env::args().skip(1).collect();
 
     // `--check-update`: operator-explicit one-shot self-update. Handled before
@@ -62,7 +62,7 @@ fn main() -> ExitCode {
         .is_some_and(|arg| arg == "onboard" || arg == "--onboard")
     {
         init_tracing();
-        return termul_manager_lib::onboard::run();
+        return itzterm_manager_lib::onboard::run();
     }
     // `--internal-mcp-plan-server`: self-spawned child of the host-injected
     // `plan` MCP tool. The agent spawns `current_exe()` with this flag
@@ -71,8 +71,8 @@ fn main() -> ExitCode {
     // tokio/app setup (AC2) so the standalone binary never inits the server
     // stack for the child path. See `acp::host_mcp::child` + spec
     // `spec-acp-host-todo-plan-tool.md`.
-    if termul_manager_lib::host_mcp::is_child_invocation() {
-        return ExitCode::from(termul_manager_lib::host_mcp::child::run() as u8);
+    if itzterm_manager_lib::host_mcp::is_child_invocation() {
+        return ExitCode::from(itzterm_manager_lib::host_mcp::child::run() as u8);
     }
 
     // Local-only Claude setup commands. They run before the server binds a
@@ -81,7 +81,7 @@ fn main() -> ExitCode {
     // `acp`), mirroring the `onboard` module wiring.
     if raw_args.first().is_some_and(|arg| arg == "claude") {
         init_tracing();
-        return termul_manager_lib::claude_admin::run(&raw_args[1..]);
+        return itzterm_manager_lib::claude_admin::run(&raw_args[1..]);
     }
 
     // Parse CLI BEFORE any tokio / app setup (AC2).
@@ -109,15 +109,15 @@ fn main() -> ExitCode {
     // AD-14: one host per durable path. Lock the state dir and every store
     // path (sessions, projects, workspace manifests, acp catalog, store file)
     // BEFORE anything opens or writes them — including the web-auth token
-    // file below. A held lock means another Termul host (desktop app or
-    // termul-server) owns the path: refuse to start, never share it. The
+    // file below. A held lock means another itzTerm host (desktop app or
+    // itzterm-server) owns the path: refuse to start, never share it. The
     // locks live until `main` returns.
     let data_paths = StandalonePaths::resolve(&cfg);
     let _data_locks = match data_paths.lock() {
         Ok(locks) => locks,
         Err(error) => {
-            error!("termul-server: refusing to start: {error}");
-            eprintln!("termul-server: {error}");
+            error!("itzterm-server: refusing to start: {error}");
+            eprintln!("itzterm-server: {error}");
             return ExitCode::from(1);
         }
     };
@@ -137,8 +137,8 @@ fn main() -> ExitCode {
         Err(error) => {
             // Durable tracing event (stderr is lost for detached services);
             // the message carries resolution context only — never the token.
-            error!("termul-server: web auth resolution failed, refusing to start: {error}");
-            eprintln!("termul-server: {error}");
+            error!("itzterm-server: web auth resolution failed, refusing to start: {error}");
+            eprintln!("itzterm-server: {error}");
             return ExitCode::from(1);
         }
     };
@@ -147,33 +147,33 @@ fn main() -> ExitCode {
     // actually crosses a network. Loaded/Generated origins imply a public
     // bind (loopback never reads/generates the token file); a Configured
     // token can also gate a LOOPBACK bind, where the warning would be wrong.
-    let public_bind = cfg.bind_mode() == Some(termul_manager_lib::web::config::BindMode::All);
+    let public_bind = cfg.bind_mode() == Some(itzterm_manager_lib::web::config::BindMode::All);
     let web_auth = match web_auth {
         WebAuthResolution::Ungated => None,
         WebAuthResolution::Gated { auth, origin } => {
             match &origin {
-                termul_manager_lib::web::auth::WebAuthOrigin::Configured => {
-                    info!("termul-server: web auth enabled (operator-configured token)");
+                itzterm_manager_lib::web::auth::WebAuthOrigin::Configured => {
+                    info!("itzterm-server: web auth enabled (operator-configured token)");
                     if public_bind {
                         warn_plaintext_transport();
                     }
                 }
-                termul_manager_lib::web::auth::WebAuthOrigin::Loaded(path) => {
+                itzterm_manager_lib::web::auth::WebAuthOrigin::Loaded(path) => {
                     // No secret in the log — only the source path.
                     info!(
-                        "termul-server: web auth enabled (token loaded from {})",
+                        "itzterm-server: web auth enabled (token loaded from {})",
                         path.display()
                     );
                     // Loaded implies a public bind — the warning always applies.
                     warn_plaintext_transport();
                 }
-                termul_manager_lib::web::auth::WebAuthOrigin::Generated(path) => {
+                itzterm_manager_lib::web::auth::WebAuthOrigin::Generated(path) => {
                     // The token is NEVER printed: stdout of a detached
                     // service lands in durable logs (journald / nohup files),
                     // and secrets must not. It lives only in the
                     // owner-protected file; later boots load it silently.
                     println!(
-                        "termul-server: generated a web auth token (first boot on a public bind).\n\
+                        "itzterm-server: generated a web auth token (first boot on a public bind).\n\
                          The token is never printed or logged — read it from the\n\
                          owner-protected file (mode 0600 on Unix): {}\n\
                          Then open http://<host>:{}/#token=<token> — the token travels in\n\
@@ -186,7 +186,7 @@ fn main() -> ExitCode {
                         cfg.port,
                     );
                     info!(
-                        "termul-server: web auth enabled (token generated, persisted to {})",
+                        "itzterm-server: web auth enabled (token generated, persisted to {})",
                         path.display()
                     );
                     warn_plaintext_transport();
@@ -199,7 +199,7 @@ fn main() -> ExitCode {
     // Operator opt-in boundary log (AGENTS.md durable-log policy). When the
     // standalone server enables `--allow-remote-writes`, any non-loopback peer
     // gains write access to a broad set of mutation routes — surface it
-    // loudly at boot so it shows up in machine logs (e.g. /tmp/termul-server.log).
+    // loudly at boot so it shows up in machine logs (e.g. /tmp/itzterm-server.log).
     if cfg.allow_remote_writes {
         let host = &cfg.host;
         let auth_tail = if gate_active {
@@ -208,7 +208,7 @@ fn main() -> ExitCode {
             "No web auth is enforced yet (Epic 2)."
         };
         tracing::warn!(
-            "termul-server: remote writes ENABLED (--allow-remote-writes); non-loopback peers \
+            "itzterm-server: remote writes ENABLED (--allow-remote-writes); non-loopback peers \
              on {} gain: fs mkdir/write/delete/rename/copy CONFINED to the registered project roots; \
              git + worktree operations confined to the registered project roots; AND host-state mutation via \
              /projects/default, /acp/install, /log/frontend-error. Loopback callers \
@@ -216,9 +216,9 @@ fn main() -> ExitCode {
             host,
             auth_tail = auth_tail,
         );
-        if cfg.bind_mode() == Some(termul_manager_lib::web::config::BindMode::Localhost) {
+        if cfg.bind_mode() == Some(itzterm_manager_lib::web::config::BindMode::Localhost) {
             tracing::warn!(
-                "termul-server: --allow-remote-writes is a no-op when bound to 127.0.0.1 \
+                "itzterm-server: --allow-remote-writes is a no-op when bound to 127.0.0.1 \
                  (no non-loopback peer can ever reach the server)"
             );
         }
@@ -226,7 +226,7 @@ fn main() -> ExitCode {
 
     if !cfg.allowed_origins.is_empty() {
         info!(
-            "termul-server: extra request origins allowed ({})",
+            "itzterm-server: extra request origins allowed ({})",
             cfg.allowed_origins
         );
     }
@@ -247,8 +247,8 @@ fn main() -> ExitCode {
         let sessions_dir = match cfg.sessions_dir.clone() {
             Some(path) => path,
             None => {
-                error!("termul-server: sessions directory is not configured");
-                eprintln!("termul-server: sessions directory is not configured");
+                error!("itzterm-server: sessions directory is not configured");
+                eprintln!("itzterm-server: sessions directory is not configured");
                 return ExitCode::from(1);
             }
         };
@@ -256,7 +256,7 @@ fn main() -> ExitCode {
         // projects must follow `--state-dir` when that flag is the only
         // location override. Paths only — never tokens or credentials.
         info!(
-            "termul-server: resolved sessions '{}' projects '{}' state '{}'",
+            "itzterm-server: resolved sessions '{}' projects '{}' state '{}'",
             sessions_dir.display(),
             cfg.projects_file
                 .as_ref()
@@ -273,16 +273,16 @@ fn main() -> ExitCode {
             // adopts the store (renamed afterwards).
             Ok(store) => Arc::new(store.with_legacy_manifests(legacy_manifests_dir(&data_paths.state_dir))),
             Err(error) => {
-                error!("termul-server: refusing to start: {error}");
-                eprintln!("termul-server: {error}");
+                error!("itzterm-server: refusing to start: {error}");
+                eprintln!("itzterm-server: {error}");
                 return ExitCode::from(1);
             }
         };
         let persistence = match SessionPersistence::open(sessions_dir).await {
             Ok(persistence) => persistence,
             Err(error) => {
-                error!("termul-server: failed to open sessions store: {error}");
-                eprintln!("termul-server: failed to open sessions store: {error}");
+                error!("itzterm-server: failed to open sessions store: {error}");
+                eprintln!("itzterm-server: failed to open sessions store: {error}");
                 return ExitCode::from(1);
             }
         };
@@ -293,7 +293,7 @@ fn main() -> ExitCode {
         let acp_catalog = match AcpCatalogService::open(acp_catalog_dir).await {
             Ok(service) => Some(service),
             Err(error) => {
-                eprintln!("termul-server: failed to open acp-catalog store: {error}");
+                eprintln!("itzterm-server: failed to open acp-catalog store: {error}");
                 return ExitCode::from(1);
             }
         };
@@ -305,7 +305,7 @@ fn main() -> ExitCode {
         let acp_install_dir = cfg
             .service_account_state_dir()
             .join("acp-registry-binaries");
-        let claude_agent = Arc::new(termul_manager_lib::ClaudeAgentService::system(
+        let claude_agent = Arc::new(itzterm_manager_lib::ClaudeAgentService::system(
             acp_install_dir.clone(),
         ));
         let acp_install = match AcpInstallService::open(
@@ -316,13 +316,13 @@ fn main() -> ExitCode {
         {
             Ok(service) => Some(service),
             Err(error) => {
-                eprintln!("termul-server: failed to open acp-install store: {error}");
+                eprintln!("itzterm-server: failed to open acp-install store: {error}");
                 return ExitCode::from(1);
             }
         };
         let ws_relay = Arc::new(
             WsRelaySink::with_persistence(cfg.event_log_capacity, Arc::clone(&persistence))
-                .with_ledger(termul_manager_lib::web::command_ledger::CommandLedger::new(
+                .with_ledger(itzterm_manager_lib::web::command_ledger::CommandLedger::new(
                     Duration::from_secs(cfg.receipt_retention_secs),
                 )),
         );
@@ -341,7 +341,7 @@ fn main() -> ExitCode {
         ws_relay.set_question_rendezvous(question_rendezvous);
         // The host's ONE project registry, durable at the resolved projects
         // file. `cfg.projects_file` is resolved by `ServerConfig::from_args`
-        // from --projects-file / $TERMUL_PROJECTS_FILE / the state-dir default
+        // from --projects-file / $ITZTERM_PROJECTS_FILE / the state-dir default
         // (<state dir>/projects.json), so `None` only survives when no
         // platform state dir is discoverable. A missing file is not fatal
         // (opens empty, so `/projects` returns empty and the first project
@@ -361,7 +361,7 @@ fn main() -> ExitCode {
                 }
                 Err(e) => {
                     eprintln!(
-                        "termul-server: failed to load projects file '{}': {e}",
+                        "itzterm-server: failed to load projects file '{}': {e}",
                         projects_file.display()
                     );
                     return ExitCode::from(1);
@@ -369,12 +369,12 @@ fn main() -> ExitCode {
             }
         } else {
             // No projects file resolved: no explicit --projects-file /
-            // $TERMUL_PROJECTS_FILE AND no platform state dir discoverable.
+            // $ITZTERM_PROJECTS_FILE AND no platform state dir discoverable.
             // The registry stays memory-only — warn loudly instead of
             // silently losing every project on restart.
             warn!(
-                "termul-server: no projects file resolved (no --projects-file / \
-                 $TERMUL_PROJECTS_FILE and no platform state dir); the project \
+                "itzterm-server: no projects file resolved (no --projects-file / \
+                 $ITZTERM_PROJECTS_FILE and no platform state dir); the project \
                  registry is in-memory only and projects will NOT persist \
                  across restarts"
             );
@@ -400,9 +400,9 @@ fn main() -> ExitCode {
 
         // The `/canvas/<id>/` figcraft bundle route rides the same web router,
         // same-origin; there is no separate listener to start here.
-        termul_manager_lib::canvas::static_server::log_bundle_status();
+        itzterm_manager_lib::canvas::static_server::log_bundle_status();
         // Opt-in self-update loop (default off): only runs when the operator set
-        // TERMUL_SERVER_UPDATE_ENABLED=true + TERMUL_SERVER_UPDATE_CHANNEL. A bad
+        // ITZTERM_SERVER_UPDATE_ENABLED=true + ITZTERM_SERVER_UPDATE_CHANNEL. A bad
         // signature keeps the current binary running (verify-before-swap), so an
         // unattended server is never bricked by a failed update attempt.
         spawn_periodic_update_loop();
@@ -425,7 +425,7 @@ fn main() -> ExitCode {
         {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {
-                eprintln!("termul-server failed: {e}");
+                eprintln!("itzterm-server failed: {e}");
                 ExitCode::from(1)
             }
         }
@@ -439,7 +439,7 @@ fn main() -> ExitCode {
 /// safe for journald/nohup logs.
 fn warn_plaintext_transport() {
     warn!(
-        "termul-server: PLAINTEXT transport — HTTP/WebSocket bearer traffic, including the \
+        "itzterm-server: PLAINTEXT transport — HTTP/WebSocket bearer traffic, including the \
          web auth token, is readable by network observers on this public bind. For \
          non-loopback exposure, place the server behind an HTTPS reverse proxy that \
          terminates TLS."
@@ -459,25 +459,25 @@ fn init_tracing() {
 
 /// Resolve the server's own binary path for the self-update swap/reexec.
 fn current_binary_path() -> PathBuf {
-    std::env::current_exe().unwrap_or_else(|_| PathBuf::from("termul-server"))
+    std::env::current_exe().unwrap_or_else(|_| PathBuf::from("itzterm-server"))
 }
 
 /// Build the self-update options from env + the embedded pubkey. `Err` when
 /// self-update is unavailable (no pubkey baked in) — the caller logs + skips.
 ///
-/// `default_channel`: when `TERMUL_SERVER_UPDATE_CHANNEL` is unset/invalid,
+/// `default_channel`: when `ITZTERM_SERVER_UPDATE_CHANNEL` is unset/invalid,
 /// `Some(c)` falls back to `c` (used by the operator-explicit `--check-update`
 /// one-shot, which defaults to Stable), while `None` surfaces an error (used by
 /// the periodic loop, which requires the env to opt in).
 fn build_update_options(default_channel: Option<UpdateChannel>) -> Result<UpdateOptions, String> {
     let channel =
-        UpdateChannel::parse(&std::env::var("TERMUL_SERVER_UPDATE_CHANNEL").unwrap_or_default())
+        UpdateChannel::parse(&std::env::var("ITZTERM_SERVER_UPDATE_CHANNEL").unwrap_or_default())
             .or(default_channel);
     let channel = match channel {
         Some(c) => c,
         None => {
             return Err(
-                "TERMUL_SERVER_UPDATE_CHANNEL is unset or not stable/insider/nightly".to_owned(),
+                "ITZTERM_SERVER_UPDATE_CHANNEL is unset or not stable/insider/nightly".to_owned(),
             )
         }
     };
@@ -503,7 +503,7 @@ fn build_update_options(default_channel: Option<UpdateChannel>) -> Result<Update
 /// without this explicit trigger or the env gate.
 fn run_one_shot_update_check() -> ExitCode {
     info!(
-        target: "termul::server_update",
+        target: "itzterm::server_update",
         "one-shot server self-update requested (--check-update)"
     );
     // Operator-explicit one-shot: default to Stable when the channel env is
@@ -511,7 +511,7 @@ fn run_one_shot_update_check() -> ExitCode {
     let opts = match build_update_options(Some(UpdateChannel::Stable)) {
         Ok(o) => o,
         Err(reason) => {
-            error!(target: "termul::server_update", "self-update unavailable: {reason}");
+            error!(target: "itzterm::server_update", "self-update unavailable: {reason}");
             return ExitCode::from(1);
         }
     };
@@ -520,7 +520,7 @@ fn run_one_shot_update_check() -> ExitCode {
         Ok(rt) => rt,
         Err(e) => {
             error!(
-                target: "termul::server_update",
+                target: "itzterm::server_update",
                 "failed to start tokio runtime for update check: {e}"
             );
             return ExitCode::from(1);
@@ -530,7 +530,7 @@ fn run_one_shot_update_check() -> ExitCode {
     match runtime.block_on(check_and_apply_update(&opts)) {
         Ok(UpdateOutcome::NoUpdate) => {
             info!(
-                target: "termul::server_update",
+                target: "itzterm::server_update",
                 "no newer server binary on channel {:?} (current {})",
                 opts.channel,
                 opts.current_version
@@ -546,7 +546,7 @@ fn run_one_shot_update_check() -> ExitCode {
             // the server to run the new version; the `.old` binary is retained
             // for manual rollback.
             info!(
-                target: "termul::server_update",
+                target: "itzterm::server_update",
                 "verified + swapped to {new_version}; previous binary retained at {}. \
                  Restart the server to run the new version (no auto-reexec from --check-update)",
                 old_path.display()
@@ -555,7 +555,7 @@ fn run_one_shot_update_check() -> ExitCode {
         }
         Err(e) => {
             error!(
-                target: "termul::server_update",
+                target: "itzterm::server_update",
                 "update check failed (keeping current binary): {e}"
             );
             ExitCode::from(1)
@@ -569,9 +569,9 @@ fn run_one_shot_update_check() -> ExitCode {
 fn spawn_periodic_update_loop() {
     if !is_update_enabled() {
         info!(
-            target: "termul::server_update",
-            "self-update disabled (set TERMUL_SERVER_UPDATE_ENABLED=true + \
-             TERMUL_SERVER_UPDATE_CHANNEL to opt in)"
+            target: "itzterm::server_update",
+            "self-update disabled (set ITZTERM_SERVER_UPDATE_ENABLED=true + \
+             ITZTERM_SERVER_UPDATE_CHANNEL to opt in)"
         );
         return;
     }
@@ -582,8 +582,8 @@ fn spawn_periodic_update_loop() {
         Ok(o) => o,
         Err(reason) => {
             warn!(
-                target: "termul::server_update",
-                "TERMUL_SERVER_UPDATE_ENABLED=true but self-update unavailable: {reason} \
+                target: "itzterm::server_update",
+                "ITZTERM_SERVER_UPDATE_ENABLED=true but self-update unavailable: {reason} \
                  (periodic loop disabled)"
             );
             return;
@@ -592,7 +592,7 @@ fn spawn_periodic_update_loop() {
 
     // Default 6h, mirroring the desktop's periodic cadence. Overridable so an
     // operator can tune the polling frequency for their deployment.
-    let interval_secs = std::env::var("TERMUL_SERVER_UPDATE_INTERVAL_SECS")
+    let interval_secs = std::env::var("ITZTERM_SERVER_UPDATE_INTERVAL_SECS")
         .ok()
         .and_then(|value| value.parse::<u64>().ok())
         .filter(|value| *value > 0)
@@ -600,7 +600,7 @@ fn spawn_periodic_update_loop() {
 
     let channel = opts.channel;
     info!(
-        target: "termul::server_update",
+        target: "itzterm::server_update",
         "periodic self-update enabled on channel {:?} (every {}s)", channel, interval_secs
     );
 
@@ -611,7 +611,7 @@ fn spawn_periodic_update_loop() {
             match check_and_apply_update(&opts).await {
                 Ok(UpdateOutcome::NoUpdate) => {
                     tracing::debug!(
-                        target: "termul::server_update",
+                        target: "itzterm::server_update",
                         "no newer server binary on channel {:?}", opts.channel
                     );
                 }
@@ -620,21 +620,21 @@ fn spawn_periodic_update_loop() {
                     old_path,
                 }) => {
                     info!(
-                        target: "termul::server_update",
+                        target: "itzterm::server_update",
                         "verified + swapped to {new_version}; restarting into the new binary"
                     );
                     // Re-exec the canonical install path (NOT current_exe(),
                     // which would resolve to the `.old` inode after the swap).
                     if let Err(e) = restart_binary(&opts.binary_path) {
                         error!(
-                            target: "termul::server_update",
+                            target: "itzterm::server_update",
                             "reexec failed: {e}; rolling back to the previous binary"
                         );
                         // Roll the swap back so the deployment keeps running the
                         // known-good binary instead of a new binary that can't re-exec.
                         if let Err(restore_err) = restore_previous(&opts.binary_path, &old_path) {
                             error!(
-                                target: "termul::server_update",
+                                target: "itzterm::server_update",
                                 "rollback also failed: {restore_err}; the new binary is at {} \
                                  and the previous at {} — recover manually",
                                 opts.binary_path.display(),
@@ -647,7 +647,7 @@ fn spawn_periodic_update_loop() {
                 }
                 Err(e) => {
                     warn!(
-                        target: "termul::server_update",
+                        target: "itzterm::server_update",
                         "periodic update check failed (keeping current binary): {e}"
                     );
                 }
@@ -657,12 +657,12 @@ fn spawn_periodic_update_loop() {
 }
 
 fn usage() -> &'static str {
-    r#"termul-server — standalone headless ACP web server
+    r#"itzterm-server — standalone headless ACP web server
 
 USAGE:
-    termul-server [OPTIONS]
-    termul-server onboard          Guided setup + background launch
-    termul-server --check-update   One-shot self-update
+    itzterm-server [OPTIONS]
+    itzterm-server onboard          Guided setup + background launch
+    itzterm-server --check-update   One-shot self-update
 
 OPTIONS:
   Network:
@@ -675,7 +675,7 @@ OPTIONS:
 
   Sessions & state:
     --sessions-dir <PATH>         Durable sessions root.
-                                  [default: $TERMUL_SESSIONS_DIR, else
+                                  [default: $ITZTERM_SESSIONS_DIR, else
                                   <--state-dir>/sessions when --state-dir
                                   is set, else the platform state dir]
     --project-root <PATH>         REMOVED (still parsed, with a startup
@@ -688,7 +688,7 @@ OPTIONS:
                                   as an empty registry (not fatal); a corrupt
                                   file is fatal. With no state dir
                                   discoverable, the registry is in-memory only.
-                                  [default: $TERMUL_PROJECTS_FILE, else
+                                  [default: $ITZTERM_PROJECTS_FILE, else
                                   <--state-dir>/projects.json when
                                   --state-dir is set, else the platform
                                   state dir]
@@ -697,7 +697,7 @@ OPTIONS:
     --store-file <PATH>           Server-side key-value store for the web client
                                   (terminal layout, settings, editor state,
                                   command history, SSH profiles, ...).
-                                  [default: $TERMUL_STORE_FILE or
+                                  [default: $ITZTERM_STORE_FILE or
                                   <state dir>/store.json]
     --state-dir <PATH>            Service-account state dir override. Wins over
                                   $XDG_STATE_HOME/$HOME (%LOCALAPPDATA% on
@@ -705,7 +705,7 @@ OPTIONS:
                                   --sessions-dir / --projects-file are omitted,
                                   for sessions and projects.json too. Explicit
                                   --sessions-dir, --projects-file,
-                                  $TERMUL_SESSIONS_DIR, and $TERMUL_PROJECTS_FILE
+                                  $ITZTERM_SESSIONS_DIR, and $ITZTERM_PROJECTS_FILE
                                   still win. The onboard wizard passes this so
                                   the background-launched server uses the exact
                                   state dir it printed (web auth token, store,
@@ -719,14 +719,14 @@ OPTIONS:
     --agent-idle-window-secs <SECS>
                                   Idle window after which an idle agent is
                                   reaped. Positive integer.
-                                  [env: TERMUL_AGENT_IDLE_REAP_SECS]
+                                  [env: ITZTERM_AGENT_IDLE_REAP_SECS]
                                   [default: 1800]
     --max-terminals-per-project <N>
                                   Most live terminals one project may have.
                                   The host refuses a spawn past it with
                                   TERMINAL_LIMIT; the host-wide cap is 30.
                                   Positive integer.
-                                  [env: TERMUL_MAX_TERMINALS_PER_PROJECT]
+                                  [env: ITZTERM_MAX_TERMINALS_PER_PROJECT]
                                   [default: 10]
     --overflow-tolerance <N>      Reliable-queue overflow tolerance per client.
                                   Positive integer. Reserved: the host
@@ -745,13 +745,13 @@ OPTIONS:
                                   a device that has not connected (and is not
                                   connected now) is garbage collected.
                                   Positive integer.
-                                  [env: TERMUL_PARTITION_GC_AGE_SECS]
+                                  [env: ITZTERM_PARTITION_GC_AGE_SECS]
                                   [default: 7776000]
     --partition-byte-budget <BYTES>
                                   Per-device web store partition byte budget;
                                   a write past it is refused
                                   (STORE_PARTITION_FULL). Positive integer.
-                                  [env: TERMUL_PARTITION_BYTE_BUDGET]
+                                  [env: ITZTERM_PARTITION_BYTE_BUDGET]
                                   [default: 16777216]
     --permission-timeout <SECS>, --permission-reconnect-grace <SECS>,
     --workspace-manifests-dir <PATH>
@@ -771,7 +771,7 @@ OPTIONS:
                                   127.0.0.1. The web auth token gate still
                                   applies (see --web-auth-token). Only enable
                                   on a trusted network.
-                                  [env: TERMUL_SERVER_ALLOW_REMOTE_WRITES=true|1]
+                                  [env: ITZTERM_SERVER_ALLOW_REMOTE_WRITES=true|1]
     --web-auth-token <TOKEN>    Require this bearer token on the /ws
                                   authenticate handshake, /terminal/ws, and
                                   every HTTP API route (/health, both WS
@@ -787,20 +787,20 @@ OPTIONS:
                                   Loopback binds stay ungated unless a token
                                   is configured. NOTE: a flag value is visible
                                   to local users via the process list — prefer
-                                  TERMUL_WEB_AUTH_TOKEN or the token file.
-                                  [env: TERMUL_WEB_AUTH_TOKEN]
+                                  ITZTERM_WEB_AUTH_TOKEN or the token file.
+                                  [env: ITZTERM_WEB_AUTH_TOKEN]
     --allowed-origins <ORIGINS>   Extra http(s) origins for a reverse proxy
                                   whose public origin does not match Host.
                                   Comma-separated. Repeatable. Replaces
-                                  TERMUL_ALLOWED_ORIGINS when both are set.
-                                  [env: TERMUL_ALLOWED_ORIGINS]
+                                  ITZTERM_ALLOWED_ORIGINS when both are set.
+                                  [env: ITZTERM_ALLOWED_ORIGINS]
     --check-update                Run one opt-in self-update now: fetch the channel
                                   manifest, verify the downloaded binary signature,
                                   and atomically swap. Does NOT auto-reexec —
                                   restart the server to run the new version (the
                                   .old binary is retained for rollback). Defaults
                                   to the stable channel when
-                                  TERMUL_SERVER_UPDATE_CHANNEL is unset; the env
+                                  ITZTERM_SERVER_UPDATE_CHANNEL is unset; the env
                                   wins when set. A locally-built binary without a
                                   baked-in pubkey reports self-update unavailable.
 
@@ -815,41 +815,41 @@ OPTIONS:
     -h, --help                    Show this help
 
 ENVIRONMENT:
-    <state dir>                   Unix: $XDG_STATE_HOME/termul or
-                                  $HOME/.local/state/termul
-                                  Windows: %LOCALAPPDATA%\Termul
-                                  Fallback: <tmp>/termul
+    <state dir>                   Unix: $XDG_STATE_HOME/itzterm or
+                                  $HOME/.local/state/itzterm
+                                  Windows: %LOCALAPPDATA%\itzTerm
+                                  Fallback: <tmp>/itzterm
     RUST_LOG                      tracing filter (floor: info). Try
-                                  RUST_LOG=termul_manager_lib=debug
-    TERMUL_PROJECT_ROOT           Removed fallback for --project-root (seed only)
-    TERMUL_PROJECTS_FILE          Fallback for --projects-file
-    TERMUL_SESSIONS_DIR           Fallback for --sessions-dir
-    TERMUL_STORE_FILE             Fallback for --store-file
-    TERMUL_SERVER_ALLOW_REMOTE_WRITES  true|1 enables --allow-remote-writes
-    TERMUL_WEB_AUTH_TOKEN         Fallback for --web-auth-token
-    TERMUL_ALLOWED_ORIGINS        Fallback for --allowed-origins (comma-separated)
-    TERMUL_SERVER_UPDATE_ENABLED  true gates the periodic self-update loop
-    TERMUL_SERVER_UPDATE_CHANNEL  stable|insider|nightly (required for periodic loop)
-    TERMUL_SERVER_UPDATE_INTERVAL_SECS  periodic loop interval [default: 21600]
+                                  RUST_LOG=itzterm_manager_lib=debug
+    ITZTERM_PROJECT_ROOT           Removed fallback for --project-root (seed only)
+    ITZTERM_PROJECTS_FILE          Fallback for --projects-file
+    ITZTERM_SESSIONS_DIR           Fallback for --sessions-dir
+    ITZTERM_STORE_FILE             Fallback for --store-file
+    ITZTERM_SERVER_ALLOW_REMOTE_WRITES  true|1 enables --allow-remote-writes
+    ITZTERM_WEB_AUTH_TOKEN         Fallback for --web-auth-token
+    ITZTERM_ALLOWED_ORIGINS        Fallback for --allowed-origins (comma-separated)
+    ITZTERM_SERVER_UPDATE_ENABLED  true gates the periodic self-update loop
+    ITZTERM_SERVER_UPDATE_CHANNEL  stable|insider|nightly (required for periodic loop)
+    ITZTERM_SERVER_UPDATE_INTERVAL_SECS  periodic loop interval [default: 21600]
 
 EXAMPLES:
     # Local: serve the embedded web client on loopback
-    termul-server
+    itzterm-server
 
     # LAN: expose to phone browsers on the trusted network
-    termul-server --host 0.0.0.0 --port 8080
+    itzterm-server --host 0.0.0.0 --port 8080
 
     # LAN with remote writes (trusted network only)
-    termul-server --host 0.0.0.0 --allow-remote-writes
+    itzterm-server --host 0.0.0.0 --allow-remote-writes
 
     # Background with debug logging
-    RUST_LOG=termul_manager_lib=debug termul-server --host 0.0.0.0 \
-        > /tmp/termul-server.log 2>&1 &
+    RUST_LOG=itzterm_manager_lib=debug itzterm-server --host 0.0.0.0 \
+        > /tmp/itzterm-server.log 2>&1 &
 
     # Guided setup (auto-detects systemd or setsid, survives SSH logout)
-    termul-server onboard
+    itzterm-server onboard
 
     # One-shot self-update check
-    termul-server --check-update
+    itzterm-server --check-update
 "#
 }

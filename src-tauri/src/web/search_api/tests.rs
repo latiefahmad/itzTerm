@@ -214,7 +214,7 @@ async fn cancel_is_refused_for_a_view_only_peer() {
 #[tokio::test]
 async fn file_names_search_returns_root_relative_hits() {
     let root = std::env::temp_dir().join(format!(
-        "termul-search-fnames-{}-{}",
+        "itzterm-search-fnames-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ));
@@ -262,7 +262,7 @@ async fn file_names_search_returns_root_relative_hits() {
 #[tokio::test]
 async fn file_names_search_include_ignored_tags_and_ranks() {
     let root = std::env::temp_dir().join(format!(
-        "termul-search-fnames-ign-{}-{}",
+        "itzterm-search-fnames-ign-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ));
@@ -350,7 +350,7 @@ async fn file_names_search_outside_project_root_rejected() {
 /// folder-name tests (gh-896).
 fn folder_fixture(tag: &str) -> (std::path::PathBuf, AppState) {
     let root = std::env::temp_dir().join(format!(
-        "termul-search-dirs-{tag}-{}-{}",
+        "itzterm-search-dirs-{tag}-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ));

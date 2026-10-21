@@ -1061,7 +1061,7 @@ describe('WsAcpTransport', () => {
     const sentBefore = sock.sent.length
 
     // The standalone server has no settings surface and configures these via
-    // the TERMUL_ACP_* env vars — the setters must resolve without sending
+    // the ITZTERM_ACP_* env vars — the setters must resolve without sending
     // anything over the wire (and without throwing).
     await transport.setTurnTimeout(7200)
     await transport.setTurnIdleTimeout(1800)
@@ -4248,7 +4248,7 @@ describe('WsAcpTransport web auth token presentation (CAP-1)', () => {
   })
 
   it('presents the resolved web auth token on the relay authenticate frame', async () => {
-    window.localStorage.setItem('termul.webAuthToken', 's3cret-token')
+    window.localStorage.setItem('itzterm.webAuthToken', 's3cret-token')
     const transport = new WsAcpTransport({
       url: 'ws://test/ws',
       WebSocketImpl: FakeWebSocket as unknown as typeof WebSocket
@@ -4297,8 +4297,8 @@ describe('WsAcpTransport web auth token presentation (CAP-1)', () => {
     expect(authReq?.payload).toEqual({
       token: 'dev',
       protocolVersion: WS_PROTOCOL_VERSION,
-      deviceId: window.localStorage.getItem('termul.deviceId'),
-      clientInstanceId: window.sessionStorage.getItem('termul.clientInstanceId')
+      deviceId: window.localStorage.getItem('itzterm.deviceId'),
+      clientInstanceId: window.sessionStorage.getItem('itzterm.clientInstanceId')
     })
     transport.dispose()
   })
@@ -4608,7 +4608,7 @@ describe('WsAcpTransport unauthorized authenticate halts reconnect churn (#907)'
 
   it('recovers on the next connect after the token is fixed', async () => {
     vi.useFakeTimers()
-    window.localStorage.setItem('termul.webAuthToken', 'good-token')
+    window.localStorage.setItem('itzterm.webAuthToken', 'good-token')
     let refused = true
     class FirstRefusedThenOkWebSocket extends FakeWebSocket {
       constructor(url: string) {

@@ -22,7 +22,7 @@ impl TempDir {
             .duration_since(UNIX_EPOCH)
             .expect("clock")
             .as_nanos();
-        let path = std::env::temp_dir().join(format!("termul-web-fsapi-{label}-{nanos}"));
+        let path = std::env::temp_dir().join(format!("itzterm-web-fsapi-{label}-{nanos}"));
         fs::create_dir_all(&path).expect("create temp dir");
         Self { path }
     }
@@ -46,7 +46,7 @@ fn test_state() -> AppState {
 }
 
 /// `AppState` with `allow_remote_writes: true` — the standalone
-/// `termul-server` `--allow-remote-writes` opt-in. Used by the
+/// `itzterm-server` `--allow-remote-writes` opt-in. Used by the
 /// guard-relaxation tests (non-loopback peer + flag on → succeeds).
 fn test_state_remote_writes() -> AppState {
     let mut state = test_state();

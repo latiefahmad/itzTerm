@@ -210,7 +210,7 @@ export function parseUnifiedDiffSplit(diff: string): SplitDiffRow[] {
   return rows
 }
 
-export const GIT_DIFF_VIEW_MODE_KEY = 'termul.gitDiffViewMode'
+export const GIT_DIFF_VIEW_MODE_KEY = 'itzterm.gitDiffViewMode'
 
 export type GitDiffViewMode = 'inline' | 'split'
 

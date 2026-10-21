@@ -2,7 +2,7 @@
  * Web auth bootstrap gate (issue #854): missing or wrong token hangs the web
  * client on "Loading..." forever.
  *
- * On a token-gated `termul-server`, `GET /projects` answers 401 with
+ * On a token-gated `itzterm-server`, `GET /projects` answers 401 with
  * `{success:false, code:'UNAUTHORIZED'}` until a valid bearer token is
  * presented (the auth gate refuses gated API routes — see
  * `src-tauri/src/web/router.rs`). The projects watch (`useProjectRegistry`)

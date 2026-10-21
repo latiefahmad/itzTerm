@@ -267,7 +267,7 @@ describe('buildSlashSections', () => {
     expect(commandNames).toEqual(['compact'])
   })
 
-  it('keeps `skill:` commands for skills termul did not discover', () => {
+  it('keeps `skill:` commands for skills itzterm did not discover', () => {
     const promoted: AvailableCommand[] = [
       { name: 'skill:agent-only', description: 'Agent builtin skill' },
       { name: 'skill:investigate', description: 'Run an investigation' }

@@ -1,4 +1,4 @@
-﻿import { MONO_STACK } from '@/lib/font-stacks'
+import { MONO_STACK } from '@/lib/font-stacks'
 
 // Context bar visibility settings
 export interface ContextBarSettings {
@@ -37,7 +37,7 @@ export const DEFAULT_TOC_SETTINGS: TocSettings = {
   width: 240
 }
 
-export type TerminalUrlOpenMode = 'system' | 'termul'
+export type TerminalUrlOpenMode = 'system' | 'itzterm'
 
 /** Which interface the remote terminal HTTP server binds to when started. */
 export type RemoteBindMode = 'localhost' | 'all'
@@ -116,7 +116,7 @@ export interface AppSettings {
    * Rust core. */
   acpSessionReopenTimeoutSecs: number | null
   /** How long an idle agent chat stays open, in seconds. `null` follows
-   * `$TERMUL_AGENT_IDLE_REAP_SECS` or the 30-minute default. The env var
+   * `$ITZTERM_AGENT_IDLE_REAP_SECS` or the 30-minute default. The env var
    * wins over this value. */
   agentIdleWindowSecs: number | null
   /**
@@ -170,7 +170,7 @@ export const TERMINAL_URL_OPEN_MODE_OPTIONS: Array<{
   label: string
 }> = [
   { value: 'system', label: 'System Default Browser' },
-  { value: 'termul', label: 'Termul Browser' }
+  { value: 'itzterm', label: 'itzTerm Browser' }
 ]
 
 export const REMOTE_BIND_MODE_OPTIONS: Array<{
@@ -285,7 +285,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   confirmTerminalClose: true,
   terminalUrlOpenMode: 'system',
   remoteBindMode: 'localhost',
-  colorTheme: 'termul',
+  colorTheme: 'itzterm',
   appearanceMode: 'dark',
   uiZoomLevel: UI_ZOOM_DEFAULT,
   acpTurnTimeoutSecs: null,

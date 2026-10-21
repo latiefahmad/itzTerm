@@ -1,4 +1,4 @@
-//! Axum router for the ACP web server (standalone `termul-server` + desktop).
+//! Axum router for the ACP web server (standalone `itzterm-server` + desktop).
 //!
 //! Exposes `/health`, the live WS upgrade at `/ws`, and static serving of the
 //! web client: from disk `ServeDir` in dev (`dist-web/` on disk) or the
@@ -198,7 +198,7 @@ pub fn router(
             "/mcp-servers",
             get(mcp_servers_api::get).put(mcp_servers_api::put),
         )
-        // On-demand MCP client probe (web parity): runs on the termul-server
+        // On-demand MCP client probe (web parity): runs on the itzterm-server
         // host where stdio commands execute. Mirrors the `acp_probe_mcp_server`
         // Tauri command; returns the same `IpcBody<ProbeResult>` shape.
         .route("/mcp-servers/probe", post(mcp_probe_api::probe))
@@ -503,7 +503,7 @@ async fn web_auth_gate(
         }
         _ => {
             tracing::warn!(
-                target: "termul::web::router",
+                target: "itzterm::web::router",
                 path = %redact_canvas_path(request.uri().path()),
                 "web auth gate refused API request"
             );
@@ -698,7 +698,7 @@ async fn health_check(
     // decision. No peer address or credentials logged — only the decision
     // + whether the deployment-mode deny or opt-in governed it.
     tracing::debug!(
-        target: "termul::web::router",
+        target: "itzterm::web::router",
         allow_remote_writes = allow,
         shared_live_denied = state.shared_live_writes_denied,
         opt_in = state.allow_remote_writes,
@@ -740,7 +740,7 @@ struct AgentIdleWindowBody {
 async fn agent_idle_window() -> impl IntoResponse {
     let data = crate::web::agent_reaper::resolved_agent_idle_window();
     tracing::debug!(
-        target: "termul::web::agent_reaper",
+        target: "itzterm::web::agent_reaper",
         secs = data.secs,
         source = data.source,
         "agent idle window probe"
@@ -770,7 +770,7 @@ fn idle_window_ok(data: crate::web::agent_reaper::AgentIdleWindowStatus) -> Agen
 }
 
 /// `POST /host/agent-idle-window` — save the Settings choice. A flag or
-/// `$TERMUL_AGENT_IDLE_REAP_SECS` keeps the live window. View-only peers
+/// `$ITZTERM_AGENT_IDLE_REAP_SECS` keeps the live window. View-only peers
 /// (shared-live, or a remote peer without `--allow-remote-writes`) are refused.
 async fn set_agent_idle_window(
     State(state): State<AppState>,
@@ -784,7 +784,7 @@ async fn set_agent_idle_window(
     .is_allowed();
     if !allowed {
         tracing::info!(
-            target: "termul::web::agent_reaper",
+            target: "itzterm::web::agent_reaper",
             "agent idle window change refused for a view-only peer"
         );
         return (

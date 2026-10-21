@@ -269,7 +269,7 @@ describe('shell-layout-store', () => {
             {
               id: 'p1',
               activeWorktreeId: 'w1',
-              worktrees: [{ id: 'w1', path: 'C:\\Repo\\.termul\\worktrees\\feat' }]
+              worktrees: [{ id: 'w1', path: 'C:\\Repo\\.itzterm\\worktrees\\feat' }]
             }
           ]
         }
@@ -288,7 +288,7 @@ describe('shell-layout-store', () => {
         sshSectionHeight: 200,
         gitHistoryDetailWidth: 400,
         lastColumnTabByProject: {},
-        worktreePickByProject: { p1: 'c:/repo/.termul/worktrees/feat' }
+        worktreePickByProject: { p1: 'c:/repo/.itzterm/worktrees/feat' }
       })
       expect(mockWriteDebounced).not.toHaveBeenCalled()
       const message = mockLog.mock.calls.map(([payload]) => payload.message).join('\n')

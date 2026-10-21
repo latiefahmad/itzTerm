@@ -15,7 +15,7 @@ import { IconActionButton } from '@/components/ui/icon-action-button'
 import { IconSwap } from '@/components/ui/icon-swap'
 import { copyText } from '@/lib/copy-text'
 import { cn } from '@/lib/utils'
-import { TermulPlanRenderer } from './ChatMarkdownPlanFence'
+import { ItzTermPlanRenderer } from './ChatMarkdownPlanFence'
 
 const MERMAID_PLUGIN = mermaidPlugin
 const LANGUAGE_RE = /language-([^\s]+)/
@@ -173,16 +173,16 @@ export function ChatMarkdownCode({
     )
   }
 
-  // termul-plan fences render as an inline read-only PlanPanel, not a code
+  // itzterm-plan fences render as an inline read-only PlanPanel, not a code
   // block. This override replaces Streamdown's default `code` component (the
   // only one that consults the `renderers` plugin config), so the lookup must
   // happen here. `useIsCodeFenceIncomplete` is the public per-block hook that
   // reports whether THIS fence is still being streamed — the same signal the
   // default component passes to custom renderers.
-  if (language === 'termul-plan') {
+  if (language === 'itzterm-plan') {
     return (
       <Suspense fallback={null}>
-        <TermulPlanRenderer code={code} isIncomplete={isIncomplete} language={language} />
+        <ItzTermPlanRenderer code={code} isIncomplete={isIncomplete} language={language} />
       </Suspense>
     )
   }

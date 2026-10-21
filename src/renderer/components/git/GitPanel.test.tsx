@@ -197,7 +197,7 @@ describe('GitPanel commit message generation', () => {
 })
 
 describe('GitPanel write block for an unresolved working copy', () => {
-  const GONE = '/proj/.termul/worktrees/gone'
+  const GONE = '/proj/.itzterm/worktrees/gone'
 
   beforeEach(() => {
     vi.clearAllMocks()

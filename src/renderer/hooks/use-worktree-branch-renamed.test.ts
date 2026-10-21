@@ -87,7 +87,7 @@ function project(id: string, path: string, worktreePaths: string[] = []): Projec
   } as unknown as Project
 }
 
-const WT = 'E:/proj-a/.termul/worktrees/ab12cd34'
+const WT = 'E:/proj-a/.itzterm/worktrees/ab12cd34'
 
 describe('useWorktreeBranchRenamed', () => {
   beforeEach(() => {
@@ -138,13 +138,13 @@ describe('useWorktreeBranchRenamed', () => {
     acpState.sessions = {
       a: {
         agentId: 'x',
-        worktreePath: 'e:\\Proj-A\\.termul\\worktrees\\ab12cd34\\',
+        worktreePath: 'e:\\Proj-A\\.itzterm\\worktrees\\ab12cd34\\',
         worktreeBranch: 'chat/ab12cd34'
       },
       b: { agentId: 'x', worktreePath: WT, worktreeBranch: 'chat/ab12cd34' },
       other: {
         agentId: 'x',
-        worktreePath: 'E:/proj-a/.termul/worktrees/zz',
+        worktreePath: 'E:/proj-a/.itzterm/worktrees/zz',
         worktreeBranch: 'chat/zz'
       },
       bare: { agentId: 'x' }
@@ -164,7 +164,7 @@ describe('useWorktreeBranchRenamed', () => {
     projectState.projects = [
       project('lists', 'E:/elsewhere', [WT]),
       project('contains', 'E:/proj-a'),
-      project('unrelated', 'E:/proj-b', ['E:/proj-b/.termul/worktrees/x'])
+      project('unrelated', 'E:/proj-b', ['E:/proj-b/.itzterm/worktrees/x'])
     ]
     handleWorktreeBranchRenamed({
       worktreePath: WT,

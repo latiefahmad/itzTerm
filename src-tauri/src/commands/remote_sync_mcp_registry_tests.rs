@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 fn temp_dir(label: &str) -> std::path::PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-mcp-sync-{label}-{}-{}",
+        "itzterm-mcp-sync-{label}-{}-{}",
         std::process::id(),
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -44,7 +44,7 @@ async fn writes_registry_to_project_mcp_servers_file() {
     assert!(result.success, "expected success, got {:?}", result.error);
 
     // The sync must write the exact file the web `GET /mcp-servers` route
-    // reads (`{project_root}/.termul/mcp-servers.json`).
+    // reads (`{project_root}/.itzterm/mcp-servers.json`).
     let file = registry_path(&dir);
     let bytes = std::fs::read(&file).unwrap();
     let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();

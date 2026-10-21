@@ -98,7 +98,7 @@ async function drive(ctx: ScenarioContext): Promise<void> {
   // only once a project is selected, so seed one first and reload so the
   // boot sequence activates it.
   const seed = await ctx.beginPhase('seed-project')
-  const projectDir = path.join(process.env.TEMP ?? 'C:\\temp', 'termul-perf-project')
+  const projectDir = path.join(process.env.TEMP ?? 'C:\\temp', 'itzterm-perf-project')
   mkdirSync(projectDir, { recursive: true })
   await seedPerfProject(handle, projectDir)
   await reloadRenderer(handle)

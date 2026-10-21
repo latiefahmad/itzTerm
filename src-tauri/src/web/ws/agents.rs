@@ -309,7 +309,7 @@ pub(super) async fn handle_install_acp_agent(
 /// `pi_terminal_login`) on the host where the agent process runs. Distinct
 /// from the WS connection `authenticate` token gate — this is the agent
 /// method, not the relay handshake. Calls `AcpManager::authenticate`. The provider owns
-/// the login UX (often opens its own browser); Termul never invents a
+/// the login UX (often opens its own browser); itzTerm never invents a
 /// redirect URL or stores credentials.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -336,7 +336,7 @@ pub(super) async fn handle_authenticate_agent(
         }
     };
     debug!(
-        target: "termul::web::ws",
+        target: "itzterm::web::ws",
         agent = %parsed.agent_id,
         method = %parsed.method_id,
         "authenticate_agent: invoking agent auth method"
@@ -352,7 +352,7 @@ pub(super) async fn handle_authenticate_agent(
         Ok(()) => WsReply::ok(id, Some(json!({}))),
         Err(e) => {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 agent = %parsed.agent_id,
                 method = %method_id,
                 error = %e,
@@ -397,7 +397,7 @@ pub(super) async fn handle_deliver_auth_redirect(
     };
     // Never log the URL — it carries OAuth state. The manager logs host+port.
     debug!(
-        target: "termul::web::ws",
+        target: "itzterm::web::ws",
         agent = %parsed.agent_id,
         "acp_deliver_auth_redirect: replaying pasted redirect"
     );
@@ -408,7 +408,7 @@ pub(super) async fn handle_deliver_auth_redirect(
         Ok(status) => WsReply::ok(id, Some(json!({ "status": status }))),
         Err(e) => {
             warn!(
-                target: "termul::web::ws",
+                target: "itzterm::web::ws",
                 agent = %parsed.agent_id,
                 error = %e,
                 "acp_deliver_auth_redirect: replay failed"

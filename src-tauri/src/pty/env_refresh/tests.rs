@@ -60,7 +60,7 @@ fn missing_shell_environment_uses_system_login_shell() {
 fn path_probe_ignores_interactive_shell_startup_output() {
     assert_eq!(
         parse_login_path_output(
-            b"zsh startup notice\n__TERMUL_LOGIN_PATH__=/custom/bin:/usr/bin\n"
+            b"zsh startup notice\n__ITZTERM_LOGIN_PATH__=/custom/bin:/usr/bin\n"
         ),
         Some("/custom/bin:/usr/bin".to_string())
     );
@@ -88,7 +88,7 @@ fn interactive_zsh_probe_includes_zshrc_path() {
     let config_dir = tempfile::tempdir().expect("create temporary zsh config");
     std::fs::write(
         config_dir.path().join(".zshrc"),
-        "export PATH=\"/termul-regression-bin:$PATH\"\n",
+        "export PATH=\"/itzterm-regression-bin:$PATH\"\n",
     )
     .expect("write temporary zshrc");
     let zdotdir = config_dir
@@ -99,7 +99,7 @@ fn interactive_zsh_probe_includes_zshrc_path() {
     let output = run_shell_path_probe_with_env(
         zsh.to_str().expect("zsh path is UTF-8"),
         "-ilc",
-        "printf '\\n__TERMUL_LOGIN_PATH__=%s\\n' \"$PATH\"",
+        "printf '\\n__ITZTERM_LOGIN_PATH__=%s\\n' \"$PATH\"",
         &[
             ("PATH", "/usr/bin:/bin:/usr/sbin:/sbin"),
             ("ZDOTDIR", zdotdir),
@@ -113,7 +113,7 @@ fn interactive_zsh_probe_includes_zshrc_path() {
     );
     let path = parse_login_path_output(&output.stdout).expect("PATH marker in zsh output");
     assert!(
-        std::env::split_paths(&path).any(|entry| entry == Path::new("/termul-regression-bin")),
+        std::env::split_paths(&path).any(|entry| entry == Path::new("/itzterm-regression-bin")),
         "interactive .zshrc PATH entry was not detected"
     );
 }

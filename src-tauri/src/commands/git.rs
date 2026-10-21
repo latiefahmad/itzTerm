@@ -244,7 +244,7 @@ pub async fn git_get_commit_file_diff(
 ///
 /// `expected_head` (the full sha, or empty for an unborn branch) refuses the
 /// commit with a `precondition_failed: …` error when `HEAD` is elsewhere. A
-/// `command_id` stamps the commit (`Termul-Command-Id:` trailer) so a resend
+/// `command_id` stamps the commit (`itzTerm-Command-Id:` trailer) so a resend
 /// answers from the commit it made instead of committing again.
 #[tauri::command]
 pub async fn git_commit(

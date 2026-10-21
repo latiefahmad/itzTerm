@@ -13,14 +13,14 @@ function worktree(id: string, path: string, extra: Partial<Worktree> = {}): Work
   }
 }
 
-const a = worktree('a', 'E:/p/.termul/worktrees/a')
+const a = worktree('a', 'E:/p/.itzterm/worktrees/a')
 const disabled = worktree('ext', 'D:/elsewhere/wt', { outsideProjectRoot: true })
 const project: Pick<Project, 'path' | 'worktrees'> = { path: 'E:/p', worktrees: [a, disabled] }
 
 describe('activeWorktreeOf', () => {
   it('returns the listed worktree for a pick in any path form', () => {
-    expect(activeWorktreeOf(project, 'e:/p/.termul/worktrees/a')).toBe(a)
-    expect(activeWorktreeOf(project, 'E:\\p\\.termul\\worktrees\\a')).toBe(a)
+    expect(activeWorktreeOf(project, 'e:/p/.itzterm/worktrees/a')).toBe(a)
+    expect(activeWorktreeOf(project, 'E:\\p\\.itzterm\\worktrees\\a')).toBe(a)
   })
 
   it('returns undefined with no pick or a pick equal to the project folder', () => {
@@ -30,7 +30,7 @@ describe('activeWorktreeOf', () => {
   })
 
   it('returns undefined for a pruned (unlisted) pick', () => {
-    expect(activeWorktreeOf(project, 'e:/p/.termul/worktrees/gone')).toBeUndefined()
+    expect(activeWorktreeOf(project, 'e:/p/.itzterm/worktrees/gone')).toBeUndefined()
   })
 
   it('returns undefined for a pick naming an outsideProjectRoot worktree', () => {
@@ -38,7 +38,7 @@ describe('activeWorktreeOf', () => {
   })
 
   it('returns undefined without a project', () => {
-    expect(activeWorktreeOf(undefined, 'e:/p/.termul/worktrees/a')).toBeUndefined()
+    expect(activeWorktreeOf(undefined, 'e:/p/.itzterm/worktrees/a')).toBeUndefined()
     expect(activeWorktreeOf(null, null)).toBeUndefined()
   })
 })

@@ -256,13 +256,13 @@ pub(super) fn check_local_only<T>(
     match decision {
         WriteDecision::Allowed => {}
         WriteDecision::AdmittedByOptIn => tracing::warn!(
-            target: "termul::web::fs_api",
+            target: "itzterm::web::fs_api",
             route = route,
             peer = %peer,
             "remote-write guard ADMITTED (--allow-remote-writes)",
         ),
         WriteDecision::DeniedSharedLive | WriteDecision::DeniedRemotePeer => tracing::warn!(
-            target: "termul::web::fs_api",
+            target: "itzterm::web::fs_api",
             route = route,
             peer = %peer,
             reason = ?decision,

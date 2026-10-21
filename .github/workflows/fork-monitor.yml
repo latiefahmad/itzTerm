@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   validate:
-    if: github.repository == 'mannnrachman/termul'
+    if: github.repository == 'mannnrachman/itzterm'
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -50,7 +50,7 @@ jobs:
         run: bun run test
 
   rust-checks:
-    if: github.repository == 'mannnrachman/termul'
+    if: github.repository == 'mannnrachman/itzterm'
     name: Rust Checks
     runs-on: ubuntu-22.04
     timeout-minutes: 20
@@ -93,7 +93,7 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
   rust-windows-check:
-    if: github.repository == 'mannnrachman/termul'
+    if: github.repository == 'mannnrachman/itzterm'
     name: Rust Windows Smoke Check
     runs-on: windows-latest
     timeout-minutes: 15
@@ -119,7 +119,7 @@ jobs:
         run: cargo check --all-targets
 
   build-check:
-    if: github.repository == 'mannnrachman/termul'
+    if: github.repository == 'mannnrachman/itzterm'
     name: Verify Tauri Frontend Build
     needs: [validate, rust-checks, rust-windows-check]
     runs-on: ubuntu-latest

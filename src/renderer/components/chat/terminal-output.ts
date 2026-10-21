@@ -10,7 +10,7 @@ export interface TerminalStreamFields {
 }
 
 const MAX_TERMINAL_OUTPUT_CHARS = 64 * 1024
-const TERMINAL_TRUNCATION_MARKER = '\n[termul: tool call content truncated]'
+const TERMINAL_TRUNCATION_MARKER = '\n[itzterm: tool call content truncated]'
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null

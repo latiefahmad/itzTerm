@@ -9,7 +9,7 @@ use crate::acp::events::{SessionModel, SessionModelState};
 
 fn temp_dir(label: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-sessions-model-{label}-{}-{}",
+        "itzterm-sessions-model-{label}-{}-{}",
         std::process::id(),
         now_millis()
     ));

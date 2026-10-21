@@ -85,7 +85,7 @@ export function showUpdateToast(version: string, releaseNotes?: string): void {
       onClick: async () => {
         if (isAur) {
           toast.info('Run in terminal', {
-            description: 'yay -S termul-manager'
+            description: 'yay -S itzterm-manager'
           })
           return
         }
@@ -122,7 +122,7 @@ export function showUpdateDownloadedToast(version: string): void {
   toast.success('Update ready to install', {
     duration: 30000,
     classNames: UPDATE_TOAST_CLASS_NAMES,
-    description: `Version ${version} is downloaded. Termul restarts to install it, and running terminal sessions close.`,
+    description: `Version ${version} is downloaded. itzTerm restarts to install it, and running terminal sessions close.`,
     action: {
       label: 'Install and restart',
       onClick: () => confirmInstallAndRestart(version)

@@ -200,7 +200,7 @@ export function ChatInputBar({
   // Chatbox popover (per-server enable/disable + status dot + collapsible tool
   // list). The badge degrades to the read-only count pill when the registry is
   // empty. Reuses `setMcpServerEnabled` (optimistic + rollback) — no new
-  // persistence path. The probe reflects Termul's own client connection.
+  // persistence path. The probe reflects itzTerm's own client connection.
   const chatReload = useReloadChat(session.id)
   const mcpServers = useAcpStore((s) => s.mcpServers)
   const setMcpServerEnabled = useAcpStore((s) => s.setMcpServerEnabled)

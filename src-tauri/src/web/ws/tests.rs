@@ -8,7 +8,7 @@ use tokio_util::sync::CancellationToken;
 
 #[tokio::test]
 async fn cross_agent_prompt_is_rejected_before_claim_or_persistence() {
-    let root = std::env::temp_dir().join(format!("termul-ws-ownership-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-ownership-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -397,7 +397,7 @@ async fn cancelled_prompt_handler_releases_exact_turn_claim() {
 
 #[tokio::test]
 async fn accepted_prompt_survives_disconnect_and_persists_completion_for_reconnect() {
-    let root = std::env::temp_dir().join(format!("termul-ws-resume-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-resume-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -493,7 +493,7 @@ async fn handle_request_with_catalog(
 
 #[tokio::test]
 async fn handle_list_acp_catalog_ws_dispatch_returns_payload() {
-    let root = std::env::temp_dir().join(format!("termul-ws-cat-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-cat-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&root).unwrap();
     let catalog = crate::acp::AcpCatalogService::open(root.join("catalog"))
         .await
@@ -526,7 +526,7 @@ async fn handle_list_acp_catalog_ws_dispatch_returns_payload() {
 
 #[tokio::test]
 async fn handle_set_catalog_opt_in_ws_dispatch_persists() {
-    let root = std::env::temp_dir().join(format!("termul-ws-optin-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-optin-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&root).unwrap();
     let catalog = crate::acp::AcpCatalogService::open(root.join("catalog"))
         .await
@@ -650,7 +650,7 @@ fn store_identity(device: &str) -> Arc<std::sync::OnceLock<ClientIdentity>> {
 }
 
 fn open_store(label: &str) -> (Arc<WebStore>, std::path::PathBuf) {
-    let dir = std::env::temp_dir().join(format!("termul-ws-store-{label}-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("itzterm-ws-store-{label}-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&dir).unwrap();
     let store = WebStore::open(dir.join("store.json"), crate::web::store::StorePolicy::default()).unwrap();
     (Arc::new(store), dir)
@@ -834,7 +834,7 @@ async fn store_malformed_payload_returns_validation_error() {
 
 #[tokio::test]
 async fn second_client_restores_session_created_by_first_client() {
-    let root = std::env::temp_dir().join(format!("termul-ws-cross-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-cross-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -1831,7 +1831,7 @@ fn resume_ok_payload_marks_replay_snapshot_null() {
 /// answers `not_found` for an unknown id.
 #[tokio::test]
 async fn delete_session_removes_host_persisted_record() {
-    let root = std::env::temp_dir().join(format!("termul-ws-delete-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-delete-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -1922,7 +1922,7 @@ async fn delete_session_unsupported_in_live_only() {
 /// delete of an absent record (`{ deleted: false }`).
 #[tokio::test]
 async fn delete_session_malformed_or_empty_payload_is_rejected() {
-    let root = std::env::temp_dir().join(format!("termul-ws-delete-bad-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-delete-bad-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&root).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
         .await
@@ -2212,7 +2212,7 @@ async fn install_acp_agent_unknown_agent_returns_catalog_agent_not_found() {
     // acp_install: Some(...). An unknown agent id resolves to
     // CATALOG_AGENT_NOT_FOUND (the catalog has no such agent).
     let tmp = std::env::temp_dir().join(format!(
-        "termul-ws-install-unknown-{}-{}",
+        "itzterm-ws-install-unknown-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -2835,7 +2835,7 @@ fn handle_subscribe_ok_and_stale() {
 /// `lastSeq` cursor.
 #[tokio::test]
 async fn handle_subscribe_unknown_session_is_not_found() {
-    let root = std::env::temp_dir().join(format!("termul-ws-sub-unknown-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-sub-unknown-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -2890,7 +2890,7 @@ async fn handle_subscribe_unknown_session_is_not_found() {
 async fn open_persisted_session_is_read_only() {
     use crate::web::sink::{AcpEvent, EventSink};
     let root =
-        std::env::temp_dir().join(format!("termul-ws-open-readonly-{}", uuid::Uuid::new_v4()));
+        std::env::temp_dir().join(format!("itzterm-ws-open-readonly-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -2976,7 +2976,7 @@ async fn open_persisted_session_is_read_only() {
 async fn open_persisted_session_catalog_branch_admits_finalized_session() {
     use crate::web::sink::{AcpEvent, EventSink};
     let root =
-        std::env::temp_dir().join(format!("termul-ws-open-catalog-{}", uuid::Uuid::new_v4()));
+        std::env::temp_dir().join(format!("itzterm-ws-open-catalog-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -3034,7 +3034,7 @@ async fn open_persisted_session_catalog_branch_admits_finalized_session() {
 /// and standalone.
 #[tokio::test]
 async fn list_persisted_sessions_serves_host_persistence() {
-    let root = std::env::temp_dir().join(format!("termul-ws-list-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-list-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -3063,7 +3063,7 @@ async fn list_persisted_sessions_serves_host_persistence() {
 #[tokio::test]
 async fn register_discovered_session_promotes_metadata_without_transcript() {
     let root = std::env::temp_dir().join(format!(
-        "termul-ws-register-discovered-{}",
+        "itzterm-ws-register-discovered-{}",
         uuid::Uuid::new_v4()
     ));
     let cwd = root.join("cwd");
@@ -3130,7 +3130,7 @@ async fn get_session_payload_unsupported_in_live_only() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn record_agent_switch_writes_durable_marker_and_replies_ok() {
     let root =
-        std::env::temp_dir().join(format!("termul-ws-record-switch-{}", uuid::Uuid::new_v4()));
+        std::env::temp_dir().join(format!("itzterm-ws-record-switch-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -3195,7 +3195,7 @@ async fn record_agent_switch_writes_durable_marker_and_replies_ok() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn record_agent_switch_unknown_session_is_not_found() {
     let root = std::env::temp_dir().join(format!(
-        "termul-ws-record-switch-nf-{}",
+        "itzterm-ws-record-switch-nf-{}",
         uuid::Uuid::new_v4()
     ));
     let cwd = root.join("cwd");
@@ -3247,7 +3247,7 @@ async fn record_agent_switch_unknown_session_is_not_found() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn recover_session_snapshot_reply_watermark_is_the_log_head() {
     use crate::web::sink::{AcpEvent, EventSink};
-    let root = std::env::temp_dir().join(format!("termul-ws-snap-head-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-snap-head-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -3310,7 +3310,7 @@ async fn recover_session_snapshot_reply_watermark_is_the_log_head() {
 #[tokio::test]
 async fn recover_session_snapshot_subscription_closes_the_connection_on_reliable_overflow() {
     use crate::web::sink::{AcpEvent, EventSink};
-    let root = std::env::temp_dir().join(format!("termul-ws-snap-overflow-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-snap-overflow-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -3370,7 +3370,7 @@ async fn recover_session_snapshot_subscription_closes_the_connection_on_reliable
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn record_agent_switch_writer_gone_session_replies_not_found() {
     let root = std::env::temp_dir().join(format!(
-        "termul-ws-record-switch-wg-{}",
+        "itzterm-ws-record-switch-wg-{}",
         uuid::Uuid::new_v4()
     ));
     let cwd = root.join("cwd");
@@ -3464,7 +3464,7 @@ fn standalone_payload_record(
 
 #[tokio::test]
 async fn get_session_payload_materializes_standalone_durable_history() {
-    let root = std::env::temp_dir().join(format!("termul-ws-payload-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-payload-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -3583,7 +3583,7 @@ async fn get_session_payload_materializes_standalone_durable_history() {
 
 #[tokio::test]
 async fn get_session_payload_standalone_unknown_session_is_not_found() {
-    let root = std::env::temp_dir().join(format!("termul-ws-payload-nf-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-payload-nf-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))
@@ -3634,7 +3634,7 @@ async fn get_session_payload_without_store_or_persistence_is_not_found() {
 #[tokio::test]
 async fn get_session_payload_standalone_corrupt_log_is_unsupported() {
     let root = std::env::temp_dir().join(format!(
-        "termul-ws-payload-corrupt-{}",
+        "itzterm-ws-payload-corrupt-{}",
         uuid::Uuid::new_v4()
     ));
     let cwd = root.join("cwd");
@@ -3890,7 +3890,7 @@ fn watch_fixture(
     OutboundReceiver,
 ) {
     let dir = std::env::temp_dir()
-        .join(format!("termul-ws-watch-{id}-{}", std::process::id()))
+        .join(format!("itzterm-ws-watch-{id}-{}", std::process::id()))
         .to_path_buf();
     std::fs::create_dir_all(&dir).unwrap();
     let dir = dir.canonicalize().unwrap();
@@ -4051,7 +4051,7 @@ async fn unwatch_after_the_project_was_archived_succeeds() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn log_epoch_rides_subscribe_snapshot_and_cursor_replies() {
     use crate::web::sink::{AcpEvent, EventSink};
-    let root = std::env::temp_dir().join(format!("termul-ws-epoch-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-epoch-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = crate::acp::SessionPersistence::open(root.join("sessions"))

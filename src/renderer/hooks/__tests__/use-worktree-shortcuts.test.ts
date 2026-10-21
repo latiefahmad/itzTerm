@@ -17,10 +17,10 @@ function wt(id: string, path: string, extra: Partial<Worktree> = {}): Worktree {
 
 // Deliberately stored out of canonical order to prove the cycle sorts by path.
 const WORKTREES: Worktree[] = [
-  wt('c', 'E:/p/.termul/worktrees/c'),
-  wt('a', 'E:/p/.termul/worktrees/a'),
+  wt('c', 'E:/p/.itzterm/worktrees/c'),
+  wt('a', 'E:/p/.itzterm/worktrees/a'),
   wt('ext', 'D:/elsewhere/wt', { outsideProjectRoot: true }),
-  wt('b', 'E:\\p\\.termul\\worktrees\\B\\')
+  wt('b', 'E:\\p\\.itzterm\\worktrees\\B\\')
 ]
 
 function seed(worktrees: Worktree[] = WORKTREES): void {
@@ -65,62 +65,62 @@ beforeEach(() => {
 describe('useWorktreeShortcuts: switcher pick', () => {
   it('cycles next in canonical path order, skipping disabled worktrees, and wraps', () => {
     renderHook(() => useWorktreeShortcuts())
-    setPick('E:/p/.termul/worktrees/a')
+    setPick('E:/p/.itzterm/worktrees/a')
 
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/b')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/b')
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/c')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/c')
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/a')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/a')
   })
 
   it('cycles prev and wraps among worktrees only', () => {
     renderHook(() => useWorktreeShortcuts())
-    setPick('E:/p/.termul/worktrees/b')
+    setPick('E:/p/.itzterm/worktrees/b')
 
     prev()
-    expect(pick()).toBe('e:/p/.termul/worktrees/a')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/a')
     prev()
-    expect(pick()).toBe('e:/p/.termul/worktrees/c')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/c')
   })
 
   it('from the project folder next goes to the first and prev to the last', () => {
     renderHook(() => useWorktreeShortcuts())
 
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/a')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/a')
 
     setPick(null)
     prev()
-    expect(pick()).toBe('e:/p/.termul/worktrees/c')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/c')
   })
 
   it('treats a stale or disabled pick as the project folder', () => {
     renderHook(() => useWorktreeShortcuts())
 
-    setPick('E:/p/.termul/worktrees/gone')
+    setPick('E:/p/.itzterm/worktrees/gone')
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/a')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/a')
 
     setPick('D:/elsewhere/wt')
     prev()
-    expect(pick()).toBe('e:/p/.termul/worktrees/c')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/c')
   })
 
   it('reads the current pick at event time, not at render time', () => {
     renderHook(() => useWorktreeShortcuts())
-    setPick('E:/p/.termul/worktrees/a')
+    setPick('E:/p/.itzterm/worktrees/a')
     next()
     // A pick written elsewhere after render is honoured by the next keypress.
-    setPick('E:/p/.termul/worktrees/c')
+    setPick('E:/p/.itzterm/worktrees/c')
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/a')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/a')
   })
 
   it('root clears the pick', () => {
     renderHook(() => useWorktreeShortcuts())
-    setPick('E:/p/.termul/worktrees/a')
+    setPick('E:/p/.itzterm/worktrees/a')
 
     root()
     expect(pick()).toBeUndefined()
@@ -159,11 +159,11 @@ describe('useWorktreeShortcuts: default bindings', () => {
     setPick(null)
 
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/a')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/a')
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/b')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/b')
     prev()
-    expect(pick()).toBe('e:/p/.termul/worktrees/a')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/a')
     root()
     expect(pick()).toBeUndefined()
   })
@@ -176,7 +176,7 @@ describe('useWorktreeShortcuts: default bindings', () => {
     setPick(null)
 
     next()
-    expect(pick()).toBe('e:/p/.termul/worktrees/a')
+    expect(pick()).toBe('e:/p/.itzterm/worktrees/a')
   })
 })
 

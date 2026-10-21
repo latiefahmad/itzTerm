@@ -1,4 +1,4 @@
-//! Disk changes made outside Termul (AD-27): self-write suppression, the
+//! Disk changes made outside itzTerm (AD-27): self-write suppression, the
 //! silent reload of a clean editor, and the conflict of a dirty one with
 //! each of its three resolutions.
 
@@ -79,13 +79,13 @@ impl Doc {
 }
 
 #[tokio::test]
-async fn termuls_own_write_is_not_a_change() {
+async fn itzterms_own_write_is_not_a_change() {
     let doc = Doc::opened(b"saved").await;
     doc.edit(2).await;
     assert_eq!(doc.save(2, b"mine").await.as_deref(), Some("2"));
     assert_eq!(doc.on_disk(), b"mine");
     let DiskOutcome::Unchanged { view } = doc.disk_changed().await else {
-        panic!("Termul's own atomic write must not look like an outside change");
+        panic!("itzTerm's own atomic write must not look like an outside change");
     };
     assert_eq!(view.conflict, None);
 }

@@ -12,7 +12,7 @@ fn entry(path: &str) -> GitWorktreeEntry {
 #[test]
 fn inside_and_root_are_not_flagged() {
     let out = scope_entries(
-        vec![entry("/work/proj"), entry("/work/proj/.termul/worktrees/a")],
+        vec![entry("/work/proj"), entry("/work/proj/.itzterm/worktrees/a")],
         "/work/proj",
     );
     assert!(out.iter().all(|e| !e.outside_project_root));
@@ -35,7 +35,7 @@ fn prefix_sibling_is_outside() {
 fn windows_forms_are_equivalent() {
     let out = scope_entries(
         vec![
-            entry("E:/Work/Proj/.termul/worktrees/a"),
+            entry("E:/Work/Proj/.itzterm/worktrees/a"),
             entry("D:/other/wt"),
         ],
         r"\\?\e:\work\proj\",

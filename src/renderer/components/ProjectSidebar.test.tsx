@@ -498,8 +498,8 @@ describe('ProjectSidebar Project Icons', () => {
     const monogram = projectRow.querySelector('[data-project-color="blue"]')
     expect(monogram).toBeInTheDocument()
     expect(monogram).toHaveTextContent('P')
-    expect(projectRow.querySelector('svg[data-termul-icon="Folder"]')).not.toBeInTheDocument()
-    expect(projectRow.querySelector('svg[data-termul-icon="FolderOpen"]')).not.toBeInTheDocument()
+    expect(projectRow.querySelector('svg[data-itzterm-icon="Folder"]')).not.toBeInTheDocument()
+    expect(projectRow.querySelector('svg[data-itzterm-icon="FolderOpen"]')).not.toBeInTheDocument()
   })
 
   it('carries the project color on the monogram tile before the name', () => {
@@ -531,7 +531,7 @@ describe('ProjectSidebar Project Icons', () => {
     const monogram = projectRow.querySelector('[data-project-color="green"]')
     expect(monogram).toBeInTheDocument()
     expect(monogram).toHaveTextContent('A')
-    expect(projectRow.querySelector('svg[data-termul-icon="Folder"]')).not.toBeInTheDocument()
+    expect(projectRow.querySelector('svg[data-itzterm-icon="Folder"]')).not.toBeInTheDocument()
   })
 })
 
@@ -980,7 +980,7 @@ describe('ProjectSidebar: Mono-style alignment and groups', () => {
     const icon = row.querySelector('[data-rail-group-icon]')
     const chevron = row.querySelector('[data-rail-group-chevron]')
     // The group's folder icon stands for it, not a child project's icon.
-    expect(icon?.querySelector('svg[data-termul-icon="Folder"]')).toBeInTheDocument()
+    expect(icon?.querySelector('svg[data-itzterm-icon="Folder"]')).toBeInTheDocument()
     expect(icon?.querySelector('[data-project-color]')).toBeNull()
     expect(icon).toHaveClass('group-hover:hidden', 'group-focus-within:hidden')
     expect(chevron).toHaveClass(
@@ -988,7 +988,7 @@ describe('ProjectSidebar: Mono-style alignment and groups', () => {
       'group-hover:inline-flex',
       'group-focus-within:inline-flex'
     )
-    expect(chevron?.querySelector('svg[data-termul-icon="ChevronRight"]')).toBeInTheDocument()
+    expect(chevron?.querySelector('svg[data-itzterm-icon="ChevronRight"]')).toBeInTheDocument()
     // The row is one button that toggles the group.
     expect(within(row).getByRole('button', { name: 'My Folder' })).toHaveAttribute(
       'aria-expanded',
@@ -1006,7 +1006,7 @@ describe('ProjectSidebar: Mono-style alignment and groups', () => {
     const icon = screen
       .getByTestId('rail-group-row-group-1')
       .querySelector('[data-rail-group-icon]')
-    expect(icon?.querySelector('svg[data-termul-icon="Folder"]')).toBeInTheDocument()
+    expect(icon?.querySelector('svg[data-itzterm-icon="Folder"]')).toBeInTheDocument()
   })
 
   it('keeps the chevron-down visible when expanded and wraps the group in one surface', () => {
@@ -1020,7 +1020,7 @@ describe('ProjectSidebar: Mono-style alignment and groups', () => {
     expect(icon).not.toHaveClass('group-hover:hidden')
     expect(chevron).toHaveClass('inline-flex')
     expect(chevron).not.toHaveClass('hidden')
-    expect(chevron?.querySelector('svg[data-termul-icon="ChevronDown"]')).toBeInTheDocument()
+    expect(chevron?.querySelector('svg[data-itzterm-icon="ChevronDown"]')).toBeInTheDocument()
 
     const container = screen.getByTestId('rail-group-group-1')
     expect(container).toHaveClass('rounded-lg', 'bg-foreground/[0.03]')
@@ -1131,7 +1131,7 @@ describe('ProjectSidebar: Mono-style alignment and groups', () => {
 
     const folder = screen
       .getByTestId('rail-group-row-group-1')
-      .querySelector('[data-rail-group-icon] svg[data-termul-icon="Folder"]')
+      .querySelector('[data-rail-group-icon] svg[data-itzterm-icon="Folder"]')
     expect(folder).toHaveClass('text-project-green')
   })
 

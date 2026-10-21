@@ -163,17 +163,17 @@ pub fn spawn_gc_task(store: Arc<WebStore>, presence: Arc<PresenceRegistry>) -> J
             .await;
             match result {
                 Ok(Ok(collected)) if !collected.is_empty() => info!(
-                    target: "termul::web::store",
+                    target: "itzterm::web::store",
                     collected = collected.len(),
                     "web store sweep collected stale device partitions"
                 ),
                 Ok(Ok(_)) => {}
                 Ok(Err(error)) => warn!(
-                    target: "termul::web::store",
+                    target: "itzterm::web::store",
                     "web store sweep failed: {error}"
                 ),
                 Err(error) => warn!(
-                    target: "termul::web::store",
+                    target: "itzterm::web::store",
                     "web store sweep task failed: {error}"
                 ),
             }

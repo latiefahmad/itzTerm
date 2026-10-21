@@ -44,7 +44,7 @@
 //! first device that adopts the store ([`manifest_import`]); a parked
 //! `editor-state/<projectId>` key is adopted as `workspace/<projectId>`.
 //!
-//! The desktop's retired plugin-store file `termul-data.json` is imported once,
+//! The desktop's retired plugin-store file `itzterm-data.json` is imported once,
 //! into the first device that reaches the store over the desktop carrier
 //! ([`desktop_import`]); its own marker (`host.desktopImported`) keeps it
 //! apart from the adoption above, which a shared-live client may have done long
@@ -168,7 +168,7 @@ pub const STORE_VALUE_MAX_BYTES: usize = 256 * 1024;
 
 /// Where a host kept the retired per-project workspace manifests under its
 /// data directory (`<app data dir>` on desktop, `<state dir>` for
-/// `termul-server`).
+/// `itzterm-server`).
 #[must_use]
 pub fn legacy_manifests_dir(data_dir: &Path) -> PathBuf {
     data_dir.join("workspace-manifests")
@@ -420,7 +420,7 @@ impl WebStore {
         {
             if let Err(error) = state.persist(&self.path, &self.extra, now_ms) {
                 warn!(
-                    target: "termul::web::store",
+                    target: "itzterm::web::store",
                     "could not persist device last-seen times: {error}"
                 );
             }
@@ -460,7 +460,7 @@ impl WebStore {
         }
         if let Some(adoption) = adoption {
             info!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 device_id = %ClientIdentity::log_label(&identity.device_id),
                 parked = adoption.parked,
                 workspaces = adoption.workspaces.len(),
@@ -495,7 +495,7 @@ impl WebStore {
                 used -= records::record_bytes(&key, &record);
             }
             warn!(
-                target: "termul::web::store",
+                target: "itzterm::web::store",
                 "dropped the imported workspace '{key}': the device partition would exceed its {budget} byte budget"
             );
         }

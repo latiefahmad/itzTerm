@@ -1,7 +1,7 @@
 //! Claude Account WS handlers: list the Accounts and their usage, and choose
 //! the Default or a Project Account. Adding, signing in, renaming, and
 //! removing an Account stay on the host (desktop UI or
-//! `termul-server claude account`), because they
+//! `itzterm-server claude account`), because they
 //! start a browser login or delete login state on the host.
 
 use super::*;

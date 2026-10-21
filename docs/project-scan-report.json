@@ -6,8 +6,8 @@
   },
   "mode": "initial_scan",
   "scan_level": "exhaustive",
-  "project_root": "E:/open-source/PecutAPP/termul",
-  "project_knowledge": "E:/open-source/PecutAPP/termul/docs",
+  "project_root": "E:/open-source/PecutAPP/itzterm",
+  "project_knowledge": "E:/open-source/PecutAPP/itzterm/docs",
   "completed_steps": [
     {
       "step": "step_1",

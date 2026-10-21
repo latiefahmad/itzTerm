@@ -1,4 +1,4 @@
-//! The one-shot import of the desktop plugin-store file `termul-data.json`:
+//! The one-shot import of the desktop plugin-store file `itzterm-data.json`:
 //! key mapping, the first-device takeover, the size limits and the retry rules.
 
 use std::path::{Path, PathBuf};
@@ -21,7 +21,7 @@ fn write_legacy(dir: &Path, content: &Value) -> PathBuf {
     path
 }
 
-/// The files in `dir` that are `termul-data.json` backups of an import.
+/// The files in `dir` that are `itzterm-data.json` backups of an import.
 fn backups(dir: &Path) -> Vec<String> {
     let mut names: Vec<String> = std::fs::read_dir(dir)
         .unwrap()

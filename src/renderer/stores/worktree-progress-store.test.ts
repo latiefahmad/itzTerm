@@ -103,13 +103,13 @@ describe('worktree-progress-store', () => {
     expect(store().ops.p1.status).toBe('done')
   })
 
-  it('handleEvent maps the termul:error: sentinel to the error state', () => {
+  it('handleEvent maps the itzterm:error: sentinel to the error state', () => {
     store().begin('p1')
-    store().handleEvent({ progressId: 'p1', line: 'termul:error: branch exists' })
+    store().handleEvent({ progressId: 'p1', line: 'itzterm:error: branch exists' })
     const op = store().ops.p1
     expect(op.status).toBe('error')
     expect(op.error).toBe('branch exists')
-    expect(op.lines).toContain('termul:error: branch exists')
+    expect(op.lines).toContain('itzterm:error: branch exists')
   })
 
   // Real git stderr lines can legitimately start with `error:`/`fatal:`

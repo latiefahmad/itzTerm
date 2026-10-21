@@ -12,7 +12,7 @@ const initialProjects = useProjectStore.getState().projects
 
 function seedProject(fields: { gitBranch?: string; isGitRepo?: boolean }): void {
   useProjectStore.setState({
-    projects: [{ id: 'p1', name: 'termul', color: 'blue', path: '/work', ...fields }]
+    projects: [{ id: 'p1', name: 'itzterm', color: 'blue', path: '/work', ...fields }]
   })
 }
 
@@ -39,7 +39,7 @@ describe('useChatIsolationContext', () => {
     const { result } = renderHook(() =>
       useChatIsolationContext({
         projectId: 'p1',
-        worktreePath: '/work/.termul/worktrees/ab12',
+        worktreePath: '/work/.itzterm/worktrees/ab12',
         worktreeBranch: 'chat/ab12'
       })
     )
@@ -47,7 +47,7 @@ describe('useChatIsolationContext', () => {
     expect(result.current).toEqual({
       isWorktree: true,
       isolationModeLabel: 'Worktree',
-      isolationModeTitle: 'Agent works in a separate git worktree: /work/.termul/worktrees/ab12',
+      isolationModeTitle: 'Agent works in a separate git worktree: /work/.itzterm/worktrees/ab12',
       isolationBranch: 'chat/ab12',
       isDetachedHead: false
     })
@@ -56,7 +56,7 @@ describe('useChatIsolationContext', () => {
   it('Worktree without a recorded branch: never falls back to the project branch', () => {
     seedProject({ gitBranch: 'main', isGitRepo: true })
     const { result } = renderHook(() =>
-      useChatIsolationContext({ projectId: 'p1', worktreePath: '/work/.termul/worktrees/ab12' })
+      useChatIsolationContext({ projectId: 'p1', worktreePath: '/work/.itzterm/worktrees/ab12' })
     )
 
     expect(result.current.isWorktree).toBe(true)
@@ -75,7 +75,7 @@ describe('useChatIsolationContext', () => {
   it('a worktree without a branch is not detached', () => {
     seedProject({ isGitRepo: true })
     const { result } = renderHook(() =>
-      useChatIsolationContext({ projectId: 'p1', worktreePath: '/work/.termul/worktrees/ab12' })
+      useChatIsolationContext({ projectId: 'p1', worktreePath: '/work/.itzterm/worktrees/ab12' })
     )
 
     expect(result.current.isWorktree).toBe(true)
@@ -112,49 +112,49 @@ describe('describeProjectSubtitle', () => {
 
   it('worktree chat: project · branch · Worktree', () => {
     expect(
-      describeProjectSubtitle('termul', {
+      describeProjectSubtitle('itzterm', {
         ...local,
         isWorktree: true,
         isolationModeLabel: 'Worktree',
         isolationBranch: 'chat/ab12'
       })
     ).toEqual({
-      text: 'termul · chat/ab12 · Worktree',
-      label: 'termul · chat/ab12, switch project'
+      text: 'itzterm · chat/ab12 · Worktree',
+      label: 'itzterm · chat/ab12, switch project'
     })
   })
 
   it('git local: project · branch · Local', () => {
-    expect(describeProjectSubtitle('termul', local)).toEqual({
-      text: 'termul · main · Local',
-      label: 'termul · main, switch project'
+    expect(describeProjectSubtitle('itzterm', local)).toEqual({
+      text: 'itzterm · main · Local',
+      label: 'itzterm · main, switch project'
     })
   })
 
   it('detached HEAD: project · Detached HEAD · Local', () => {
     expect(
-      describeProjectSubtitle('termul', { ...local, isolationBranch: null, isDetachedHead: true })
+      describeProjectSubtitle('itzterm', { ...local, isolationBranch: null, isDetachedHead: true })
     ).toEqual({
-      text: 'termul · Detached HEAD · Local',
-      label: 'termul · Detached HEAD, switch project'
+      text: 'itzterm · Detached HEAD · Local',
+      label: 'itzterm · Detached HEAD, switch project'
     })
   })
 
   it('worktree with an unknown branch: project · Worktree', () => {
     expect(
-      describeProjectSubtitle('termul', {
+      describeProjectSubtitle('itzterm', {
         ...local,
         isWorktree: true,
         isolationModeLabel: 'Worktree',
         isolationBranch: null
       })
-    ).toEqual({ text: 'termul · Worktree', label: 'termul, switch project' })
+    ).toEqual({ text: 'itzterm · Worktree', label: 'itzterm, switch project' })
   })
 
   it('non-git project: the name only', () => {
-    expect(describeProjectSubtitle('termul', { ...local, isolationBranch: null })).toEqual({
-      text: 'termul',
-      label: 'termul, switch project'
+    expect(describeProjectSubtitle('itzterm', { ...local, isolationBranch: null })).toEqual({
+      text: 'itzterm',
+      label: 'itzterm, switch project'
     })
   })
 
@@ -212,8 +212,8 @@ describe('describeIsolationDetail', () => {
       { ...local, isolationBranch: null }
     ]) {
       const detail = describeIsolationDetail(isolation)
-      expect(describeProjectSubtitle('termul', isolation).text).toBe(
-        detail ? `termul · ${detail}` : 'termul'
+      expect(describeProjectSubtitle('itzterm', isolation).text).toBe(
+        detail ? `itzterm · ${detail}` : 'itzterm'
       )
     }
   })

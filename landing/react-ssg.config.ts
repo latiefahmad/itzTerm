@@ -4,7 +4,7 @@ import { routes } from './src/routes'
 
 export default defineReactSsgConfig({
   history: 'browser',
-  origin: 'https://termul.dev',
+  origin: 'https://itzterm.dev',
   routes,
   logLevel: 'normal',
 })

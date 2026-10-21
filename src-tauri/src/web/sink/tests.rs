@@ -464,7 +464,7 @@ fn temp_dir(label: &str) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let path = std::env::temp_dir().join(format!("termul-sink-{label}-{stamp}"));
+    let path = std::env::temp_dir().join(format!("itzterm-sink-{label}-{stamp}"));
     std::fs::create_dir_all(&path).unwrap();
     path
 }
@@ -779,7 +779,7 @@ async fn browser_open_request_reaches_the_agents_watch_only() {
 #[tokio::test]
 async fn session_lifecycle_publishes_history_changed_when_persistent() {
     let root = std::env::temp_dir().join(format!(
-        "termul-sink-history-broadcast-{}",
+        "itzterm-sink-history-broadcast-{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&root).unwrap();
@@ -1003,7 +1003,7 @@ async fn deleted_session_event_is_skipped_without_failing_the_relay() {
 #[tokio::test]
 async fn title_metadata_events_publish_history_changed_when_persistent() {
     let root = std::env::temp_dir().join(format!(
-        "termul-sink-title-broadcast-{}",
+        "itzterm-sink-title-broadcast-{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&root).unwrap();

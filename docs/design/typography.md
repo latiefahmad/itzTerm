@@ -2,7 +2,7 @@
 
 `body` is `font-sans` (**Inter Variable**, then `sans-serif`). Code, the editor, and the terminal are `font-mono` (**Paper Mono**, then `monospace`). Both files are bundled. There is no font picker. A saved `terminalFontFamily` is ignored.
 
-UI chrome stays at 14px (`text-sm`). Termul is a dense tool, so body copy is not 16px. Long-form markdown stays at `1rem`. Touch text fields stay at 16px.
+UI chrome stays at 14px (`text-sm`). itzTerm is a dense tool, so body copy is not 16px. Long-form markdown stays at `1rem`. Touch text fields stay at 16px.
 
 Never `text-[Npx]`. Use the scale below. `tabular-nums` on every value that changes (counts, times, revisions).
 

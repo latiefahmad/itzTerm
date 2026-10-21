@@ -5,7 +5,7 @@
  *
  * 1. **React DevTools hook tap** — when the app runs a profiling-capable
  *    React build (dev build, or release + `react-dom/profiling` alias gated
- *    behind `TERMUL_PERF_PROFILING`), the `__REACT_DEVTOOLS_GLOBAL_HOOK__`
+ *    behind `ITZTERM_PERF_PROFILING`), the `__REACT_DEVTOOLS_GLOBAL_HOOK__`
  *    receives `onCommitFiberRoot` for every root commit. We wrap it and
  *    attribute commits to component display names by walking the finished
  *    fiber tree — no app code changes, passive, works on release builds

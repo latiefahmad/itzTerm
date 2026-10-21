@@ -63,7 +63,7 @@ fn export_to(command: &str, params: Value) -> (String, Value) {
     let CanvasRoute::ExportTo { path, execute } =
         route("engine.execute", &execute(command, params))
     else {
-        panic!("{command} with a path is written by Termul");
+        panic!("{command} with a path is written by itzTerm");
     };
     (path, execute)
 }
@@ -204,7 +204,7 @@ fn commands_and_methods_that_name_files_are_unsupported_in_kiosk() {
 }
 
 #[test]
-fn a_batch_with_a_step_termul_must_handle_is_refused_whole() {
+fn a_batch_with_a_step_itzterm_must_handle_is_refused_whole() {
     let batch = |steps: Value| execute("command.batch", json!({"commands": steps}));
     let plain = json!([{"command": "node.create", "params": {"type": "frame"}}]);
     assert_eq!(route("engine.execute", &batch(plain)), CanvasRoute::Forward);
@@ -227,7 +227,7 @@ struct Project(std::path::PathBuf);
 impl Project {
     fn new() -> Self {
         let root =
-            std::env::temp_dir().join(format!("termul-canvas-policy-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("itzterm-canvas-policy-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(root.join("project/assets")).unwrap();
         Self(root)
     }

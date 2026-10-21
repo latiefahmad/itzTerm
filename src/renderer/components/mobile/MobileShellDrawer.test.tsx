@@ -272,7 +272,7 @@ function seedTabs(tabs: Array<Record<string, unknown>>, activeTabId: string | nu
 function makeProject(overrides: Partial<Project> = {}): Project {
   return {
     id: 'p1',
-    name: 'termul',
+    name: 'itzterm',
     color: 'blue',
     path: '/work',
     gitBranch: 'main',
@@ -311,7 +311,7 @@ async function openDrawer(props: Parameters<typeof Harness>[0] = {}) {
   const view = render(<Harness {...props} />)
   const menu = screen.getByRole('button', { name: 'Open menu' })
   fireEvent.click(menu)
-  const dialog = await screen.findByRole('dialog', { name: 'Termul' })
+  const dialog = await screen.findByRole('dialog', { name: 'itzTerm' })
   return { ...view, menu, dialog }
 }
 
@@ -349,7 +349,7 @@ beforeEach(async () => {
 })
 
 describe('MobileShellDrawer shell', () => {
-  it('is the full-screen left sheet #mobile-shell-drawer, named Termul, with the project row as its top row beside the close', async () => {
+  it('is the full-screen left sheet #mobile-shell-drawer, named itzTerm, with the project row as its top row beside the close', async () => {
     const { dialog } = await openDrawer()
 
     expect(dialog.id).toBe('mobile-shell-drawer')
@@ -358,10 +358,10 @@ describe('MobileShellDrawer shell', () => {
     expect(within(dialog).getByRole('button', { name: 'Close' })).toBeInTheDocument()
     expect(dialog.className).toContain('flex-col')
     // On web the title only names the dialog: the project row is the visible top row.
-    const title = within(dialog).getByRole('heading', { level: 2, name: 'Termul' })
+    const title = within(dialog).getByRole('heading', { level: 2, name: 'itzTerm' })
     expect(title).toHaveAttribute('tabindex', '-1')
     expect(title).toHaveClass('sr-only')
-    const projectRow = within(dialog).getByRole('button', { name: /termul/ })
+    const projectRow = within(dialog).getByRole('button', { name: /itzterm/ })
     const topRow = title.parentElement
     expect(topRow).toContainElement(projectRow)
     // The row leaves room for the close × in the corner.
@@ -391,7 +391,7 @@ describe('MobileShellDrawer shell', () => {
 
     const nav = within(dialog).getByRole('navigation', { name: 'Sections' })
     const inOrder = [
-      within(dialog).getByRole('button', { name: /termul/ }),
+      within(dialog).getByRole('button', { name: /itzterm/ }),
       within(nav).getByRole('button', { name: 'Chats' }),
       within(nav).getByRole('button', { name: 'Terminals' }),
       within(nav).getByRole('button', { name: 'Editors' }),
@@ -454,7 +454,7 @@ describe('MobileShellDrawer shell', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'New terminal' }))
     expect(onNewTerminal).toHaveBeenCalledTimes(1)
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
   })
 
   it('lists the Editors section with a Browse files pill', async () => {
@@ -467,7 +467,7 @@ describe('MobileShellDrawer shell', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Browse files' }))
     expect(onOpenFiles).toHaveBeenCalledTimes(1)
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
   })
 
   it('holds its list still while open, and follows the section again once closed', async () => {
@@ -481,9 +481,9 @@ describe('MobileShellDrawer shell', () => {
     expect(within(dialog).getByRole('heading', { level: 2, name: 'Terminals' })).toBeInTheDocument()
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
     fireEvent.click(menu)
-    const reopened = await screen.findByRole('dialog', { name: 'Termul' })
+    const reopened = await screen.findByRole('dialog', { name: 'itzTerm' })
     expect(within(reopened).getByRole('heading', { level: 2, name: 'Editors' })).toBeInTheDocument()
   })
 
@@ -498,11 +498,11 @@ describe('MobileShellDrawer shell', () => {
     const { dialog } = await openDrawer({ onOpenGitHistory: vi.fn() })
 
     // No project row on Tauri: a small visible wordmark title takes the top row.
-    const title = within(dialog).getByRole('heading', { level: 2, name: 'Termul' })
+    const title = within(dialog).getByRole('heading', { level: 2, name: 'itzTerm' })
     expect(title).not.toHaveClass('sr-only')
-    expect(title.parentElement?.querySelector('svg[aria-label="Termul"]')).toBeTruthy()
+    expect(title.parentElement?.querySelector('svg[aria-label="itzTerm"]')).toBeTruthy()
 
-    expect(within(dialog).queryByRole('button', { name: /termul/ })).not.toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: /itzterm/ })).not.toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Settings' })).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Snapshots' })).toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: 'Git history' })).not.toBeInTheDocument()
@@ -587,7 +587,7 @@ describe('MobileShellDrawer section nav', () => {
 
     fireEvent.click(navButton(dialog, 'Terminals'))
 
-    expect(screen.getByRole('dialog', { name: 'Termul' })).toBe(dialog)
+    expect(screen.getByRole('dialog', { name: 'itzTerm' })).toBe(dialog)
     expect(navButton(dialog, 'Terminals')).toHaveAttribute('aria-current', 'true')
     const group = within(dialog).getByRole('group', { name: 'Terminals' })
     expect(within(group).getByRole('button', { name: 'alpha' })).toBeInTheDocument()
@@ -598,7 +598,7 @@ describe('MobileShellDrawer section nav', () => {
     // A list row opens its tab and closes the drawer.
     fireEvent.click(within(group).getByRole('button', { name: 'beta' }))
     expect(workspaceRef.current.setActiveTab).toHaveBeenCalledWith('pane-1', 'term-t2')
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
   })
 
   it('shows an empty line and the primary pill for a section with no tab', async () => {
@@ -638,9 +638,9 @@ describe('MobileShellDrawer section nav', () => {
     fireEvent.click(navButton(dialog, 'Editors'))
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
     fireEvent.click(menu)
-    const reopened = await screen.findByRole('dialog', { name: 'Termul' })
+    const reopened = await screen.findByRole('dialog', { name: 'itzTerm' })
 
     expect(navButton(reopened, 'Chats')).toHaveAttribute('aria-current', 'true')
   })
@@ -688,10 +688,10 @@ describe('MobileShellDrawer search', () => {
     expect(screen.queryByText('beta plan')).not.toBeInTheDocument()
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
 
     fireEvent.click(menu)
-    const reopened = await screen.findByRole('dialog', { name: 'Termul' })
+    const reopened = await screen.findByRole('dialog', { name: 'itzTerm' })
     expect(within(reopened).getByRole('textbox', { name: 'Search chats' })).toHaveValue('')
     expect(within(reopened).getByText('beta plan')).toBeInTheDocument()
   })
@@ -708,7 +708,7 @@ describe('MobileShellDrawer New chat', () => {
     fireEvent.click(button)
 
     expect(onNewChat).toHaveBeenCalledTimes(1)
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
   })
 
   it('is disabled when a chat cannot be started', async () => {
@@ -739,7 +739,7 @@ describe('MobileShellDrawer footer', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Settings' }))
 
     expect(useSettingsModalStore.getState().view).toBe('app')
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
   })
 
   it('navigates to /snapshots from the drawer and closes it', async () => {
@@ -748,7 +748,7 @@ describe('MobileShellDrawer footer', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Snapshots' }))
 
     expect(mockNavigate).toHaveBeenCalledWith('/snapshots')
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
   })
 
   it('returns to the workspace after a terminal row is chosen off the workspace route', async () => {
@@ -783,7 +783,7 @@ describe('MobileShellDrawer footer', () => {
     fireEvent.click(button)
 
     expect(onOpenGitHistory).toHaveBeenCalledTimes(1)
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
   })
 
   it('hides the Git history button without a handler', async () => {
@@ -907,7 +907,7 @@ describe('MobileShellDrawer close confirm hand-off', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close zsh' }))
 
     expect(onCloseTerminal).toHaveBeenCalledWith('t1', 'term-t1')
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
     const confirm = openFakeConfirm()
     confirm.cancel()
 
@@ -919,10 +919,10 @@ describe('MobileShellDrawer close confirm hand-off', () => {
     render(<Harness section="terminals" onCloseTerminal={onCloseTerminal} />)
     const second = screen.getByRole('button', { name: 'Second opener' })
     fireEvent.click(second)
-    const dialog = await screen.findByRole('dialog', { name: 'Termul' })
+    const dialog = await screen.findByRole('dialog', { name: 'itzTerm' })
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close zsh' }))
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
     const confirm = openFakeConfirm()
     confirm.cancel()
 
@@ -936,7 +936,7 @@ describe('MobileShellDrawer close confirm hand-off', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close a.ts' }))
 
     expect(onCloseEditorTab).toHaveBeenCalledWith('/p/a.ts')
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
     openFakeConfirm().cancel()
     await waitFor(() => expect(menu).toHaveFocus())
   })
@@ -946,7 +946,7 @@ describe('MobileShellDrawer close confirm hand-off', () => {
     const { dialog } = await openDrawer({ section: 'terminals', onCloseTerminal })
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close zsh' }))
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
     const confirm = openFakeConfirm()
     // The confirm's action opened another dialog that took focus.
     const next = document.createElement('input')
@@ -963,7 +963,7 @@ describe('MobileShellDrawer close confirm hand-off', () => {
     const onCloseTerminal = vi.fn(() => true)
     const { dialog, unmount } = await openDrawer({ section: 'terminals', onCloseTerminal })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Close zsh' }))
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
     vi.mocked(logFrontendError).mockClear()
 
     unmount()
@@ -993,7 +993,7 @@ describe('MobileShellDrawer close confirm hand-off', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: closeName }))
     await settle()
 
-    expect(screen.getByRole('dialog', { name: 'Termul' })).toBe(dialog)
+    expect(screen.getByRole('dialog', { name: 'itzTerm' })).toBe(dialog)
     expect(useOverlayStackStore.getState().stack.map((entry) => entry.id)).not.toContain(
       'confirm-dialog:test'
     )
@@ -1003,7 +1003,7 @@ describe('MobileShellDrawer close confirm hand-off', () => {
 describe('MobileShellDrawer project row', () => {
   async function projectRow(props: Parameters<typeof Harness>[0] = {}) {
     const { dialog } = await openDrawer(props)
-    return within(dialog).getByRole('button', { name: /termul|No project|Demo/ })
+    return within(dialog).getByRole('button', { name: /itzterm|No project|Demo/ })
   }
 
   it('shows the project, its branch and Local for a git project', async () => {
@@ -1011,11 +1011,11 @@ describe('MobileShellDrawer project row', () => {
 
     expect(row).toHaveAttribute('aria-haspopup', 'dialog')
     expect(row).toHaveClass('min-h-11')
-    expect(within(row).getByText('termul')).toHaveClass('text-sm', 'font-medium')
+    expect(within(row).getByText('itzterm')).toHaveClass('text-sm', 'font-medium')
     expect(within(row).getByText('main · Local')).toHaveClass('text-xs', 'text-muted-foreground')
     // The avatar: the monogram tile (ProjectIcon is aria-hidden) and a chevron.
     expect(row.querySelector('[data-project-color="blue"]')).toBeInTheDocument()
-    expect(row.querySelector('svg[data-termul-icon="ChevronDown"]')).toBeInTheDocument()
+    expect(row.querySelector('svg[data-itzterm-icon="ChevronDown"]')).toBeInTheDocument()
   })
 
   it('reads No project, with no branch line, when there is no project', async () => {
@@ -1030,7 +1030,7 @@ describe('MobileShellDrawer project row', () => {
     seedProject(makeProject({ isGitRepo: false, gitBranch: undefined }))
     const row = await projectRow()
 
-    expect(within(row).getByText('termul')).toBeInTheDocument()
+    expect(within(row).getByText('itzterm')).toBeInTheDocument()
     expect(within(row).queryByText(/·/)).not.toBeInTheDocument()
   })
 
@@ -1097,7 +1097,7 @@ describe('MobileShellDrawer project row', () => {
     tauriRef.current = true
     const { dialog } = await openDrawer()
 
-    expect(within(dialog).queryByRole('button', { name: /termul/ })).not.toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: /itzterm/ })).not.toBeInTheDocument()
   })
 
   it('closes the drawer and opens the project sheet when tapped', async () => {
@@ -1107,7 +1107,7 @@ describe('MobileShellDrawer project row', () => {
     fireEvent.click(row)
 
     expect(onOpenProjects).toHaveBeenCalledTimes(1)
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
   })
 })
 
@@ -1122,7 +1122,7 @@ describe('MobileShellDrawer unread rows', () => {
     render(<Harness activeTabId="tab-1" activeSessionId="s1" />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Termul' })
+    const dialog = await screen.findByRole('dialog', { name: 'itzTerm' })
     expect(
       within(dialog).getByRole('button', { name: 'Chat two, New activity' })
     ).toBeInTheDocument()
@@ -1198,7 +1198,7 @@ describe('MobileShellDrawer History inside the real Sheet', () => {
     })
 
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Past chat' })).toBeNull())
-    expect(screen.getByRole('dialog', { name: 'Termul' })).toBe(dialog)
+    expect(screen.getByRole('dialog', { name: 'itzTerm' })).toBe(dialog)
     useOverlayStackStore.setState({ stack: [] })
   })
 
@@ -1228,7 +1228,7 @@ describe('MobileShellDrawer History inside the real Sheet', () => {
       expect(within(dialog).getByRole('button', { name: /^Second chat/ })).toHaveFocus()
     )
     expect(mockDeleteHistorySession).not.toHaveBeenCalled()
-    expect(screen.getByRole('dialog', { name: 'Termul' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'itzTerm' })).toBeInTheDocument()
   })
 
   it('Delete focuses the next visible row', async () => {
@@ -1243,7 +1243,7 @@ describe('MobileShellDrawer History inside the real Sheet', () => {
     await waitFor(() =>
       expect(within(dialog).getByRole('button', { name: /^Second chat/ })).toHaveFocus()
     )
-    expect(screen.getByRole('dialog', { name: 'Termul' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: 'itzTerm' })).toBeInTheDocument()
   })
 
   it('Delete on the last visible row focuses the Recents heading', async () => {
@@ -1276,10 +1276,10 @@ describe('MobileShellDrawer focus', () => {
       expect(within(dialog).getByRole('textbox', { name: 'Search chats' })).not.toHaveFocus()
     })
 
-    it('lands on the Termul title when no row is active', async () => {
+    it('lands on the itzTerm title when no row is active', async () => {
       const { dialog } = await openDrawer({ activeTabId: null })
 
-      const title = within(dialog).getByRole('heading', { level: 2, name: 'Termul' })
+      const title = within(dialog).getByRole('heading', { level: 2, name: 'itzTerm' })
       await waitFor(() => expect(title).toHaveFocus())
       expect(within(dialog).getByRole('textbox', { name: 'Search chats' })).not.toHaveFocus()
     })
@@ -1291,7 +1291,7 @@ describe('MobileShellDrawer focus', () => {
 
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       await waitFor(() => expect(menu).toHaveFocus())
     })
 
@@ -1310,7 +1310,7 @@ describe('MobileShellDrawer focus', () => {
 
       expect(within(dialog).queryByRole('textbox', { name: 'Rename zsh' })).toBeNull()
       expect(onRenameTerminal).not.toHaveBeenCalled()
-      expect(screen.getByRole('dialog', { name: 'Termul' })).toHaveAttribute('data-state', 'open')
+      expect(screen.getByRole('dialog', { name: 'itzTerm' })).toHaveAttribute('data-state', 'open')
       expect(within(dialog).getByRole('button', { name: 'Rename zsh' })).toHaveFocus()
     })
 
@@ -1319,7 +1319,7 @@ describe('MobileShellDrawer focus', () => {
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }))
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       await waitFor(() => expect(menu).toHaveFocus())
     })
 
@@ -1327,11 +1327,11 @@ describe('MobileShellDrawer focus', () => {
       render(<Harness />)
       const second = screen.getByRole('button', { name: 'Second opener' })
       fireEvent.click(second)
-      await screen.findByRole('dialog', { name: 'Termul' })
+      await screen.findByRole('dialog', { name: 'itzTerm' })
 
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       await waitFor(() => expect(second).toHaveFocus())
     })
 
@@ -1339,12 +1339,12 @@ describe('MobileShellDrawer focus', () => {
       render(<Harness />)
       const second = screen.getByRole('button', { name: 'Second opener' })
       fireEvent.click(second)
-      await screen.findByRole('dialog', { name: 'Termul' })
+      await screen.findByRole('dialog', { name: 'itzTerm' })
 
       // The shell's overlay registration closes it by state, not through Radix.
       fireEvent.click(screen.getByRole('button', { name: 'Close like back', hidden: true }))
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       await waitFor(() => expect(second).toHaveFocus())
     })
 
@@ -1354,13 +1354,13 @@ describe('MobileShellDrawer focus', () => {
       const menu = screen.getByRole('button', { name: 'Open menu' })
       const temp = screen.getByRole('button', { name: 'Temporary opener' })
       fireEvent.click(temp)
-      await screen.findByRole('dialog', { name: 'Termul' })
+      await screen.findByRole('dialog', { name: 'itzTerm' })
 
       act(() => controlsRef.current?.hideTempOpener())
       expect(temp.isConnected).toBe(false)
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       await waitFor(() => expect(menu).toHaveFocus())
     })
   })
@@ -1421,7 +1421,7 @@ describe('MobileShellDrawer focus', () => {
 
       tap(dialog)
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       await waitFor(() => expect(document.getElementById('mobile-shell-title')).toHaveFocus())
     })
 
@@ -1432,7 +1432,7 @@ describe('MobileShellDrawer focus', () => {
 
       tap(dialog)
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       await waitFor(() => expect(menu).toHaveFocus())
     })
   })
@@ -1442,7 +1442,7 @@ describe('MobileShellDrawer focus', () => {
       fireEvent.click(within(dialog).getByRole('button', { name: 'Chat one' }))
     }
     const drawerClosed = (): Promise<void> =>
-      waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
     const open = (props: Parameters<typeof Harness>[0]) =>
       openDrawer({ activeTabId: 'tab-1', activeSessionId: 's1', ...props })
 
@@ -1540,7 +1540,7 @@ describe('MobileShellDrawer focus', () => {
 
       // Reopen from ☰ and dismiss: focus returns to ☰, not the question.
       fireEvent.click(menu)
-      await screen.findByRole('dialog', { name: 'Termul' })
+      await screen.findByRole('dialog', { name: 'itzTerm' })
       fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
 
       await drawerClosed()
@@ -1563,7 +1563,7 @@ describe('MobileShellDrawer focus', () => {
       [
         'the project row',
         'Project sheet field',
-        (d) => fireEvent.click(within(d).getByRole('button', { name: /termul/ }))
+        (d) => fireEvent.click(within(d).getByRole('button', { name: /itzterm/ }))
       ]
     ]
 
@@ -1572,7 +1572,7 @@ describe('MobileShellDrawer focus', () => {
 
       tap(dialog)
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       const input = await screen.findByLabelText(field)
       await settle()
       expect(input).toHaveFocus()
@@ -1586,7 +1586,7 @@ describe('MobileShellDrawer focus', () => {
 
       tap(dialog)
 
-      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+      await waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
       await waitFor(() => expect(menu).toHaveFocus())
     })
   })
@@ -1604,8 +1604,8 @@ describe('MobileShellDrawer opened from the real header', () => {
       <>
         <MobileShellHeader
           title="Chat one"
-          subtitleText="termul · main · Local"
-          subtitleLabel="termul · main, switch project"
+          subtitleText="itzterm · main · Local"
+          subtitleLabel="itzterm · main, switch project"
           drawerOpen={open}
           onOpenDrawer={(opener) => {
             recordSheetOpener('mobile-drawer', opener ?? menuRef.current, menuRef.current)
@@ -1643,7 +1643,7 @@ describe('MobileShellDrawer opened from the real header', () => {
   })
 
   const drawerClosed = (): Promise<void> =>
-    waitFor(() => expect(screen.queryByRole('dialog', { name: 'Termul' })).toBeNull())
+    waitFor(() => expect(screen.queryByRole('dialog', { name: 'itzTerm' })).toBeNull())
 
   it.each([
     ['☰', 'Open menu', 0],
@@ -1656,7 +1656,7 @@ describe('MobileShellDrawer opened from the real header', () => {
 
     fireEvent.click(control)
 
-    const dialog = await screen.findByRole('dialog', { name: 'Termul' })
+    const dialog = await screen.findByRole('dialog', { name: 'itzTerm' })
     const controlled = control.getAttribute('aria-controls')
     expect(controlled).toBeTruthy()
     expect(document.getElementById(controlled ?? '')).toBe(dialog)
@@ -1665,7 +1665,7 @@ describe('MobileShellDrawer opened from the real header', () => {
   it('a navigation then focuses the real header title', async () => {
     render(<HeaderHarness />)
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Termul' })
+    const dialog = await screen.findByRole('dialog', { name: 'itzTerm' })
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Chat one' }))
 
@@ -1679,7 +1679,7 @@ describe('MobileShellDrawer opened from the real header', () => {
     render(<HeaderHarness attentionCount={2} />)
     const pill = screen.getByRole('button', { name: '2 other chats need you' })
     fireEvent.click(pill)
-    await screen.findByRole('dialog', { name: 'Termul' })
+    await screen.findByRole('dialog', { name: 'itzTerm' })
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: 'Escape' })
 
@@ -1692,7 +1692,7 @@ describe('MobileShellDrawer opened from the real header', () => {
     const menu = screen.getByRole('button', { name: 'Open menu' })
     const pill = screen.getByRole('button', { name: '2 other chats need you' })
     fireEvent.click(pill)
-    await screen.findByRole('dialog', { name: 'Termul' })
+    await screen.findByRole('dialog', { name: 'itzTerm' })
 
     // Nothing needs the user any more: the pill unmounts while the drawer is open.
     rerender(<HeaderHarness attentionCount={0} />)

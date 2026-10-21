@@ -229,7 +229,7 @@ describe('ACP agent plan store', () => {
     expect(useAcpStore.getState().plans['sess-1']).toBe(plan)
   })
 
-  it('_onPromptComplete appends a termul-plan fence to the last assistant message when plans[sessionId] is non-empty', () => {
+  it('_onPromptComplete appends a itzterm-plan fence to the last assistant message when plans[sessionId] is non-empty', () => {
     seedSession('sess-1', 'agent-1', true)
     useAcpStore.setState((s) => ({
       messages: {
@@ -271,7 +271,7 @@ describe('ACP agent plan store', () => {
     // The fence block must be the last block on the just-finished assistant message
     const fenceBlock = lastAgent!.blocks.find(
       (b) =>
-        b.type === 'text' && typeof b.text === 'string' && b.text.startsWith('```termul-plan\n')
+        b.type === 'text' && typeof b.text === 'string' && b.text.startsWith('```itzterm-plan\n')
     )
     expect(fenceBlock).toBeDefined()
     // Non-fence text blocks (the agent's reply prose) must survive the
@@ -280,11 +280,13 @@ describe('ACP agent plan store', () => {
     expect(lastAgent!.blocks).toHaveLength(2)
     // The preceding prose block gains a trailing newline so the fence opener
     // sits on its own line (CommonMark fence requirement). Without it, the
-    // joined text "working on it```termul-plan" is not recognized as a fence
+    // joined text "working on it```itzterm-plan" is not recognized as a fence
     // and the snapshot renders as plain text instead of a PlanPanel.
     expect(lastAgent!.blocks.find((b) => b.text === 'working on it\n')).toBeDefined()
     // The fence JSON decodes to the original PlanEntry[]
-    const json = (fenceBlock!.text as string).replace(/^```termul-plan\n/, '').replace(/\n```$/, '')
+    const json = (fenceBlock!.text as string)
+      .replace(/^```itzterm-plan\n/, '')
+      .replace(/\n```$/, '')
     expect(JSON.parse(json)).toEqual([
       { content: 'Read AC file', status: 'completed', priority: 'high' },
       { content: 'Fix bug', status: 'in_progress', priority: 'high' }
@@ -297,7 +299,7 @@ describe('ACP agent plan store', () => {
       .filter((b) => b.type === 'text')
       .map((b) => b.text ?? '')
       .join('')
-    expect(/(^|\n)```termul-plan/.test(joined)).toBe(true)
+    expect(/(^|\n)```itzterm-plan/.test(joined)).toBe(true)
   })
 
   it('_onPromptComplete normalizes the last non-empty text block even when a non-text block follows it', () => {
@@ -338,7 +340,7 @@ describe('ACP agent plan store', () => {
       .filter((b) => b.type === 'text')
       .map((b) => b.text ?? '')
       .join('')
-    expect(/(^|\n)```termul-plan/.test(joined)).toBe(true)
+    expect(/(^|\n)```itzterm-plan/.test(joined)).toBe(true)
   })
 
   it('_onPromptComplete writes no fence when plans[sessionId] is empty (non-compliant agent)', () => {
@@ -366,13 +368,13 @@ describe('ACP agent plan store', () => {
     })
     const lastAgent = useAcpStore.getState().messages['sess-1'].find((m) => m.role === 'agent')!
     expect(
-      lastAgent.blocks.some((b) => b.type === 'text' && b.text?.startsWith('```termul-plan\n'))
+      lastAgent.blocks.some((b) => b.type === 'text' && b.text?.startsWith('```itzterm-plan\n'))
     ).toBe(false)
   })
 
-  it('_onPromptComplete replaces a prior termul-plan fence on the same message (one fence per assistant message)', () => {
+  it('_onPromptComplete replaces a prior itzterm-plan fence on the same message (one fence per assistant message)', () => {
     seedSession('sess-1', 'agent-1', true)
-    const priorFence = '```termul-plan\n[{"content":"old","status":"completed"}]\n```'
+    const priorFence = '```itzterm-plan\n[{"content":"old","status":"completed"}]\n```'
     useAcpStore.setState((s) => ({
       messages: {
         ...s.messages,
@@ -402,11 +404,11 @@ describe('ACP agent plan store', () => {
     const lastAgent = useAcpStore.getState().messages['sess-1'].find((m) => m.role === 'agent')!
     const fences = lastAgent.blocks.filter(
       (b) =>
-        b.type === 'text' && typeof b.text === 'string' && b.text.startsWith('```termul-plan\n')
+        b.type === 'text' && typeof b.text === 'string' && b.text.startsWith('```itzterm-plan\n')
     )
     // Exactly one fence — the prior one was replaced, not appended
     expect(fences).toHaveLength(1)
-    const json = (fences[0]!.text as string).replace(/^```termul-plan\n/, '').replace(/\n```$/, '')
+    const json = (fences[0]!.text as string).replace(/^```itzterm-plan\n/, '').replace(/\n```$/, '')
     expect(JSON.parse(json)).toEqual([
       { content: 'new plan', status: 'in_progress', priority: 'high' }
     ])
@@ -457,7 +459,7 @@ describe('ACP agent plan store', () => {
       .getState()
       .messages['sess-circular'].find((m) => m.role === 'agent')!
     expect(lastAgent.blocks.find((b) => b.text === 'working on it')).toBeDefined()
-    expect(lastAgent.blocks.some((b) => b.text?.startsWith('```termul-plan'))).toBe(false)
+    expect(lastAgent.blocks.some((b) => b.text?.startsWith('```itzterm-plan'))).toBe(false)
   })
 
   it('_onPromptComplete updates the in-memory payload cache so a same-session rehydrate finds the fence (CAP-2 host-owned history)', async () => {
@@ -518,7 +520,7 @@ describe('ACP agent plan store', () => {
     expect(cachedAgent).toBeDefined()
     const cachedFence = cachedAgent!.blocks.find(
       (b) =>
-        b.type === 'text' && typeof b.text === 'string' && b.text.startsWith('```termul-plan\n')
+        b.type === 'text' && typeof b.text === 'string' && b.text.startsWith('```itzterm-plan\n')
     )
     expect(cachedFence).toBeDefined()
     // The live store and the cache must agree on the fence content.
@@ -527,17 +529,17 @@ describe('ACP agent plan store', () => {
       .messages['sess-cache'].find((m) => m.role === 'agent')!
     const storeFence = storeAgent.blocks.find(
       (b) =>
-        b.type === 'text' && typeof b.text === 'string' && b.text.startsWith('```termul-plan\n')
+        b.type === 'text' && typeof b.text === 'string' && b.text.startsWith('```itzterm-plan\n')
     )!
     expect(cachedFence!.text).toBe(storeFence.text)
   })
 
-  it('openHistorySession repopulates plans[id] from the latest termul-plan fence in the last assistant message', async () => {
+  it('openHistorySession repopulates plans[id] from the latest itzterm-plan fence in the last assistant message', async () => {
     const plan: PlanEntry[] = [
       { content: 'historical task', status: 'completed', priority: 'high' },
       { content: 'next step', status: 'in_progress', priority: 'medium' }
     ]
-    const fence = '```termul-plan\n' + JSON.stringify(plan) + '\n```'
+    const fence = '```itzterm-plan\n' + JSON.stringify(plan) + '\n```'
     setCachedSessionPayload('sess-rehydrate', {
       metadata: {
         id: 'sess-rehydrate',
@@ -599,7 +601,7 @@ describe('ACP agent plan store', () => {
         {
           id: 'm-agent',
           role: 'agent',
-          blocks: [{ type: 'text', text: '```termul-plan\n{not valid json}\n```' }],
+          blocks: [{ type: 'text', text: '```itzterm-plan\n{not valid json}\n```' }],
           streaming: false,
           timestamp: 1,
           seq: 2
@@ -616,7 +618,7 @@ describe('ACP agent plan store', () => {
   it('openHistorySession does not overwrite a live plans[id] from an in-flight turn', async () => {
     const livePlan: PlanEntry[] = [{ content: 'live', status: 'in_progress', priority: 'high' }]
     const fence =
-      '```termul-plan\n' + JSON.stringify([{ content: 'fence', status: 'completed' }]) + '\n```'
+      '```itzterm-plan\n' + JSON.stringify([{ content: 'fence', status: 'completed' }]) + '\n```'
     setCachedSessionPayload('sess-live', {
       metadata: {
         id: 'sess-live',
@@ -646,11 +648,11 @@ describe('ACP agent plan store', () => {
     expect(useAcpStore.getState().plans['sess-live']).toBe(livePlan)
   })
 
-  it('openHistorySession last-fence-wins when two termul-plan fences are in the same assistant message', async () => {
+  it('openHistorySession last-fence-wins when two itzterm-plan fences are in the same assistant message', async () => {
     const first =
-      '```termul-plan\n' + JSON.stringify([{ content: 'first', status: 'completed' }]) + '\n```'
+      '```itzterm-plan\n' + JSON.stringify([{ content: 'first', status: 'completed' }]) + '\n```'
     const second =
-      '```termul-plan\n' + JSON.stringify([{ content: 'second', status: 'in_progress' }]) + '\n```'
+      '```itzterm-plan\n' + JSON.stringify([{ content: 'second', status: 'in_progress' }]) + '\n```'
     setCachedSessionPayload('sess-twofence', {
       metadata: {
         id: 'sess-twofence',

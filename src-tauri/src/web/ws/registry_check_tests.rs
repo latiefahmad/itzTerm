@@ -11,7 +11,7 @@ use crate::acp_registry_snapshot::{
 
 fn temp_root(label: &str) -> std::path::PathBuf {
     std::env::temp_dir().join(format!(
-        "termul-ws-registry-{label}-{}",
+        "itzterm-ws-registry-{label}-{}",
         uuid::Uuid::new_v4()
     ))
 }

@@ -27,22 +27,22 @@ The same menu also starts a chat (**New chat**) or opens the project canvas (**O
 
 ## Which shells you can pick
 
-The **Terminal** group lists the shells that Termul finds. In the desktop app, these are the shells on your computer. In a browser, they are the shells on the computer that runs the Termul server.
+The **Terminal** group lists the shells that itzTerm finds. In the desktop app, these are the shells on your computer. In a browser, they are the shells on the computer that runs the itzTerm server.
 
-| Platform | Shells Termul looks for |
+| Platform | Shells itzTerm looks for |
 | --- | --- |
 | Windows | **PowerShell 7**, **PowerShell** (Windows PowerShell), **Command Prompt**, **WSL**, **Git Bash** |
 | macOS and Linux | **Bash**, **Zsh**, **Fish**, **Shell** (`sh`) |
 
 On Windows, **Command Prompt** and **WSL** are always in the list, even if WSL is not installed.
 
-On macOS and Linux, Termul looks only in `/bin` and `/usr/bin`. A shell installed somewhere else, for example by Homebrew, is not in the menu. To use one, create a [terminal profile](#save-a-terminal-profile) and type the shell's path.
+On macOS and Linux, itzTerm looks only in `/bin` and `/usr/bin`. A shell installed somewhere else, for example by Homebrew, is not in the menu. To use one, create a [terminal profile](#save-a-terminal-profile) and type the shell's path.
 
 If the project has a default shell, the menu lists it first and marks it **(default)**.
 
 ## Set the default shell
 
-The default shell is the shell Termul uses when you don't pick one, for example when you run **New Terminal** from the command palette. There is a default for all projects and a default for each project.
+The default shell is the shell itzTerm uses when you don't pick one, for example when you run **New Terminal** from the command palette. There is a default for all projects and a default for each project.
 
 To set the default for all projects:
 
@@ -58,16 +58,16 @@ To set the default for one project:
 2. Under **Shell Settings**, choose a shell in **Default Shell**.
 3. Select **Save Changes**.
 
-When you create a project, **Advanced options** in the new project dialog has a **Default Terminal** field. It sets the same per-project default. Termul fills in this field for you, so every project you create there starts with its own default shell.
+When you create a project, **Advanced options** in the new project dialog has a **Default Terminal** field. It sets the same per-project default. itzTerm fills in this field for you, so every project you create there starts with its own default shell.
 
-Termul picks the shell for a new terminal in this order:
+itzTerm picks the shell for a new terminal in this order:
 
 1. The shell you select in the **+** menu.
 2. The project's default shell.
 3. The default shell in Settings.
 4. Your system's default shell.
 
-Because projects you create in Termul already have a default shell, the Settings default applies only to projects without one. To change the shell for an existing project, change it in **Project settings**.
+Because projects you create in itzTerm already have a default shell, the Settings default applies only to projects without one. To change the shell for an existing project, change it in **Project settings**.
 
 ## Save a terminal profile
 
@@ -86,10 +86,10 @@ A terminal profile is a saved shell setup. It has a shell, its arguments, a star
 ![The New terminal profile dialog with the name Node dev and the variable NODE_ENV=development](/screenshots/terminals-profile-dialog.png)
 
 <Callout type="warn">
-  Termul saves profile environment variables in plain text with your settings. Don't put passwords or tokens in them.
+  itzTerm saves profile environment variables in plain text with your settings. Don't put passwords or tokens in them.
 </Callout>
 
-To change a profile, select its pencil icon. To remove it, select its trash icon. Termul deletes the profile right away, without asking.
+To change a profile, select its pencil icon. To remove it, select its trash icon. itzTerm deletes the profile right away, without asking.
 
 ### Open a terminal from a profile
 
@@ -103,6 +103,6 @@ The terminal opens in the active pane, and the tab has the profile's name. Profi
 
 ## Terminal limits
 
-A project can have 10 terminals open at once, and Termul as a whole can have 30. Terminals that keep running in the background count toward both limits. When you reach a limit, Termul shows a message such as "Terminal limit reached (10 per project, 30 total): this project is at its limit" and doesn't open the terminal. Close a terminal to open a new one.
+A project can have 10 terminals open at once, and itzTerm as a whole can have 30. Terminals that keep running in the background count toward both limits. When you reach a limit, itzTerm shows a message such as "Terminal limit reached (10 per project, 30 total): this project is at its limit" and doesn't open the terminal. Close a terminal to open a new one.
 
-To change the per-project limit, set the `TERMUL_MAX_TERMINALS_PER_PROJECT` environment variable to a number before you start Termul. If you run Termul as a server, you can also use the `--max-terminals-per-project` flag. The total limit of 30 doesn't change.
+To change the per-project limit, set the `ITZTERM_MAX_TERMINALS_PER_PROJECT` environment variable to a number before you start itzTerm. If you run itzTerm as a server, you can also use the `--max-terminals-per-project` flag. The total limit of 30 doesn't change.

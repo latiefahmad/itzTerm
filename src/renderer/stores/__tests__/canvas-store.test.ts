@@ -89,7 +89,7 @@ const PROJECT = 'proj-1'
 const DOC_A = 'C:/proj/design.figcraft'
 const DOC_B = 'C:/proj/poster.figcraft'
 const CANVAS_ORIGIN = 'http://127.0.0.1:5199'
-const PIN = 'termul-v1'
+const PIN = 'itzterm-v1'
 const BIG = '9007199254740993'
 
 const INFO: CanvasOpenInfo = {
@@ -1096,10 +1096,10 @@ describe('disk changes (AD-27)', () => {
 
 describe('pinVerdict', () => {
   it('matches only the exact pinned tag and refuses only in release', () => {
-    expect(pinVerdict('termul-v1', 'termul-v1', true)).toBe('match')
-    expect(pinVerdict('dev', 'termul-v1', false)).toBe('mismatch-logged')
-    expect(pinVerdict('dev', 'termul-v1', true)).toBe('mismatch-refused')
-    expect(pinVerdict(null, 'termul-v1', true)).toBe('mismatch-refused')
+    expect(pinVerdict('itzterm-v1', 'itzterm-v1', true)).toBe('match')
+    expect(pinVerdict('dev', 'itzterm-v1', false)).toBe('mismatch-logged')
+    expect(pinVerdict('dev', 'itzterm-v1', true)).toBe('mismatch-refused')
+    expect(pinVerdict(null, 'itzterm-v1', true)).toBe('mismatch-refused')
   })
 })
 

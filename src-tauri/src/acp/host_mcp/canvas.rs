@@ -72,11 +72,11 @@ impl CanvasErrorCode {
         match self {
             Self::CanvasClosed => Some(
                 "The canvas is not open: ask the user to open it with the Canvas button in \
-                 Termul's left rail, then retry.",
+                 itzTerm's left rail, then retry.",
             ),
             Self::CanvasClosing => Some(
                 "The canvas is closing: ask the user to reopen it with the Canvas button in \
-                 Termul's left rail, then retry.",
+                 itzTerm's left rail, then retry.",
             ),
             Self::CanvasHidden => Some(
                 "This tool needs the canvas on screen: ask the user to switch to the Canvas tab, \
@@ -84,7 +84,7 @@ impl CanvasErrorCode {
                  while it is hidden.",
             ),
             Self::CanvasOpenElsewhere => Some(
-                "This project's canvas is held by another Termul window or browser tab: ask the \
+                "This project's canvas is held by another itzTerm window or browser tab: ask the \
                  user to close it there and reopen it with the Canvas button here, then retry.",
             ),
             Self::CanvasTimeout => Some(
@@ -94,7 +94,7 @@ impl CanvasErrorCode {
                  too, ask the user to check that the Canvas tab is open and responsive.",
             ),
             Self::UnsupportedInKiosk => Some(
-                "Termul owns the canvas file: save with save_file, export only to a relative \
+                "itzTerm owns the canvas file: save with save_file, export only to a relative \
                  path inside the project, and never open or write design files on disk.",
             ),
             Self::UnknownMethod | Self::EngineError => None,

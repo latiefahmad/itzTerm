@@ -99,7 +99,7 @@ export const PersistenceKeys = {
   sshProfiles: 'ssh/profiles',
   // The last crash-recovery session snapshot (device scope).
   sessionsAutoSave: 'sessions/auto-save',
-  // Marker: the pre-fold-in `termul-sessions.json` entry was moved to
+  // Marker: the pre-fold-in `itzterm-sessions.json` entry was moved to
   // `sessionsAutoSave`; the legacy file is never read again once it is set.
   sessionsLegacyMigrated: 'sessions/legacy-migrated',
   // ADR-004.3 / ADR-004.6: user-defined terminal-native agent definitions.

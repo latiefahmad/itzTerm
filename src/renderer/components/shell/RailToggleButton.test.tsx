@@ -45,11 +45,11 @@ describe('RailToggleButton', () => {
 
   it('swaps the glyph: collapse when expanded, expand when collapsed', async () => {
     const toggle = renderToggle()
-    expect(toggle.querySelector('[data-termul-icon="PanelLeftCollapse"]')).not.toBeNull()
+    expect(toggle.querySelector('[data-itzterm-icon="PanelLeftCollapse"]')).not.toBeNull()
 
     fireEvent.click(toggle)
     await waitFor(() =>
-      expect(toggle.querySelector('[data-termul-icon="PanelLeftExpand"]')).not.toBeNull()
+      expect(toggle.querySelector('[data-itzterm-icon="PanelLeftExpand"]')).not.toBeNull()
     )
   })
 

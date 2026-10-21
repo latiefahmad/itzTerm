@@ -10,7 +10,7 @@ impl TempDir {
             .expect("clock")
             .as_nanos();
         let path = std::env::temp_dir().join(format!(
-            "termul-web-auth-{label}-{}-{nanos}",
+            "itzterm-web-auth-{label}-{}-{nanos}",
             std::process::id()
         ));
         std::fs::create_dir_all(&path).expect("create temp dir");

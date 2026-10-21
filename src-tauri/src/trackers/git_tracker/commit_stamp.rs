@@ -1,10 +1,10 @@
-//! The command stamp of a commit: the `Termul-Command-Id: <id>` trailer that
+//! The command stamp of a commit: the `itzTerm-Command-Id: <id>` trailer that
 //! lets a resend find the commit it made, and the `expectedHead` precondition
 //! that refuses a commit when `HEAD` moved since the caller looked.
 //!
 //! The stamp is a real git trailer (parsed by git, exact value match): a prose
 //! line that merely looks like one is not a stamp. A commit and its head check
-//! run under one in-process lock per git dir, so two Termul commits naming one
+//! run under one in-process lock per git dir, so two itzTerm commits naming one
 //! `expectedHead` cannot both pass the check.
 //!
 //! Limits of the stamp: a resend is found within the commits between
@@ -18,7 +18,7 @@ use std::fmt;
 use super::*;
 
 /// Trailer key of the commit entity stamp.
-const TRAILER_KEY: &str = "Termul-Command-Id";
+const TRAILER_KEY: &str = "itzTerm-Command-Id";
 /// Most recent commits a stamp search looks through (see the module doc).
 const SEARCH_DEPTH: &str = "200";
 
@@ -77,7 +77,7 @@ fn describe_head(sha: &str) -> &str {
     }
 }
 
-/// `message` followed by the `Termul-Command-Id` trailer.
+/// `message` followed by the `itzTerm-Command-Id` trailer.
 pub(super) fn with_command_trailer(message: &str, command_id: &str) -> String {
     format!("{message}\n\n{TRAILER_KEY}: {command_id}")
 }
@@ -135,7 +135,7 @@ pub fn find_stamped_commit(
 }
 
 /// One lock per git dir (a linked worktree has its own), so the `expectedHead`
-/// check and the commit it guards are atomic against other Termul commits.
+/// check and the commit it guards are atomic against other itzTerm commits.
 static REPO_LOCKS: std::sync::LazyLock<
     parking_lot::Mutex<HashMap<std::path::PathBuf, Arc<parking_lot::Mutex<()>>>>,
 > = std::sync::LazyLock::new(|| parking_lot::Mutex::new(HashMap::new()));

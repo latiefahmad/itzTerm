@@ -14,8 +14,8 @@ function isHttpUrl(url: string): boolean {
 }
 
 /** Raw HTML for the custom image element the sanitizer keeps and harden ignores. */
-export function termulImageTag(url: string, alt: string): string {
-  return `<termul-image data-url="${escapeHtmlAttribute(url)}" data-alt="${escapeHtmlAttribute(alt)}"></termul-image>`
+export function itztermImageTag(url: string, alt: string): string {
+  return `<itzterm-image data-url="${escapeHtmlAttribute(url)}" data-alt="${escapeHtmlAttribute(alt)}"></itzterm-image>`
 }
 
 /** The first definition wins, per CommonMark. */
@@ -46,7 +46,7 @@ function transformChildren(node: MarkdownNode, definitions: Map<string, string>)
     // would otherwise render `[Image blocked: ]` on the default pipeline.
     const url = imageUrl(child, definitions)
     if (url !== undefined && !isHttpUrl(url)) {
-      return [{ type: 'html', value: termulImageTag(url, child.alt ?? '') }]
+      return [{ type: 'html', value: itztermImageTag(url, child.alt ?? '') }]
     }
     transformChildren(child, definitions)
     return [child]
@@ -55,10 +55,10 @@ function transformChildren(node: MarkdownNode, definitions: Map<string, string>)
 
 /**
  * Streamdown's `rehype-harden` turns non-`https?` images into
- * `[Image blocked: …]`; `<termul-image>` survives `rehype-sanitize` because it
+ * `[Image blocked: …]`; `<itzterm-image>` survives `rehype-sanitize` because it
  * is registered via the `allowedTags` prop.
  */
-export function remarkTermulImages(): (tree: MarkdownNode) => void {
+export function remarkItzTermImages(): (tree: MarkdownNode) => void {
   return (tree) => {
     const definitions = new Map<string, string>()
     collectDefinitions(tree, definitions)

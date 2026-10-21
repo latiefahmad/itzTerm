@@ -1,9 +1,9 @@
-//! Bind configuration for the standalone `termul-server` HTTP listener.
+//! Bind configuration for the standalone `itzterm-server` HTTP listener.
 //!
 //! Mirrors `remote::host::RemoteBindMode` so `--host` parsing stays consistent
 //! across the desktop-hosted shared-live server and the headless ACP server.
 //! The single-token web auth gate (CAP-1 interim) is configured here
-//! (`--web-auth-token` / `$TERMUL_WEB_AUTH_TOKEN`); resolution + persistence
+//! (`--web-auth-token` / `$ITZTERM_WEB_AUTH_TOKEN`); resolution + persistence
 //! live in `web::auth`, the Epic-2 identity/authz model replaces both later.
 
 use std::net::SocketAddr;
@@ -41,10 +41,10 @@ pub const DEFAULT_PARTITION_BYTE_BUDGET: u64 = 16 * 1024 * 1024;
 /// `--receipt-retention-secs` is clamped to it at startup.
 pub const MAX_RECEIPT_RETENTION_SECS: u64 = 7 * 24 * 60 * 60;
 
-const AGENT_IDLE_WINDOW_ENV: &str = "TERMUL_AGENT_IDLE_REAP_SECS";
-const MAX_TERMINALS_PER_PROJECT_ENV: &str = "TERMUL_MAX_TERMINALS_PER_PROJECT";
-const PARTITION_GC_AGE_ENV: &str = "TERMUL_PARTITION_GC_AGE_SECS";
-const PARTITION_BYTE_BUDGET_ENV: &str = "TERMUL_PARTITION_BYTE_BUDGET";
+const AGENT_IDLE_WINDOW_ENV: &str = "ITZTERM_AGENT_IDLE_REAP_SECS";
+const MAX_TERMINALS_PER_PROJECT_ENV: &str = "ITZTERM_MAX_TERMINALS_PER_PROJECT";
+const PARTITION_GC_AGE_ENV: &str = "ITZTERM_PARTITION_GC_AGE_SECS";
+const PARTITION_BYTE_BUDGET_ENV: &str = "ITZTERM_PARTITION_BYTE_BUDGET";
 
 /// Parse a strictly positive integer from a flag or env value.
 fn parse_positive<T>(source: &str, value: &str) -> Result<T, ParseCliError>
@@ -66,7 +66,7 @@ where
 
 /// Positive integer from an env var. Unset and blank values mean "not
 /// configured". An invalid value is ignored with a queued startup warning
-/// (the pre-existing `TERMUL_AGENT_IDLE_REAP_SECS` behavior) — unlike the
+/// (the pre-existing `ITZTERM_AGENT_IDLE_REAP_SECS` behavior) — unlike the
 /// flags, which fail startup.
 fn positive_env<T>(key: &str, warnings: &mut Vec<String>) -> Option<T>
 where
@@ -89,7 +89,7 @@ where
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DesktopAgentIdleWindow {
     pub secs: u64,
-    /// `true` when `$TERMUL_AGENT_IDLE_REAP_SECS` supplied `secs`. That value
+    /// `true` when `$ITZTERM_AGENT_IDLE_REAP_SECS` supplied `secs`. That value
     /// stays locked: App Preferences cannot move the live window.
     pub from_env: bool,
 }
@@ -108,14 +108,14 @@ pub fn server_agent_idle_window_lock(cfg: &ServerConfig) -> Option<&'static str>
     }
 }
 
-/// `$TERMUL_AGENT_IDLE_REAP_SECS` → [`DEFAULT_AGENT_IDLE_WINDOW_SECS`] (1800).
+/// `$ITZTERM_AGENT_IDLE_REAP_SECS` → [`DEFAULT_AGENT_IDLE_WINDOW_SECS`] (1800).
 /// An invalid env value is ignored with a logged warning.
 #[must_use]
 pub fn desktop_agent_idle_window_secs() -> DesktopAgentIdleWindow {
     let mut warnings = Vec::new();
     let from_env = positive_env::<u64>(AGENT_IDLE_WINDOW_ENV, &mut warnings);
     for warning in warnings {
-        log::warn!(target: "termul::web::agent_reaper", "{warning}");
+        log::warn!(target: "itzterm::web::agent_reaper", "{warning}");
     }
     match from_env {
         Some(secs) => DesktopAgentIdleWindow {
@@ -130,7 +130,7 @@ pub fn desktop_agent_idle_window_secs() -> DesktopAgentIdleWindow {
 }
 
 /// The per-project terminal cap for the desktop host, which has no CLI:
-/// `$TERMUL_MAX_TERMINALS_PER_PROJECT` → [`DEFAULT_MAX_TERMINALS_PER_PROJECT`].
+/// `$ITZTERM_MAX_TERMINALS_PER_PROJECT` → [`DEFAULT_MAX_TERMINALS_PER_PROJECT`].
 /// An invalid env value is ignored with a logged warning.
 #[must_use]
 pub fn desktop_max_terminals_per_project() -> usize {
@@ -183,32 +183,32 @@ fn removed_flag_warning(flag: &str, value: Option<&str>) -> String {
 }
 
 /// Resolve the default ACP session-history root for the standalone
-/// `termul-server`: `$TERMUL_SESSIONS_DIR` (trimmed, non-empty) →
-/// `$XDG_STATE_HOME/termul/sessions` →
-/// `$HOME/.local/state/termul/sessions` →
-/// `%LOCALAPPDATA%/Termul/sessions`.
+/// `itzterm-server`: `$ITZTERM_SESSIONS_DIR` (trimmed, non-empty) →
+/// `$XDG_STATE_HOME/itzterm/sessions` →
+/// `$HOME/.local/state/itzterm/sessions` →
+/// `%LOCALAPPDATA%/itzTerm/sessions`.
 ///
 /// Empty-string env vars (`XDG_STATE_HOME=""`, `HOME=""`,
 /// `LOCALAPPDATA=""`) are filtered out so the default never becomes a
-/// CWD-relative `termul/sessions` dir; a RELATIVE `XDG_STATE_HOME` is
+/// CWD-relative `itzterm/sessions` dir; a RELATIVE `XDG_STATE_HOME` is
 /// likewise ignored (the XDG base-dir spec requires an absolute path) —
 /// the same guard as [`default_projects_file`] (issue #839).
 pub fn default_sessions_dir() -> Option<PathBuf> {
-    if let Some(path) = trimmed_env_path("TERMUL_SESSIONS_DIR") {
+    if let Some(path) = trimmed_env_path("ITZTERM_SESSIONS_DIR") {
         return Some(path);
     }
     #[cfg(unix)]
     {
         // Issue #839: empty-string env vars (XDG_STATE_HOME="", HOME="")
         // are filtered out so the default never becomes a CWD-relative
-        // `termul/sessions` dir, and a RELATIVE XDG_STATE_HOME is ignored
+        // `itzterm/sessions` dir, and a RELATIVE XDG_STATE_HOME is ignored
         // (the XDG base-dir spec requires an absolute path) — mirroring
         // the guard documented on `default_projects_file` below.
         if let Some(base) = std::env::var_os("XDG_STATE_HOME")
             .map(PathBuf::from)
             .filter(|p| !p.as_os_str().is_empty() && p.is_absolute())
         {
-            return Some(base.join("termul").join("sessions"));
+            return Some(base.join("itzterm").join("sessions"));
         }
         std::env::var_os("HOME")
             .map(PathBuf::from)
@@ -216,7 +216,7 @@ pub fn default_sessions_dir() -> Option<PathBuf> {
             .map(|home| {
                 home.join(".local")
                     .join("state")
-                    .join("termul")
+                    .join("itzterm")
                     .join("sessions")
             })
     }
@@ -225,22 +225,22 @@ pub fn default_sessions_dir() -> Option<PathBuf> {
         std::env::var_os("LOCALAPPDATA")
             .map(PathBuf::from)
             .filter(|p| !p.as_os_str().is_empty())
-            .map(|base| base.join("Termul").join("sessions"))
+            .map(|base| base.join("itzTerm").join("sessions"))
     }
     #[cfg(not(any(unix, windows)))]
     None
 }
 
 /// Resolve the default VFS-roots registry file (Story 4.1) for the
-/// standalone `termul-server`. Mirrors [`default_sessions_dir`]'s chain:
-/// `$TERMUL_PROJECTS_FILE` (trimmed, non-empty) →
-/// `$XDG_STATE_HOME/termul/projects.json` →
-/// `$HOME/.local/state/termul/projects.json` →
-/// `%LOCALAPPDATA%/Termul/projects.json`.
+/// standalone `itzterm-server`. Mirrors [`default_sessions_dir`]'s chain:
+/// `$ITZTERM_PROJECTS_FILE` (trimmed, non-empty) →
+/// `$XDG_STATE_HOME/itzterm/projects.json` →
+/// `$HOME/.local/state/itzterm/projects.json` →
+/// `%LOCALAPPDATA%/itzTerm/projects.json`.
 ///
 /// Empty-string env vars (`XDG_STATE_HOME=""`, `HOME=""`,
 /// `LOCALAPPDATA=""`) are filtered out so the default never becomes a
-/// CWD-relative `termul/projects.json` (mirrors the Patch-15 guard in
+/// CWD-relative `itzterm/projects.json` (mirrors the Patch-15 guard in
 /// [`ServerConfig::service_account_state_dir`]); an empty value falls
 /// through to the next branch or the `None` outcome. A RELATIVE
 /// `XDG_STATE_HOME` is likewise ignored (the XDG base-dir spec requires an
@@ -254,7 +254,7 @@ pub fn default_sessions_dir() -> Option<PathBuf> {
 /// registry and is created on the first project mutation
 /// (`FileProjectRegistry`'s atomic save creates the parent dirs).
 pub fn default_projects_file() -> Option<PathBuf> {
-    if let Some(path) = trimmed_env_path("TERMUL_PROJECTS_FILE") {
+    if let Some(path) = trimmed_env_path("ITZTERM_PROJECTS_FILE") {
         return Some(path);
     }
     #[cfg(unix)]
@@ -267,7 +267,7 @@ pub fn default_projects_file() -> Option<PathBuf> {
             // relative path would silently become CWD-relative).
             .filter(|p| !p.as_os_str().is_empty() && p.is_absolute())
         {
-            return Some(base.join("termul").join("projects.json"));
+            return Some(base.join("itzterm").join("projects.json"));
         }
         std::env::var_os("HOME")
             .map(PathBuf::from)
@@ -275,7 +275,7 @@ pub fn default_projects_file() -> Option<PathBuf> {
             .map(|home| {
                 home.join(".local")
                     .join("state")
-                    .join("termul")
+                    .join("itzterm")
                     .join("projects.json")
             })
     }
@@ -284,7 +284,7 @@ pub fn default_projects_file() -> Option<PathBuf> {
         std::env::var_os("LOCALAPPDATA")
             .map(PathBuf::from)
             .filter(|p| !p.as_os_str().is_empty())
-            .map(|base| base.join("Termul").join("projects.json"))
+            .map(|base| base.join("itzTerm").join("projects.json"))
     }
     #[cfg(not(any(unix, windows)))]
     None
@@ -293,10 +293,10 @@ pub fn default_projects_file() -> Option<PathBuf> {
 /// Environment fallback of the removed `--project-root` flag. Like the flag it
 /// only seeds one project while the registry is empty, and it queues the same
 /// startup warning.
-pub const PROJECT_ROOT_ENV: &str = "TERMUL_PROJECT_ROOT";
+pub const PROJECT_ROOT_ENV: &str = "ITZTERM_PROJECT_ROOT";
 
 /// The startup warning for the removed `--project-root` option (or its
-/// `$TERMUL_PROJECT_ROOT` fallback): there is no single host project root any
+/// `$ITZTERM_PROJECT_ROOT` fallback): there is no single host project root any
 /// more; the value only seeds one in-memory project while the registry has no
 /// usable project. `source` names where the value came from.
 fn project_root_warning(source: &str) -> String {
@@ -309,7 +309,7 @@ fn project_root_warning(source: &str) -> String {
 /// Validate a raw project-root path and return its canonical absolute form.
 ///
 /// Used where a `ServerConfig::seed_project_root` is constructed (the
-/// removed `--project-root` flag and its `$TERMUL_PROJECT_ROOT` fallback) so
+/// removed `--project-root` flag and its `$ITZTERM_PROJECT_ROOT` fallback) so
 /// the seeded project can rely on being a real, accessible directory rather
 /// than a path string that only resolves correctly at the first request. The
 /// `/fs/*` browse/read routes are intentionally broader (no boundary —
@@ -387,11 +387,11 @@ pub struct ServerConfig {
     /// Per-session event-log capacity (bounded ring; AC4). Default 4096.
     pub event_log_capacity: usize,
     /// Idle window (seconds) after which the host reaps an idle agent.
-    /// `--agent-idle-window-secs` → `$TERMUL_AGENT_IDLE_REAP_SECS` →
+    /// `--agent-idle-window-secs` → `$ITZTERM_AGENT_IDLE_REAP_SECS` →
     /// [`DEFAULT_AGENT_IDLE_WINDOW_SECS`] (1800). The desktop host reads the
     /// same env var and default through [`desktop_agent_idle_window_secs`].
     pub agent_idle_window_secs: u64,
-    /// `true` when a flag or `$TERMUL_AGENT_IDLE_REAP_SECS` fixed the window.
+    /// `true` when a flag or `$ITZTERM_AGENT_IDLE_REAP_SECS` fixed the window.
     /// Settings can change the live window only when this is `false`.
     pub agent_idle_window_locked: bool,
     /// Outbound-queue overflow tolerance per client: consecutive failed
@@ -400,23 +400,23 @@ pub struct ServerConfig {
     /// `serve_router` into the connection runtime every `/ws` socket uses.
     pub overflow_tolerance: usize,
     /// Per-project terminal cap enforced by the PTY manager on every spawn.
-    /// `--max-terminals-per-project` → `$TERMUL_MAX_TERMINALS_PER_PROJECT` →
+    /// `--max-terminals-per-project` → `$ITZTERM_MAX_TERMINALS_PER_PROJECT` →
     /// [`DEFAULT_MAX_TERMINALS_PER_PROJECT`] (10). The desktop host reads the
     /// same env var and default through [`desktop_max_terminals_per_project`].
     pub max_terminals_per_project: usize,
     /// How long the command ledger keeps a command's outcome, in seconds
     /// (bare command ids are kept six times as long).
     /// `--receipt-retention-secs` → [`DEFAULT_RECEIPT_RETENTION_SECS`] (600).
-    /// `termul-server` builds its ledger from it; the desktop shared-live host
+    /// `itzterm-server` builds its ledger from it; the desktop shared-live host
     /// uses the default.
     pub receipt_retention_secs: u64,
     /// Age (seconds) after which an unused per-device store partition is
     /// garbage collected. `--partition-gc-age-secs` →
-    /// `$TERMUL_PARTITION_GC_AGE_SECS` → [`DEFAULT_PARTITION_GC_AGE_SECS`]
+    /// `$ITZTERM_PARTITION_GC_AGE_SECS` → [`DEFAULT_PARTITION_GC_AGE_SECS`]
     /// (90 days). Read by the host's [`crate::web::store::StorePolicy`].
     pub partition_gc_age_secs: u64,
     /// Per-device store partition byte budget. `--partition-byte-budget` →
-    /// `$TERMUL_PARTITION_BYTE_BUDGET` → [`DEFAULT_PARTITION_BYTE_BUDGET`]
+    /// `$ITZTERM_PARTITION_BYTE_BUDGET` → [`DEFAULT_PARTITION_BYTE_BUDGET`]
     /// (16 MiB). A write that would push a partition past it is refused
     /// `STORE_PARTITION_FULL`.
     pub partition_byte_budget: u64,
@@ -427,7 +427,7 @@ pub struct ServerConfig {
     /// `init_tracing`. Empty for programmatic constructions.
     pub deprecation_warnings: Vec<String>,
     /// Seed root from the removed `--project-root` flag (or
-    /// `$TERMUL_PROJECT_ROOT`): when the project registry has no usable
+    /// `$ITZTERM_PROJECT_ROOT`): when the project registry has no usable
     /// project at startup, one in-memory project is registered at this path
     /// (see `ProjectRegistry::seed_root_if_no_usable_project`) so the
     /// registry-only boundary (`git_api::ensure_within_project_boundary`) does
@@ -437,10 +437,10 @@ pub struct ServerConfig {
     /// the registry through the project commands.
     pub seed_project_root: Option<PathBuf>,
     /// Server-owned VFS-roots registry file (VPS mode, Story 4.1). The
-    /// standalone `termul-server` binary loads this at startup and seeds the
+    /// standalone `itzterm-server` binary loads this at startup and seeds the
     /// in-memory [`crate::web::project_registry::ProjectRegistry`] from it.
     /// [`ServerConfig::from_args`] resolves this as `--projects-file` →
-    /// `$TERMUL_PROJECTS_FILE` → `<--state-dir>/projects.json` when
+    /// `$ITZTERM_PROJECTS_FILE` → `<--state-dir>/projects.json` when
     /// `--state-dir` was passed → the platform state dir (`$XDG_STATE_HOME`
     /// / `$HOME` / `%LOCALAPPDATA%`, via [`default_projects_file`]). An
     /// explicit `--state-dir` therefore beats HOME/XDG (issue #839 / #879).
@@ -454,7 +454,7 @@ pub struct ServerConfig {
     pub projects_file: Option<PathBuf>,
     /// Standalone-only durable session root. Resolved by
     /// [`ServerConfig::from_args`] as `--sessions-dir` →
-    /// `$TERMUL_SESSIONS_DIR` → `<--state-dir>/sessions` when `--state-dir`
+    /// `$ITZTERM_SESSIONS_DIR` → `<--state-dir>/sessions` when `--state-dir`
     /// was passed → the platform state dir (issue #839 / #879). Desktop
     /// shared-live uses `None` and does not consult this resolver.
     pub sessions_dir: Option<PathBuf>,
@@ -476,8 +476,8 @@ pub struct ServerConfig {
     /// `/log/frontend-error`, `/projects/default`, `/acp/install`). Default
     /// `false` keeps the CWE-306 loopback guard on for any `0.0.0.0` bind.
     /// Only the standalone
-    /// `termul-server` honors `--allow-remote-writes` /
-    /// `TERMUL_SERVER_ALLOW_REMOTE_WRITES`; the desktop shared-live host
+    /// `itzterm-server` honors `--allow-remote-writes` /
+    /// `ITZTERM_SERVER_ALLOW_REMOTE_WRITES`; the desktop shared-live host
     /// always sets this `false` (LAN clients remain view-only for
     /// mutations). The web auth token gate (`web_auth_token`)
     /// is independent: it authenticates the client, while this flag admits
@@ -488,7 +488,7 @@ pub struct ServerConfig {
     /// `/ws` `authenticate` handshake, gates `/terminal/ws` operations until
     /// `authenticate`, and the router middleware requires it on every gated
     /// HTTP API route. Set via `--web-auth-token` or
-    /// `$TERMUL_WEB_AUTH_TOKEN`. On a public bind (`--host 0.0.0.0`) with no
+    /// `$ITZTERM_WEB_AUTH_TOKEN`. On a public bind (`--host 0.0.0.0`) with no
     /// configured token, `server_main` generates + persists one via
     /// `web::auth::resolve` (fail-closed); a loopback bind without a token
     /// stays ungated (legacy behavior). The desktop shared-live host always
@@ -497,7 +497,7 @@ pub struct ServerConfig {
     /// Extra `http`/`https` origins accepted when a request carries `Origin`
     /// and that origin's host and port differ from the request `Host`
     /// header. Empty (the default) accepts only the request's own host and
-    /// port. Set via `--allowed-origins` or `$TERMUL_ALLOWED_ORIGINS` for a
+    /// port. Set via `--allowed-origins` or `$ITZTERM_ALLOWED_ORIGINS` for a
     /// reverse proxy whose public origin does not match the `Host` header
     /// the server sees. Clients that omit `Origin` are unchanged.
     pub allowed_origins: OriginPolicy,
@@ -528,7 +528,7 @@ impl ServerConfig {
     }
 
     /// The platform service-account state directory. Used by the standalone
-    /// `termul-server` binary to resolve the default roots of its durable
+    /// `itzterm-server` binary to resolve the default roots of its durable
     /// stores (`<state dir>/acp-catalog`, `<state dir>/store.json`, …).
     /// Mirrors the per-platform branches of
     /// [`default_sessions_dir`]'s parent dir so the two durable stores live
@@ -541,7 +541,7 @@ impl ServerConfig {
     ///
     /// Patch 15: empty env var values (`XDG_STATE_HOME=""`, `HOME=""`,
     /// `LOCALAPPDATA=""`) are filtered out so the manifests do not land in a
-    /// relative `./termul` dir (CWD-dependent, unbounded). A truly unset env
+    /// relative `./itzterm` dir (CWD-dependent, unbounded). A truly unset env
     /// var falls through to the next branch; an empty-string env var now
     /// behaves the same way (the next branch or the temp-dir fallback).
     #[must_use]
@@ -560,13 +560,13 @@ impl ServerConfig {
                 .map(PathBuf::from)
                 .filter(|p| !p.as_os_str().is_empty())
             {
-                return base.join("termul");
+                return base.join("itzterm");
             }
             if let Some(home) = std::env::var_os("HOME")
                 .map(PathBuf::from)
                 .filter(|p| !p.as_os_str().is_empty())
             {
-                return home.join(".local").join("state").join("termul");
+                return home.join(".local").join("state").join("itzterm");
             }
         }
         #[cfg(windows)]
@@ -575,10 +575,10 @@ impl ServerConfig {
                 .map(PathBuf::from)
                 .filter(|p| !p.as_os_str().is_empty())
             {
-                return base.join("Termul");
+                return base.join("itzTerm");
             }
         }
-        std::env::temp_dir().join("termul")
+        std::env::temp_dir().join("itzterm")
     }
 
     /// Parse `--host` / `--port` CLI args (defaults: `127.0.0.1:8080`).
@@ -609,7 +609,7 @@ impl ServerConfig {
         // Story 4.1: the VFS-roots registry file. Parsed but NOT validated
         // against the filesystem here (a missing file loads as an empty
         // registry at load, not a fatal error). When the flag is absent,
-        // resolution after the loop is `$TERMUL_PROJECTS_FILE`, then
+        // resolution after the loop is `$ITZTERM_PROJECTS_FILE`, then
         // `<--state-dir>/projects.json` when `--state-dir` was passed, then
         // the HOME/XDG platform default (`default_projects_file`).
         let mut projects_file: Option<PathBuf> = None;
@@ -629,7 +629,7 @@ impl ServerConfig {
         // unset/invalid env var stays `false` (lenient — no fatal startup).
         let mut allow_remote_writes = false;
         // Optional web auth token (CAP-1 interim). The CLI flag wins over
-        // $TERMUL_WEB_AUTH_TOKEN; an empty flag value is a parse error, an
+        // $ITZTERM_WEB_AUTH_TOKEN; an empty flag value is a parse error, an
         // empty env value is ignored (mirrors the other env fallbacks).
         let mut web_auth_token: Option<WebAuthToken> = None;
         // Extra origins for a reverse proxy. `None` until a flag is seen so
@@ -867,7 +867,7 @@ impl ServerConfig {
                 .filter(|raw| !raw.is_empty())
             {
                 Some(raw) => {
-                    deprecation_warnings.push(project_root_warning("$TERMUL_PROJECT_ROOT"));
+                    deprecation_warnings.push(project_root_warning("$ITZTERM_PROJECT_ROOT"));
                     Some(
                         resolve_and_validate_project_root(Path::new(&raw))
                             .map_err(ParseCliError::Message)?,
@@ -878,13 +878,13 @@ impl ServerConfig {
         };
 
         // Story 4.1 / issue #839 / #879: resolve the projects registry file.
-        // `--projects-file` wins, then `$TERMUL_PROJECTS_FILE`, then
+        // `--projects-file` wins, then `$ITZTERM_PROJECTS_FILE`, then
         // `<--state-dir>/projects.json` when `--state-dir` was passed, and
         // only then the HOME/XDG platform default. The platform default must
         // not run first: `$HOME` is almost always set, so putting
         // `default_projects_file()` ahead of the state-dir derivation made
         // `--state-dir` a no-op for projects. The specific env var still
-        // outranks `--state-dir` so an operator's TERMUL_PROJECTS_FILE keeps
+        // outranks `--state-dir` so an operator's ITZTERM_PROJECTS_FILE keeps
         // its registry. With no `--state-dir`, resolution is unchanged
         // (env, then HOME/XDG) — the desktop app and unscoped server starts
         // rely on that. The file is NOT validated against the filesystem
@@ -892,17 +892,17 @@ impl ServerConfig {
         // `None` survives only when no state dir is discoverable — the
         // binary then serves an in-memory registry (`server_main` warns).
         let projects_file = projects_file
-            .or_else(|| trimmed_env_path("TERMUL_PROJECTS_FILE"))
+            .or_else(|| trimmed_env_path("ITZTERM_PROJECTS_FILE"))
             .or_else(|| state_dir.as_ref().map(|dir| dir.join("projects.json")))
             .or_else(default_projects_file);
 
-        // Issue #613: optional $TERMUL_STORE_FILE env default when
-        // --store-file is absent (mirrors the $TERMUL_PROJECTS_FILE env
+        // Issue #613: optional $ITZTERM_STORE_FILE env default when
+        // --store-file is absent (mirrors the $ITZTERM_PROJECTS_FILE env
         // pattern). An unset/empty env var means "resolve the default at
         // serve time".
         let store_file = match store_file {
             Some(p) => Some(p),
-            None => std::env::var("TERMUL_STORE_FILE").ok().and_then(|v| {
+            None => std::env::var("ITZTERM_STORE_FILE").ok().and_then(|v| {
                 let t = v.trim();
                 (!t.is_empty()).then(|| PathBuf::from(t))
             }),
@@ -914,18 +914,18 @@ impl ServerConfig {
         // (including a typo) stays `false` — lenient, no fatal startup.
         if !allow_remote_writes {
             allow_remote_writes = matches!(
-                std::env::var("TERMUL_SERVER_ALLOW_REMOTE_WRITES")
+                std::env::var("ITZTERM_SERVER_ALLOW_REMOTE_WRITES")
                     .ok()
                     .map(|v| v.trim().to_ascii_lowercase())
                     .as_deref(),
                 Some("true") | Some("1")
             );
         }
-        // Optional $TERMUL_WEB_AUTH_TOKEN fallback when --web-auth-token is
+        // Optional $ITZTERM_WEB_AUTH_TOKEN fallback when --web-auth-token is
         // absent. An unset/EMPTY env var is ignored (no token); only the CLI
         // flag rejects an empty value.
         let web_auth_token = web_auth_token.or_else(|| {
-            std::env::var("TERMUL_WEB_AUTH_TOKEN")
+            std::env::var("ITZTERM_WEB_AUTH_TOKEN")
                 .ok()
                 .and_then(|v| WebAuthToken::new(&v))
         });
@@ -933,23 +933,23 @@ impl ServerConfig {
             OriginPolicy::from_cli_or_env(allowed_origins_cli).map_err(ParseCliError::Message)?;
 
         // Issue #839 / #879: explicit --sessions-dir wins, then
-        // `$TERMUL_SESSIONS_DIR`, then `<--state-dir>/sessions` when
+        // `$ITZTERM_SESSIONS_DIR`, then `<--state-dir>/sessions` when
         // `--state-dir` was passed, and only then the HOME/XDG platform
         // default. HOME/XDG must not outrank `--state-dir` — `$HOME` is set
         // on a real machine, so the old order never reached the derivation
-        // and sessions leaked into `~/.local/state/termul/sessions`. With no
+        // and sessions leaked into `~/.local/state/itzterm/sessions`. With no
         // `--state-dir`, `default_sessions_dir()` is unchanged. A session
         // dir derived from `--state-dir` is created on demand by the
         // persistence layer. The onboard wizard still passes `--sessions-dir`
         // explicitly (that flag wins) and appends the same `--state-dir` it
         // printed, so the launched server stays on the wizard's paths.
         let sessions_dir = sessions_dir
-            .or_else(|| trimmed_env_path("TERMUL_SESSIONS_DIR"))
+            .or_else(|| trimmed_env_path("ITZTERM_SESSIONS_DIR"))
             .or_else(|| state_dir.as_ref().map(|dir| dir.join("sessions")))
             .or_else(default_sessions_dir)
             .ok_or_else(|| {
                 ParseCliError::Message(
-                    "could not determine sessions directory: set --sessions-dir, --state-dir, or $TERMUL_SESSIONS_DIR"
+                    "could not determine sessions directory: set --sessions-dir, --state-dir, or $ITZTERM_SESSIONS_DIR"
                         .into(),
                 )
             })?;

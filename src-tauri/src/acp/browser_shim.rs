@@ -1,11 +1,11 @@
 //! POSIX browser-open shim for headless ACP OAuth (spec-acp-terminal-auth).
 //!
-//! On headless `termul-server`, an agent whose auth flow opens a browser on the
+//! On headless `itzterm-server`, an agent whose auth flow opens a browser on the
 //! host (`xdg-open <auth-url>`) can never complete login: the OAuth redirect
 //! targets `127.0.0.1` on the server, unreachable from the user's browser.
 //!
 //! This module installs a per-agent shim directory under
-//! `temp_dir()/termul-acp-shim/<host_id>/<agent_id>/` holding tiny POSIX `sh` scripts for
+//! `temp_dir()/itzterm-acp-shim/<host_id>/<agent_id>/` holding tiny POSIX `sh` scripts for
 //! the common browser-open entry points (`xdg-open`, `sensible-browser`,
 //! `x-www-browser`, `www-browser`, `gnome-open`, `kde-open`, `open`, `gio`).
 //! Each script appends its last `http(s)://` argument to a `urls` sink file and
@@ -24,8 +24,8 @@
 //! following, 15s timeout) so the agent's own callback listener completes the
 //! flow.
 //!
-//! Every host process (desktop, `termul-server`, test binaries) shares the
-//! `termul-acp-shim` root, so each one claims its own `<host_id>` dir and holds
+//! Every host process (desktop, `itzterm-server`, test binaries) shares the
+//! `itzterm-acp-shim` root, so each one claims its own `<host_id>` dir and holds
 //! an exclusive lock on the `.host.lock` file inside it for its whole life. A
 //! host killed with SIGKILL never runs agent teardown, but the kernel still
 //! drops its lock. On startup, each host removes every host dir whose lock it
@@ -108,10 +108,10 @@ exit 0
 "#;
 
 /// Root directory shared by every host's shim dir:
-/// `temp_dir()/termul-acp-shim/`.
+/// `temp_dir()/itzterm-acp-shim/`.
 #[cfg(unix)]
 fn shim_root() -> PathBuf {
-    std::env::temp_dir().join("termul-acp-shim")
+    std::env::temp_dir().join("itzterm-acp-shim")
 }
 
 /// A host's own dir under the shim root. Dropping it releases the lock, which
@@ -125,7 +125,7 @@ struct HostShimDir {
 #[cfg(unix)]
 static HOST_SHIM_DIR: OnceLock<Option<HostShimDir>> = OnceLock::new();
 
-/// This host's dir, `temp_dir()/termul-acp-shim/<host_id>/`. The first call
+/// This host's dir, `temp_dir()/itzterm-acp-shim/<host_id>/`. The first call
 /// claims it and then sweeps the dirs that dead hosts left behind. `None` when
 /// the claim failed; agents then run without the shim.
 #[cfg(unix)]

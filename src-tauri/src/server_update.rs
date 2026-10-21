@@ -1,11 +1,11 @@
-//! Opt-in self-update subsystem for the standalone `termul-server` binary.
+//! Opt-in self-update subsystem for the standalone `itzterm-server` binary.
 //!
 //! The desktop app updates via the signed `@tauri-apps/plugin-updater` flow; the
 //! standalone server has no Tauri runtime, so it ships its own bespoke updater
 //! that reuses the **same** minisign keypair the desktop updater trusts.
 //!
 //! Flow (opt-in, default off — `server_main.rs` only wires it when
-//! `TERMUL_SERVER_UPDATE_ENABLED=true` + `TERMUL_SERVER_UPDATE_CHANNEL` are set):
+//! `ITZTERM_SERVER_UPDATE_ENABLED=true` + `ITZTERM_SERVER_UPDATE_CHANNEL` are set):
 //!
 //! 1. Fetch the per-channel manifest (`latest-<channel>.json`) from GitHub
 //!    Releases.
@@ -47,7 +47,7 @@ pub enum UpdateChannel {
 }
 
 impl UpdateChannel {
-    /// Parse the `TERMUL_SERVER_UPDATE_CHANNEL` env value. `None` for anything
+    /// Parse the `ITZTERM_SERVER_UPDATE_CHANNEL` env value. `None` for anything
     /// unrecognized — the caller treats an absent/invalid channel as "no checks".
     pub fn parse(value: &str) -> Option<Self> {
         match value.trim().to_ascii_lowercase().as_str() {
@@ -63,13 +63,13 @@ impl UpdateChannel {
     pub fn manifest_url(self) -> &'static str {
         match self {
             Self::Stable => {
-                "https://github.com/gnoviawan/termul/releases/latest/download/latest-stable.json"
+                "https://github.com/latiefahmad/itzTerm/releases/latest/download/latest-stable.json"
             }
             Self::Insider => {
-                "https://github.com/gnoviawan/termul/releases/download/insider/latest-insider.json"
+                "https://github.com/latiefahmad/itzTerm/releases/download/insider/latest-insider.json"
             }
             Self::Nightly => {
-                "https://github.com/gnoviawan/termul/releases/download/nightly/latest-nightly.json"
+                "https://github.com/latiefahmad/itzTerm/releases/download/nightly/latest-nightly.json"
             }
         }
     }
@@ -106,9 +106,9 @@ pub struct PlatformRecord {
 }
 
 /// True only when the operator explicitly opts in via
-/// `TERMUL_SERVER_UPDATE_ENABLED=true` (case-insensitive). Absent → off.
+/// `ITZTERM_SERVER_UPDATE_ENABLED=true` (case-insensitive). Absent → off.
 pub fn is_update_enabled() -> bool {
-    std::env::var("TERMUL_SERVER_UPDATE_ENABLED")
+    std::env::var("ITZTERM_SERVER_UPDATE_ENABLED")
         .map(|v| v.trim().eq_ignore_ascii_case("true"))
         .unwrap_or(false)
 }
@@ -276,15 +276,15 @@ pub fn select_platform_record<'a>(
 // ---------------------------------------------------------------------------
 
 /// Allowed origin for downloaded server binaries. Mirrors the desktop's
-/// `releaseUrlAssetName` validator: a manifest `url` outside the termul GitHub
+/// `releaseUrlAssetName` validator: a manifest `url` outside the itzterm GitHub
 /// repo is rejected so a compromised manifest can't redirect the server at an
 /// attacker-controlled binary (the signature check would still catch a forged
 /// binary, but rejecting the origin is defense-in-depth).
-const ALLOWED_BINARY_URL_PREFIX: &str = "https://github.com/gnoviawan/termul/";
+const ALLOWED_BINARY_URL_PREFIX: &str = "https://github.com/latiefahmad/itzTerm/";
 
 /// Cap on a downloaded server binary so a manifest endpoint that lies about
 /// Content-Length (or omits it) can't exhaust memory. 200 MiB is generous for
-/// the standalone `termul-server` binary (a stripped release build is tens of
+/// the standalone `itzterm-server` binary (a stripped release build is tens of
 /// MiB) while bounding the exposure.
 const MAX_BINARY_BYTES: usize = 200 * 1024 * 1024;
 
@@ -295,14 +295,14 @@ fn http_client() -> &'static reqwest::Client {
     static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
     CLIENT.get_or_init(|| {
         reqwest::Client::builder()
-            .user_agent("termul-server-updater")
+            .user_agent("itzterm-server-updater")
             .timeout(Duration::from_secs(120))
             .build()
             .unwrap_or_else(|_| reqwest::Client::new())
     })
 }
 
-/// Reject a server-binary download URL outside the termul GitHub origin.
+/// Reject a server-binary download URL outside the itzterm GitHub origin.
 pub fn validate_binary_url(url: &str) -> Result<()> {
     if !url.trim().starts_with(ALLOWED_BINARY_URL_PREFIX) {
         bail!("server binary url {url} is outside the allowed origin {ALLOWED_BINARY_URL_PREFIX}");
@@ -329,7 +329,7 @@ pub async fn fetch_manifest(channel: UpdateChannel) -> Result<Manifest> {
 }
 
 /// Download the signed server binary bytes for a platform record. Rejects URLs
-/// outside the termul GitHub origin, and caps the body at [`MAX_BINARY_BYTES`]
+/// outside the itzterm GitHub origin, and caps the body at [`MAX_BINARY_BYTES`]
 /// (checked against Content-Length up front AND enforced mid-stream so a server
 /// that lies about the length can't exhaust memory).
 pub async fn download_binary(url: &str) -> Result<Vec<u8>> {
@@ -436,7 +436,7 @@ pub fn atomic_swap(binary_path: &Path, new_bytes: &[u8]) -> Result<PathBuf> {
             Ok(()) => {}
             Err(restore_err) => {
                 eprintln!(
-                    "termul-server self-update: CRITICAL — promote {} -> {} failed ({e}) \
+                    "itzterm-server self-update: CRITICAL — promote {} -> {} failed ({e}) \
                      AND restore {} -> {} also failed ({restore_err}); \
                      no binary at {} — recover the `.old` file manually",
                     new_path.display(),

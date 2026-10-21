@@ -239,7 +239,7 @@ async fn add_and_remove_project_publish_the_post_mutation_list_to_watchers() {
         &tx,
         &Arc::new(Subscriptions::default()),
     );
-    let dir = std::env::temp_dir().join(format!("termul-pub-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("itzterm-pub-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&dir).unwrap();
 
     let added = projects::handle_add_project(

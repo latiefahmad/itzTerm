@@ -7,7 +7,7 @@
 //!
 //! Every request names the `projectId` it acts for; an unknown, archived or
 //! pathless project is refused `NOT_FOUND`. `start` authorizes the server URL
-//! against THAT project's `.termul/mcp-servers.json` only. The token store
+//! against THAT project's `.itzterm/mcp-servers.json` only. The token store
 //! itself stays keyed by server URL and host-global (`acp::mcp_oauth`): a token
 //! belongs to the host's credential for that URL, not to a project, so
 //! `status`/`disconnect` validate the project but read and delete the one
@@ -59,7 +59,7 @@ pub async fn oauth_start(
     // Restrict OAuth discovery to a configured MCP server URL so a web
     // client cannot make the host probe an attacker-selected internal
     // service. Resolve the URL against the persisted MCP server registry
-    // (`.termul/mcp-servers.json`) — reject if no enabled HTTP/SSE entry
+    // (`.itzterm/mcp-servers.json`) — reject if no enabled HTTP/SSE entry
     // matches.
     let project_root =
         match project_root_or_not_found::<OAuthStartResponse>(&state.registry, &request.project_id)
@@ -253,7 +253,7 @@ pub async fn oauth_disconnect(
 }
 
 /// Check whether the given `server_url` matches an enabled HTTP/SSE entry in
-/// the persisted MCP server registry (`{project_root}/.termul/mcp-servers.json`) of the named project.
+/// the persisted MCP server registry (`{project_root}/.itzterm/mcp-servers.json`) of the named project.
 /// This prevents a web client from using the OAuth start endpoint to make the
 /// host discover OAuth metadata for an attacker-selected URL.
 async fn is_authorized_mcp_server_url(project_root: &std::path::Path, server_url: &str) -> bool {
@@ -295,7 +295,7 @@ async fn build_web_auth_url(
         .await
         .map_err(|e| mcp_oauth::McpOAuthError::DiscoveryFailed(e.to_string()))?;
     manager.set_metadata(resolution.metadata);
-    let request = AuthorizationRequest::new(redirect_uri).with_client_name("Termul");
+    let request = AuthorizationRequest::new(redirect_uri).with_client_name("itzTerm");
     let session = AuthorizationSession::new(manager, request)
         .await
         .map_err(|(_manager, e)| mcp_oauth::McpOAuthError::RegistrationFailed(e.to_string()))?;

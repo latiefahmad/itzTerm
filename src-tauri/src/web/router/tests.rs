@@ -18,7 +18,7 @@ impl TempDir {
             .duration_since(UNIX_EPOCH)
             .expect("clock")
             .as_nanos();
-        let path = std::env::temp_dir().join(format!("termul-web-assets-{label}-{nanos}"));
+        let path = std::env::temp_dir().join(format!("itzterm-web-assets-{label}-{nanos}"));
         fs::create_dir_all(&path).expect("create temp dir");
         Self { path }
     }
@@ -405,7 +405,7 @@ async fn health_reports_denied_for_all_peers_when_shared_live() {
 
 /// `allow_remote_writes=true` + `shared_live_writes_denied=false` → a
 /// non-loopback peer is ADMITTED (`allowRemoteWrites:true`). This is the
-/// standalone `termul-server --allow-remote-writes` posture.
+/// standalone `itzterm-server --allow-remote-writes` posture.
 #[tokio::test]
 async fn health_reports_admitted_for_non_loopback_with_opt_in() {
     let dir = TempDir::new("health-opt-in");
@@ -560,7 +560,7 @@ async fn root_serves_index_html_from_fixture() {
     let dir = TempDir::new("root");
     fs::write(
         dir.path().join("index.html"),
-        "<!doctype html><html><body>termul-web-fixture</body></html>",
+        "<!doctype html><html><body>itzterm-web-fixture</body></html>",
     )
     .expect("write index.html");
     fs::create_dir_all(dir.path().join("assets")).expect("assets dir");
@@ -584,7 +584,7 @@ async fn root_serves_index_html_from_fixture() {
         .expect("read body");
     let text = String::from_utf8_lossy(&body);
     assert!(
-        text.contains("termul-web-fixture"),
+        text.contains("itzterm-web-fixture"),
         "expected fixture marker in body, got: {text}"
     );
 
@@ -614,7 +614,7 @@ async fn root_serves_index_html_from_fixture() {
     let spa_body = axum::body::to_bytes(spa.into_body(), usize::MAX)
         .await
         .expect("read spa body");
-    assert!(String::from_utf8_lossy(&spa_body).contains("termul-web-fixture"));
+    assert!(String::from_utf8_lossy(&spa_body).contains("itzterm-web-fixture"));
 }
 
 #[tokio::test]
@@ -647,7 +647,7 @@ async fn nonexistent_static_root_yields_404() {
         .duration_since(UNIX_EPOCH)
         .expect("clock")
         .as_nanos();
-    let missing = std::env::temp_dir().join(format!("termul-web-assets-absent-{nanos}"));
+    let missing = std::env::temp_dir().join(format!("itzterm-web-assets-absent-{nanos}"));
     assert!(!missing.exists(), "path must not exist");
 
     let resp = test_router_with_fixture(&missing)
@@ -856,7 +856,7 @@ async fn gated_router_public_paths_pass_without_token() {
     let dir = TempDir::new("gated-public");
     fs::write(
         dir.path().join("index.html"),
-        "<!doctype html><html><body>termul-web-fixture</body></html>",
+        "<!doctype html><html><body>itzterm-web-fixture</body></html>",
     )
     .expect("write index.html");
     let app = gated_router_with_fixture(dir.path());

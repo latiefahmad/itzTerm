@@ -46,17 +46,17 @@ fn loopback_validation_rejects_non_loopback() {
 #[cfg(unix)]
 #[test]
 fn inject_shim_env_prepends_path_and_sets_browser() {
-    let dir = PathBuf::from("/tmp/termul-acp-shim/agent-1");
+    let dir = PathBuf::from("/tmp/itzterm-acp-shim/agent-1");
     let mut env = HashMap::from([("PATH".to_string(), "/usr/bin:/bin".to_string())]);
     inject_shim_env(&mut env, &dir);
     assert_eq!(
         env.get("PATH").map(String::as_str),
-        Some("/tmp/termul-acp-shim/agent-1:/usr/bin:/bin"),
+        Some("/tmp/itzterm-acp-shim/agent-1:/usr/bin:/bin"),
         "shim dir must be FIRST on PATH"
     );
     assert_eq!(
         env.get("BROWSER").map(String::as_str),
-        Some("/tmp/termul-acp-shim/agent-1/xdg-open"),
+        Some("/tmp/itzterm-acp-shim/agent-1/xdg-open"),
     );
 }
 
@@ -104,7 +104,7 @@ fn install_shim_writes_executable_scripts_and_sink() {
 #[cfg(unix)]
 #[test]
 fn sweep_removes_only_dirs_whose_host_died() {
-    let root = std::env::temp_dir().join(format!("termul-shim-sweep-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-shim-sweep-{}", uuid::Uuid::new_v4()));
     let live = claim_host_dir(&root).expect("claim live host dir");
     let dead = claim_host_dir(&root).expect("claim dead host dir");
     let dead_path = dead.path.clone();

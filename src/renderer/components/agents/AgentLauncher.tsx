@@ -254,7 +254,7 @@ export function AgentLauncher({ paneId, className }: AgentLauncherProps): React.
   // (`check_local_only`), so the picker is gated on the server's advertised
   // write-admission (`useServerAdmitsRemoteWrites`, primed from `GET /health`)
   // — the desktop (always local) and a web client whose server admits its
-  // writes (e.g. standalone `termul-server --allow-remote-writes` behind a
+  // writes (e.g. standalone `itzterm-server --allow-remote-writes` behind a
   // Cloudflare tunnel, or a loopback browser) see it; a web client whose
   // server denies writes (desktop shared-live, or a non-loopback peer without
   // the opt-in) does not, avoiding a picker that would fail `FORBIDDEN` at
@@ -1276,7 +1276,7 @@ export function AgentLauncher({ paneId, className }: AgentLauncherProps): React.
 
   // Run the agent-advertised authenticate for a chosen method, then re-prepare
   // so the session is created now that the provider login is complete. The
-  // provider owns the login UX (often opening its own browser); Termul never
+  // provider owns the login UX (often opening its own browser); itzTerm never
   // invents a redirect URL or stores credentials. Mirrors Zed's
   // ThreadState::Unauthenticated → authenticate → reset flow.
   const runAuthenticate = useCallback(
@@ -1846,7 +1846,7 @@ export function AgentLauncher({ paneId, className }: AgentLauncherProps): React.
   // Keyboard-aware bottom anchor: when the OSK opens, the visual viewport
   // shrinks but (iOS) the layout viewport does not — inset the bottom by the
   // live keyboard height so the composer stays visible above the keys. The
-  // same --termul-keyboard-height CSS var mirrors this value document-wide.
+  // same --itzterm-keyboard-height CSS var mirrors this value document-wide.
   const osk = useOskViewport()
   // Same narrow/wide seam as the chat composer toolbar (#859), measured on
   // the composer card (the toolbar's width container): the chip row scrolls

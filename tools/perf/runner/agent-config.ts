@@ -2,12 +2,12 @@
  * Fake-agent registration through the app's own persistence path (CAP-1).
  *
  * The app persists custom ACP agents via the plugin-store IPC under the key
- * `acp/agents` in `termul-data.json`, wrapped as `{_version: 1, data: [...]}`.
+ * `acp/agents` in `itzterm-data.json`, wrapped as `{_version: 1, data: [...]}`.
  * Rather than mutating the store file behind the app's back, we register
  * through the app's own IPC surface after attach:
  *
  *  1. `plugin:store|load` the app's data store (same file the renderer's
- *     `persistenceApi` uses — `Store.load('termul-data.json')`).
+ *     `persistenceApi` uses — `Store.load('itzterm-data.json')`).
  *  2. Read the current list under `acp/agents`, upsert our config
  *     (id 'custom-perf0001', configId 'custom-perfstub' — non-empty,
  *     satisfying the Rust `require_config_id`).
@@ -79,7 +79,7 @@ export async function registerFakeAgent(
       const internals = window.__TAURI_INTERNALS__
       if (!internals) throw new Error('withGlobalTauri off: no __TAURI_INTERNALS__')
       const rid = await internals.invoke('plugin:store|load', {
-        path: 'termul-data.json',
+        path: 'itzterm-data.json',
         options: { autoSave: false }
       })
       try {
@@ -130,7 +130,7 @@ export async function registerFakeAgent(
  * sequence selects it (`setProjects` activates `projects[0]`). Fresh scratch
  * profiles have zero projects, which leaves the workspace empty and the
  * launcher composer mounted-but-hidden — stream-storm needs a selected
- * project before it can drive the launcher UI. Same `termul-data.json`
+ * project before it can drive the launcher UI. Same `itzterm-data.json`
  * plugin-store IPC as `registerFakeAgent` uses; key `projects`, same
  * versioned wrapper.
  */
@@ -169,7 +169,7 @@ export async function seedPerfProjects(
       const internals = window.__TAURI_INTERNALS__
       if (!internals) throw new Error('withGlobalTauri off: no __TAURI_INTERNALS__')
       const rid = await internals.invoke('plugin:store|load', {
-        path: 'termul-data.json',
+        path: 'itzterm-data.json',
         options: { autoSave: false }
       })
       try {
@@ -317,7 +317,7 @@ export async function installAndSelectCatalogAgent(
     (async () => {
       const internals = window.__TAURI_INTERNALS__
       const rid = await internals.invoke('plugin:store|load', {
-        path: 'termul-data.json',
+        path: 'itzterm-data.json',
         options: { autoSave: false }
       })
       try {
@@ -352,7 +352,7 @@ export async function seedComposerModel(
     (async () => {
       const internals = window.__TAURI_INTERNALS__
       const rid = await internals.invoke('plugin:store|load', {
-        path: 'termul-data.json',
+        path: 'itzterm-data.json',
         options: { autoSave: false }
       })
       try {

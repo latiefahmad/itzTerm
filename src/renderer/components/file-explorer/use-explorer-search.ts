@@ -122,16 +122,16 @@ export function useExplorerSearch(rootPath: string | null): ExplorerSearch {
         useEditorStore.getState().updateCursorPosition(filePath, lineNumber, 1)
         const revealDetail = { filePath, lineNumber, searchTerm }
         ;(
-          window as unknown as { __termulPendingRevealLine?: typeof revealDetail }
-        ).__termulPendingRevealLine = revealDetail
+          window as unknown as { __itztermPendingRevealLine?: typeof revealDetail }
+        ).__itztermPendingRevealLine = revealDetail
         window.dispatchEvent(
-          new CustomEvent('termul:reveal-line', {
+          new CustomEvent('itzterm:reveal-line', {
             detail: revealDetail
           })
         )
         requestAnimationFrame(() => {
           window.dispatchEvent(
-            new CustomEvent('termul:reveal-line', {
+            new CustomEvent('itzterm:reveal-line', {
               detail: revealDetail
             })
           )

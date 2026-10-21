@@ -102,10 +102,10 @@ async fn oauth_header(
     }
 }
 
-/// Build the internal `termul` MCP server config (for the `plan` tool; stdio self-spawn) to
+/// Build the internal `itzterm` MCP server config (for the `plan` tool; stdio self-spawn) to
 /// prepend into a session's `mcp_servers`. The agent spawns
 /// `current_exe() --internal-mcp-plan-server` as a child; the child reads
-/// `TERMUL_PLAN_PORT` / `_TOKEN` / `_SESSION_ID` / `_AGENT_ID` from env,
+/// `ITZTERM_PLAN_PORT` / `_TOKEN` / `_SESSION_ID` / `_AGENT_ID` from env,
 /// runs an rmcp MCP server over stdio, and forwards `plan` calls to
 /// the parent TCP listener. The internal server is `McpServer::Stdio`, which
 /// `gate_mcp_servers` accepts unconditionally (stdio is mandatory in ACP), so
@@ -118,7 +118,7 @@ pub(super) fn build_internal_plan_stdio(
 ) -> Vec<McpServer> {
     let exe = std::env::current_exe().unwrap_or_else(|e| {
         log::warn!("[host-mcp] current_exe() failed ({e}); falling back to PATH lookup");
-        std::path::PathBuf::from("termul-manager")
+        std::path::PathBuf::from("itzterm-manager")
     });
     let env = vec![
         EnvVariable::new(crate::acp::host_mcp::ENV_PORT, port.to_string()),
@@ -129,7 +129,7 @@ pub(super) fn build_internal_plan_stdio(
         ),
         EnvVariable::new(crate::acp::host_mcp::ENV_AGENT_ID, agent_id.to_string()),
     ];
-    let stdio = McpServerStdio::new("termul".to_string(), exe)
+    let stdio = McpServerStdio::new("itzterm".to_string(), exe)
         .args(vec![crate::acp::host_mcp::CHILD_ARG.to_string()])
         .env(env);
     vec![McpServer::Stdio(stdio)]
@@ -478,7 +478,7 @@ pub(super) fn requests_summarized_thinking(config: &AgentConfig) -> bool {
 ///
 /// The adapter copies this object onto the Agent SDK query. `display:
 /// "summarized"` is what makes current Claude models return reasoning text.
-/// Without it, thinking blocks arrive empty and Termul draws no Thought row.
+/// Without it, thinking blocks arrive empty and itzTerm draws no Thought row.
 pub(super) fn summarized_thinking_meta() -> Meta {
     Meta::from_iter([(
         "claudeCode".to_string(),

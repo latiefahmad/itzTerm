@@ -107,16 +107,16 @@ export function CodeEditor({
   useEffect(() => {
     const pending = (
       window as unknown as {
-        __termulPendingRevealLine?: { filePath: string; lineNumber: number; searchTerm?: string }
+        __itztermPendingRevealLine?: { filePath: string; lineNumber: number; searchTerm?: string }
       }
-    ).__termulPendingRevealLine
+    ).__itztermPendingRevealLine
 
     if (pending && pending.filePath === filePath && isVisible && view) {
       scrollToLine(pending.lineNumber, pending.searchTerm)
       lastAppliedLineRef.current = pending.lineNumber
       pendingRevealLineRef.current = null
       pendingRevealTermRef.current = undefined
-      ;(window as unknown as { __termulPendingRevealLine?: unknown }).__termulPendingRevealLine =
+      ;(window as unknown as { __itztermPendingRevealLine?: unknown }).__itztermPendingRevealLine =
         undefined
     }
 
@@ -141,12 +141,12 @@ export function CodeEditor({
       pendingRevealTermRef.current = undefined
       // The window slot is only for an editor that mounts after the event.
       // Leaving it set replays the line on the next mount.
-      ;(window as unknown as { __termulPendingRevealLine?: unknown }).__termulPendingRevealLine =
+      ;(window as unknown as { __itztermPendingRevealLine?: unknown }).__itztermPendingRevealLine =
         undefined
     }
 
-    window.addEventListener('termul:reveal-line', handler)
-    return () => window.removeEventListener('termul:reveal-line', handler)
+    window.addEventListener('itzterm:reveal-line', handler)
+    return () => window.removeEventListener('itzterm:reveal-line', handler)
   }, [filePath, isVisible, scrollToLine, view])
 
   useEffect(() => {

@@ -1,15 +1,15 @@
-# QA Report — termul-server E2E & Mobile UX Design Audit (2026-09-16/17 round)
+# QA Report — itzterm-server E2E & Mobile UX Design Audit (2026-09-16/17 round)
 
 **Date:** 2026-09-16/17
-**Target:** freshly built `termul-server` debug binary (HEAD, `cargo build --bin termul-server --features standalone-server`) + `bun run build:web` (`dist-web/`), run isolated on `127.0.0.1:8082` with `--state-dir /tmp/termul-e2e/state`.
+**Target:** freshly built `itzterm-server` debug binary (HEAD, `cargo build --bin itzterm-server --features standalone-server`) + `bun run build:web` (`dist-web/`), run isolated on `127.0.0.1:8082` with `--state-dir /tmp/itzterm-e2e/state`.
 **Method:** three e2e passes in headless Chromium (Playwright chromium-1228, CDP):
 1. **Desktop functional walkthrough** at 1440×900 — project create, terminal PTY round-trips, git stage→commit→log (verified on-disk), editor create/edit/save, snapshots, themes, command palette, browser tab.
 2. **Mobile-first functional pass** — booted at 390×844 / DPR 3 with a clean profile; touch key bar, git sheet, file explorer, snapshots, project switching; viewport matrix 320–768 + landscape.
 3. **Mobile design/layout audit** at 390×844 / DPR 3 across 9 surfaces — screenshots + DOM geometry (`getBoundingClientRect`) + computed styles, **in parallel** with two source-analysis scouts (design-token consistency, mobile flow gaps) whose claims were each spot-verified in-repo before inclusion.
 
-PTY round-trips verified via DOM-rendered xterm output + server logs; git flows verified on-disk in the real repos under `/tmp/termul-e2e/`.
+PTY round-trips verified via DOM-rendered xterm output + server logs; git flows verified on-disk in the real repos under `/tmp/itzterm-e2e/`.
 **Environment note (same as 2026-09-15 round):** Obscura cannot host these UI tests — page-side WS receive is broken; all results come from real Chromium.
-**Not touched:** the operator's live systemd `termul-server` on `0.0.0.0:8080` (healthy before/after; the first launch actually lost the port race to it — hence the isolated 8082 run).
+**Not touched:** the operator's live systemd `itzterm-server` on `0.0.0.0:8080` (healthy before/after; the first launch actually lost the port race to it — hence the isolated 8082 run).
 **Terminal renderer note:** passes 2–3 used the DOM renderer (`terminalRenderer: 'dom'`) because the default WebGL renderer paints blank at DPR ≥ 3 — that is itself finding F0/P0 below, not a test-environment artifact.
 
 ---
@@ -179,7 +179,7 @@ Default `terminalFontFamily` is `'Menlo, Monaco, "Courier New", monospace'` (`ty
 Order rationale: items 1–4 are one-liners with outsized impact; 5–8 are the touch-ergonomics core; 9–11 fix data-loss and traps; the rest is polish and the deep render fix.
 
 ## Evidence index
-- Test state: `/tmp/termul-e2e/` (state dir with projects.json/store.json, demo-project + beta repos).
+- Test state: `/tmp/itzterm-e2e/` (state dir with projects.json/store.json, demo-project + beta repos).
 - Screenshots: `/tmp/omp-sshots-15821*` (desktop pass), `/tmp/omp-sshots-15826*` (mobile pass), `/tmp/omp-sshots-15827*` (design pass).
 - Server logs: captured via hub during all passes (spawn/attach/write/git/ACP frames quoted inline above).
 - Source audit outputs: `agent://TokenAudit`, `agent://FlowAudit` (parallel scouts; claims spot-verified in-repo, including live reproduction of the Git History trap).

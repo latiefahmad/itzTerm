@@ -34,12 +34,12 @@ import {
 import { logFrontendError } from './log-api'
 import { randomUUID } from './uuid'
 
-export const DEVICE_ID_STORAGE_KEY = 'termul.deviceId'
-export const CLIENT_INSTANCE_ID_STORAGE_KEY = 'termul.clientInstanceId'
+export const DEVICE_ID_STORAGE_KEY = 'itzterm.deviceId'
+export const CLIENT_INSTANCE_ID_STORAGE_KEY = 'itzterm.clientInstanceId'
 /** The claim (`sessionStorage`) on the id a page released when it went away. */
-export const CLIENT_INSTANCE_RELEASED_KEY = 'termul.clientInstanceId.released'
+export const CLIENT_INSTANCE_RELEASED_KEY = 'itzterm.clientInstanceId.released'
 /** Every released id not yet taken up, by claim (`localStorage`). */
-export const CLIENT_INSTANCE_RELEASES_KEY = 'termul.clientInstanceId.releases'
+export const CLIENT_INSTANCE_RELEASES_KEY = 'itzterm.clientInstanceId.releases'
 /** How long a released id waits for the page that takes it up. */
 const RELEASE_TTL_MS = 10 * 60_000
 

@@ -470,7 +470,7 @@ function claudeSession(currentModeId = 'default'): AcpSession {
 }
 
 function iconOf(element: HTMLElement): string | null {
-  return element.querySelector('[data-termul-icon]')?.getAttribute('data-termul-icon') ?? null
+  return element.querySelector('[data-itzterm-icon]')?.getAttribute('data-itzterm-icon') ?? null
 }
 
 describe('ModeChip mode menu (icons and risk groups)', () => {
@@ -505,7 +505,7 @@ describe('ModeChip mode menu (icons and risk groups)', () => {
     const careful = screen.getByRole('group', { name: 'Use with care' })
     const bypass = within(careful).getByRole('button', { name: /Bypass permissions/ })
     expect(bypass).toHaveTextContent('Accepts all permissions. Use with care.')
-    expect(bypass.querySelector('[data-termul-icon="ShieldAlert"]')).toHaveClass('text-warning')
+    expect(bypass.querySelector('[data-itzterm-icon="ShieldAlert"]')).toHaveClass('text-warning')
   })
 
   it('gives each mode its hugeicons icon', () => {
@@ -533,7 +533,7 @@ describe('ModeChip mode menu (icons and risk groups)', () => {
 
     const manual = screen.getByRole('button', { name: /^Manual/, pressed: true })
     expect(manual).not.toHaveClass('bg-foreground/10')
-    expect(manual.querySelector('[data-termul-icon="Check"]')).toHaveClass('opacity-100')
+    expect(manual.querySelector('[data-itzterm-icon="Check"]')).toHaveClass('opacity-100')
   })
 
   it('shows the current mode icon on the chip, in yellow for a risky mode', () => {
@@ -551,7 +551,7 @@ describe('ModeChip mode menu (icons and risk groups)', () => {
       />
     )
     const chip = pill(/^Bypass permissions$/)
-    expect(chip.querySelector('[data-termul-icon="ShieldAlert"]')).toHaveClass('text-warning')
+    expect(chip.querySelector('[data-itzterm-icon="ShieldAlert"]')).toHaveClass('text-warning')
   })
 
   it('maps Cursor and Codex modes, and puts unknown modes under Other modes', () => {

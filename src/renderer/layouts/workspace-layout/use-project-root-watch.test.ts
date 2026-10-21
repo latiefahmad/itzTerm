@@ -33,8 +33,8 @@ vi.mock('@/lib/worktree-reconciler', () => ({ reconcileProjectWorktrees: reconci
 
 const ROOT_A = '/repo-a'
 const ROOT_B = '/repo-b'
-const WT_A = `${ROOT_A}/.termul/worktrees/a`
-const WT_B = `${ROOT_B}/.termul/worktrees/b`
+const WT_A = `${ROOT_A}/.itzterm/worktrees/a`
+const WT_B = `${ROOT_B}/.itzterm/worktrees/b`
 
 function wt(id: string, path: string): Worktree {
   return { id, name: id, branch: `b-${id}`, path, createdAt: '2026-01-01T00:00:00.000Z' }
@@ -132,7 +132,7 @@ describe('useProjectRootWatch', () => {
     fs.watchDirectory.mockClear()
 
     useAcpStore.setState({
-      sessions: { s1: mockAcpSession({ id: 's1', cwd: `${ROOT_A}/.termul/worktrees/gone` }) }
+      sessions: { s1: mockAcpSession({ id: 's1', cwd: `${ROOT_A}/.itzterm/worktrees/gone` }) }
     })
     act(() => setActiveTab({ type: 'agent-chat', id: 'chat-s1', sessionId: 's1' }))
     await flush()
@@ -148,7 +148,7 @@ describe('useProjectRootWatch', () => {
 
   it('applies the worktree once a reconcile lists it', async () => {
     useAcpStore.setState({
-      sessions: { s1: mockAcpSession({ id: 's1', cwd: `${ROOT_A}/.termul/worktrees/new/src` }) }
+      sessions: { s1: mockAcpSession({ id: 's1', cwd: `${ROOT_A}/.itzterm/worktrees/new/src` }) }
     })
     setActiveTab({ type: 'agent-chat', id: 'chat-s1', sessionId: 's1' })
     mountReactive()
@@ -157,10 +157,13 @@ describe('useProjectRootWatch', () => {
     expect(explorer()).toMatchObject({ scopeRoot: ROOT_A, worktreeRoot: null })
 
     act(() =>
-      seed([proj('a', ROOT_A, [wt('wa', WT_A), wt('new', `${ROOT_A}/.termul/worktrees/new`)])], 'a')
+      seed(
+        [proj('a', ROOT_A, [wt('wa', WT_A), wt('new', `${ROOT_A}/.itzterm/worktrees/new`)])],
+        'a'
+      )
     )
     await flush()
-    expect(explorer().worktreeRoot).toBe(`${ROOT_A}/.termul/worktrees/new`)
+    expect(explorer().worktreeRoot).toBe(`${ROOT_A}/.itzterm/worktrees/new`)
     expect(reconcile).toHaveBeenCalledTimes(1)
   })
 

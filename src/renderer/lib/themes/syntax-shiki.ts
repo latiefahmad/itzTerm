@@ -21,7 +21,7 @@ export function syntaxThemeFor(theme: ColorThemeDefinition): ThemeRegistrationRe
   const { bg, fg } = surface(theme)
 
   return {
-    name: `termul-syntax-${theme.id}`,
+    name: `itzterm-syntax-${theme.id}`,
     displayName: `${theme.name} syntax`,
     type: theme.appearance,
     fg,

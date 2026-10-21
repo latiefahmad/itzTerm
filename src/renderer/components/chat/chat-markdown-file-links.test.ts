@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { findFilePathMatches } from '@/lib/file-path-links'
 import {
   escapeHtmlAttribute,
-  remarkFilePathLinks,
-  termulFilePathTag
+  itztermFilePathTag,
+  remarkFilePathLinks
 } from './chat-markdown-file-links'
 
 function unescapeHtml(value: string): string {
@@ -37,14 +37,14 @@ describe('chat markdown file links', () => {
 
   it('escapes HTML-special characters in emitted attributes and text', () => {
     expect(escapeHtmlAttribute('a&b<c>"d"')).toBe('a&amp;b&lt;c&gt;&quot;d&quot;')
-    expect(termulFilePathTag('src/renderer/App.tsx:42')).toBe(
-      '<termul-file-path data-path="src/renderer/App.tsx:42">src/renderer/App.tsx:42</termul-file-path>'
+    expect(itztermFilePathTag('src/renderer/App.tsx:42')).toBe(
+      '<itzterm-file-path data-path="src/renderer/App.tsx:42">src/renderer/App.tsx:42</itzterm-file-path>'
     )
   })
 
   it('round-trips paths containing & and " through the emitted tag', () => {
     const path = 'specs/edge&"quote".md:12'
-    const tag = termulFilePathTag(path)
+    const tag = itztermFilePathTag(path)
     expect(dataPathOf(tag)).toBe(path)
     expect(tag).not.toContain('"quote"')
   })
@@ -68,7 +68,10 @@ describe('chat markdown file links', () => {
     const paragraph = tree.children[0].children as Array<{ type: string; value?: string }>
     expect(paragraph).toHaveLength(3)
     expect(paragraph[0]).toMatchObject({ type: 'text', value: 'See ' })
-    expect(paragraph[1]).toMatchObject({ type: 'html', value: termulFilePathTag('src/App.tsx:42') })
+    expect(paragraph[1]).toMatchObject({
+      type: 'html',
+      value: itztermFilePathTag('src/App.tsx:42')
+    })
     expect(paragraph[2]).toMatchObject({ type: 'text', value: '.' })
     expect(tree.children[1].url).toBe('https://example.com')
     expect(tree.children[2].type).toBe('code')
@@ -90,7 +93,10 @@ describe('chat markdown file links', () => {
     const paragraph = tree.children[0].children as Array<{ type: string; value?: string }>
     expect(paragraph).toHaveLength(3)
     expect(paragraph[0]).toMatchObject({ type: 'text', value: 'Use read/write mode and open ' })
-    expect(paragraph[1]).toMatchObject({ type: 'html', value: termulFilePathTag('src/App.tsx:42') })
+    expect(paragraph[1]).toMatchObject({
+      type: 'html',
+      value: itztermFilePathTag('src/App.tsx:42')
+    })
     expect(paragraph[2]).toMatchObject({ type: 'text', value: ' now' })
   })
 
@@ -162,8 +168,8 @@ describe('chat markdown file links', () => {
 
     it('uses the link text as the label and escapes it', () => {
       const node = rewriteLink('a.md', 'A <b> & "c"')
-      expect(node.value).toBe(termulFilePathTag('a.md', 'A <b> & "c"'))
-      expect(node.value).toContain('>A &lt;b&gt; &amp; &quot;c&quot;</termul-file-path>')
+      expect(node.value).toBe(itztermFilePathTag('a.md', 'A <b> & "c"'))
+      expect(node.value).toContain('>A &lt;b&gt; &amp; &quot;c&quot;</itzterm-file-path>')
     })
 
     it('flattens inline code and emphasis in the link text into the label', () => {
@@ -188,7 +194,7 @@ describe('chat markdown file links', () => {
       }
       remarkFilePathLinks()(tree)
       const node = tree.children[0].children[0] as { value?: string }
-      expect(node.value).toBe(termulFilePathTag('src/a.ts:10', 'foo() in a'))
+      expect(node.value).toBe(itztermFilePathTag('src/a.ts:10', 'foo() in a'))
     })
 
     it('keeps image links (badges) as normal links', () => {
@@ -212,7 +218,7 @@ describe('chat markdown file links', () => {
     })
 
     it('falls back to the path when the link text is empty', () => {
-      expect(rewriteLink('a.md', '').value).toBe(termulFilePathTag('a.md'))
+      expect(rewriteLink('a.md', '').value).toBe(itztermFilePathTag('a.md'))
     })
 
     it.each([

@@ -40,7 +40,7 @@ const MAX_REDIRECTS: usize = 5;
 const FETCH_TIMEOUT_SECS: u64 = 10;
 /// The only off-host redirect target allowed (GitHub avatar CDN per spec).
 const GITHUB_AVATAR_CDN: &str = "avatars.githubusercontent.com";
-const USER_AGENT: &str = "termul-project-icon";
+const USER_AGENT: &str = "itzterm-project-icon";
 
 /// One candidate fetch URL plus the host redirects may stay on.
 pub(super) struct FetchTarget {

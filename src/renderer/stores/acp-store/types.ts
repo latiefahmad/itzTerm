@@ -208,8 +208,8 @@ export interface AcpSession {
    * `session/list` chats). Carried on the live record so `persistSession`
    * preserves it even when no `sessionIndex` entry exists yet (the
    * disconnect/close path would otherwise default a discovered session to
-   * `discovered: false` and leak it into the Termul-only Chats tab).
-   * Absent/`false` for sessions Termul created via `createSession`.
+   * `discovered: false` and leak it into the itzTerm-only Chats tab).
+   * Absent/`false` for sessions itzTerm created via `createSession`.
    */
   discovered?: boolean
   /**
@@ -464,13 +464,13 @@ export interface AcpState {
   mcpServers: StoredMcpServer[]
   // True once `loadMcpServers` has resolved at least once. Guards
   // `syncMcpRegistryToProjectFile` against syncing the initial empty state
-  // (which would overwrite a project's `.termul/mcp-servers.json` with `[]`
+  // (which would overwrite a project's `.itzterm/mcp-servers.json` with `[]`
   // before the app-store registry is loaded — CAP-7 race guard).
   mcpServersLoaded: boolean
 
   // MCP probe state — on-demand only (no persistent always-on connections).
-  // `mcpProbeStatus` reflects Termul's own rmcp client connection, NOT the
-  // agent's; the dot answers "can Termul reach this server and list its tools?".
+  // `mcpProbeStatus` reflects itzTerm's own rmcp client connection, NOT the
+  // agent's; the dot answers "can itzTerm reach this server and list its tools?".
   // `mcpTools` is the cached `tools/list` output; `mcpToolsLoaded` gates the
   // auto-probe on first expand; `mcpProbing` dedupes concurrent probes.
   mcpProbeStatus: Record<string, ProbeStatus>
@@ -806,7 +806,7 @@ export interface AcpState {
   deleteMcpServer: (id: string) => Promise<void>
   /**
    * CAP-7: mirror the app-store MCP registry to the named project's
-   * `.termul/mcp-servers.json` (best-effort, non-fatal). Called when the host
+   * `.itzterm/mcp-servers.json` (best-effort, non-fatal). Called when the host
    * project list lands and when shared-live starts, so the web route reads the
    * desktop's app-store registry for that project.
    */
@@ -814,7 +814,7 @@ export interface AcpState {
 
   // Actions — MCP probe (on-demand, read-only). State slices above.
   /**
-   * Probe a registered MCP server by id (Termul's own rmcp client — NOT the
+   * Probe a registered MCP server by id (itzTerm's own rmcp client — NOT the
    * agent's). Updates `mcpProbeStatus[id]` + `mcpTools[id]` +
    * `mcpToolsLoaded[id]=true`, and `mcpProbeError[id]` with the redacted
    * `ProbeResult.error` on a disconnected result (cleared on connected and on

@@ -2,7 +2,7 @@
 //! `SKILL.md`, so chat chips (skill pills and skill-backed slash commands) can
 //! open the file in the editor.
 //!
-//! Termul's own skill list (`list_agent_skills`: the `.agents/skills` roots
+//! itzTerm's own skill list (`list_agent_skills`: the `.agents/skills` roots
 //! and Claude Code user and plugin skills) comes first, so a skill chip opens
 //! the same file the slash menu cited. Harnesses also publish skills from
 //! their own roots as slash commands (OpenCode turns every discovered skill
@@ -124,11 +124,11 @@ fn index_skills_dir(dir: &Path, seen: &mut HashSet<String>, out: &mut Vec<SkillF
 
 /// Index every skill `SKILL.md` visible from `project_root`.
 ///
-/// `termul_skills` is Termul's own skill list for the same root. `home` and
+/// `itzterm_skills` is itzTerm's own skill list for the same root. `home` and
 /// `config_home` are injected so tests can use temp dirs without mutating the
 /// process-wide `HOME` / `XDG_CONFIG_HOME`.
 pub fn list_skill_files_with_roots(
-    termul_skills: &[AgentSkillSummary],
+    itzterm_skills: &[AgentSkillSummary],
     home: Option<&Path>,
     config_home: Option<&Path>,
     project_root: Option<&str>,
@@ -155,7 +155,7 @@ pub fn list_skill_files_with_roots(
 
     let mut seen = HashSet::new();
     let mut entries = Vec::new();
-    for skill in termul_skills {
+    for skill in itzterm_skills {
         if seen.insert(skill.name.to_lowercase()) {
             entries.push(SkillFileEntry {
                 name: skill.name.clone(),
@@ -175,16 +175,16 @@ pub fn list_skill_files_with_roots(
 }
 
 /// Index skill files using the real user home and config dirs. A failed
-/// Termul skill listing degrades to the harness roots only.
+/// itzTerm skill listing degrades to the harness roots only.
 pub fn list_skill_files(project_root: Option<&str>) -> Result<Vec<SkillFileEntry>, String> {
-    let termul_skills = list_agent_skills(project_root).unwrap_or_else(|e| {
-        log::warn!("skill index: Termul skill listing failed, using harness roots only: {e}");
+    let itzterm_skills = list_agent_skills(project_root).unwrap_or_else(|e| {
+        log::warn!("skill index: itzTerm skill listing failed, using harness roots only: {e}");
         Vec::new()
     });
     let home = home_dir();
     let config = config_dir(home.as_deref());
     list_skill_files_with_roots(
-        &termul_skills,
+        &itzterm_skills,
         home.as_deref(),
         config.as_deref(),
         project_root,

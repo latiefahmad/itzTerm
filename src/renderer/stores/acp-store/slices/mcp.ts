@@ -277,7 +277,7 @@ export const createMcpSlice: McpSliceCreator = (set, get) => ({
     }),
 
   // CAP-7: mirror the app-store MCP registry to the named project's
-  // `.termul/mcp-servers.json` so the web `GET /mcp-servers?projectId=` route
+  // `.itzterm/mcp-servers.json` so the web `GET /mcp-servers?projectId=` route
   // (file-based) serves the same registry. Invoked by `useProjectRegistry` when
   // the `projects` watch reports a new default while shared-live runs, and when
   // shared-live starts. Best-effort + non-fatal — the wrapper logs failures and

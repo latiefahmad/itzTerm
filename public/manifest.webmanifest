@@ -1,8 +1,8 @@
 {
   "id": "/",
   "lang": "en",
-  "name": "Termul",
-  "short_name": "Termul",
+  "name": "itzTerm",
+  "short_name": "itzTerm",
   "description": "Project-aware terminal that treats workspaces as first-class citizens",
   "start_url": "/",
   "scope": "/",

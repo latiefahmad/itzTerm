@@ -68,7 +68,7 @@ async function registerProject(
   await mkdir(path, { recursive: true })
   if (options.git || options.detached) {
     execSync('git init -q -b main', { cwd: path })
-    execSync('git -c user.email=e2e@termul -c user.name=e2e commit -q --allow-empty -m init', {
+    execSync('git -c user.email=e2e@itzterm -c user.name=e2e commit -q --allow-empty -m init', {
       cwd: path
     })
   }
@@ -151,7 +151,7 @@ async function signIn(page: Page): Promise<void> {
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   // The first load of a fresh server serves the whole bundle cold: allow for it.
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN,
     { timeout: 60_000 }
   )
@@ -208,7 +208,7 @@ async function launchChat(page: Page, prompt: string): Promise<string> {
 /** Tap the shell's ☰ and wait for the drawer to be on screen and settled. */
 async function openDrawer(page: Page): Promise<Locator> {
   await page.getByRole('button', { name: 'Open menu' }).tap()
-  const drawer = page.getByRole('dialog', { name: 'Termul', exact: true })
+  const drawer = page.getByRole('dialog', { name: 'itzTerm', exact: true })
   await expect(drawer).toBeVisible()
   // The sheet slides in from the left: measure only once it has landed.
   await expect
@@ -383,10 +383,10 @@ test('the drawer is a full-screen Claude-style navigator: project row beside the
   expect(Math.max(...tabWidths) - Math.min(...tabWidths)).toBeLessThanOrEqual(1)
   await expect(sectionNav(drawer, 'Chats')).toHaveAttribute('aria-current', 'true')
 
-  // The "Termul" title only names the dialog; the project row is the top row,
+  // The "itzTerm" title only names the dialog; the project row is the top row,
   // beside the close ×.
-  const title = drawer.getByRole('heading', { level: 2, name: 'Termul', exact: true })
-  await expect(drawer).toHaveAccessibleName('Termul')
+  const title = drawer.getByRole('heading', { level: 2, name: 'itzTerm', exact: true })
+  await expect(drawer).toHaveAccessibleName('itzTerm')
   const projectRow = drawer.getByRole('button', { name: project.name })
   const close = drawer.getByRole('button', { name: 'Close', exact: true })
   const projectBox = await boxOf(projectRow)

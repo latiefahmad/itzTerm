@@ -379,7 +379,7 @@ fn persist(path: &Path, data: &RegistryData) -> Result<(), ProjectCommandError> 
         .save_atomic(path)
         .map_err(|error| {
             tracing::error!(
-                target: "termul::web::project_registry",
+                target: "itzterm::web::project_registry",
                 path = %path.display(),
                 %error,
                 "failed to persist the project registry; the registry is unchanged"

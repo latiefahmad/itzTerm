@@ -170,7 +170,7 @@ fn token_file_path(server_url: &str) -> Result<std::path::PathBuf, McpOAuthError
         .or_else(|| std::env::var_os("HOME"))
         .map(std::path::PathBuf::from)
         .ok_or_else(|| McpOAuthError::Keychain("no data dir env var".to_string()))?;
-    let dir = base.join("com.termul-manager.app").join("mcp-oauth");
+    let dir = base.join("com.itzterm.app").join("mcp-oauth");
     // Hash the normalized URL with a version-stable digest so filenames do
     // not change across Rust releases (DefaultHasher has no stability
     // guarantee) and trailing-slash variants (`https://x/mcp` vs
@@ -289,7 +289,7 @@ pub async fn run_full_flow(
         .await
         .map_err(|e| McpOAuthError::DiscoveryFailed(e.to_string()))?;
     manager.set_metadata(resolution.metadata);
-    let request = AuthorizationRequest::new(redirect_uri).with_client_name("Termul");
+    let request = AuthorizationRequest::new(redirect_uri).with_client_name("itzTerm");
     let session = AuthorizationSession::new(manager, request)
         .await
         .map_err(|(_manager, e)| McpOAuthError::RegistrationFailed(e.to_string()))?;

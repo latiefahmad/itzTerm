@@ -9,7 +9,7 @@ import {
   getLastAppliedColorThemeId
 } from '@/lib/themes'
 import { mixHex } from '@/lib/themes/color-utils'
-import { surfacesFromChrome } from '@/lib/themes/termul-dark-chrome'
+import { surfacesFromChrome } from '@/lib/themes/itzterm-dark-chrome'
 
 type MermaidThemeVariables = Record<string, string | boolean>
 

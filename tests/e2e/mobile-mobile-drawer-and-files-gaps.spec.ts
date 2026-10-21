@@ -23,7 +23,7 @@ import { openWorkspace } from './ui'
  *         Discard leave focus on the menu button; a clean editor keeps the
  *         drawer open.
  * - L-18  closing a section row or ending a rename keeps focus inside the drawer.
- * - L-20  the Files breadcrumb on a Windows-hosted termul-server, whose
+ * - L-20  the Files breadcrumb on a Windows-hosted itzterm-server, whose
  *         listings carry the verbatim `\\?\C:\...` prefix (no response shim).
  * - L-35  a fully clipped breadcrumb ancestor leaves the tab order.
  * - V-12  the drawer footer reads `Connected · {host}` (the StatusBar lamp keeps
@@ -205,7 +205,7 @@ async function openShell(
   const warmedUp = options.settleAgentWarmup ? watchAgentWarmup(page) : Promise.resolve()
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN,
     { timeout: 60_000 }
   )
@@ -230,7 +230,7 @@ function menuButton(page: Page): Locator {
 }
 
 function drawerOf(page: Page): Locator {
-  return page.getByRole('dialog', { name: 'Termul', exact: true })
+  return page.getByRole('dialog', { name: 'itzTerm', exact: true })
 }
 
 /** Tap ☰ and wait for the drawer to be on screen and settled. */

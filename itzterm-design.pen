@@ -6,7 +6,7 @@
       "id": "S41Ue9",
       "x": 0,
       "y": 0,
-      "name": "Termul Desktop — Main Window - old",
+      "name": "itzTerm Desktop — Main Window - old",
       "clip": true,
       "width": 1440,
       "height": 900,
@@ -153,7 +153,7 @@
                     {
                       "type": "frame",
                       "id": "cI2DZ",
-                      "name": "Termul Mark",
+                      "name": "itzTerm Mark",
                       "width": 32,
                       "height": 32,
                       "fill": "$primary",
@@ -5027,7 +5027,7 @@
       "id": "CQTEp",
       "x": 1560,
       "y": 0,
-      "name": "Termul Desktop — Agent Chat - old",
+      "name": "itzTerm Desktop — Agent Chat - old",
       "clip": true,
       "width": 1440,
       "height": 900,
@@ -5174,7 +5174,7 @@
                     {
                       "type": "frame",
                       "id": "N6Otdk",
-                      "name": "Termul Mark",
+                      "name": "itzTerm Mark",
                       "width": 32,
                       "height": 32,
                       "fill": "$primary",
@@ -37973,7 +37973,7 @@
                       "fill": "$fg-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Termul is a desktop terminal for running coding agents side by side. Read this file before you change code in this repository.",
+                      "content": "itzTerm is a desktop terminal for running coding agents side by side. Read this file before you change code in this repository.",
                       "lineHeight": 1.72,
                       "fontFamily": "Inter",
                       "fontSize": 15,
@@ -38427,7 +38427,7 @@
               "fill": "$fg-muted",
               "textGrowth": "fixed-width",
               "width": "fill_container",
-              "content": "2  Active row and hover row use the same solid accent fill. In Termul Light that fill is maroon.",
+              "content": "2  Active row and hover row use the same solid accent fill. In itzTerm Light that fill is maroon.",
               "lineHeight": 1.5,
               "fontFamily": "Inter",
               "fontSize": 12,
@@ -38942,7 +38942,7 @@
                       "fill": "$fg-secondary",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Termul is dark-first. Every color comes from a semantic OKLCH token, so themes swap without code changes. Never put raw hex values in JSX.",
+                      "content": "itzTerm is dark-first. Every color comes from a semantic OKLCH token, so themes swap without code changes. Never put raw hex values in JSX.",
                       "lineHeight": 1.72,
                       "fontFamily": "Inter",
                       "fontSize": 15,
@@ -42789,7 +42789,7 @@
                               "fill": "$fg-secondary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Termul is dark-first. Every color comes from a semantic OKLCH token, so themes swap without code changes.",
+                              "content": "itzTerm is dark-first. Every color comes from a semantic OKLCH token, so themes swap without code changes.",
                               "lineHeight": 1.65,
                               "fontFamily": "Inter",
                               "fontSize": 14,
@@ -43321,7 +43321,7 @@
                               "fill": "$fg-secondary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Termul is dark-first. Every color comes from a semantic OKLCH token, so themes swap without code changes.",
+                              "content": "itzTerm is dark-first. Every color comes from a semantic OKLCH token, so themes swap without code changes.",
                               "lineHeight": 1.65,
                               "fontFamily": "Inter",
                               "fontSize": 14,
@@ -44282,7 +44282,7 @@
                   "fill": "$fg-muted",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Active: keycap surface (bg-muted + inset highlight + shadow). Hover: bg-foreground/[0.03]. Never bg-accent — it is maroon in Termul Light.",
+                  "content": "Active: keycap surface (bg-muted + inset highlight + shadow). Hover: bg-foreground/[0.03]. Never bg-accent — it is maroon in itzTerm Light.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
                   "fontSize": 12,
@@ -46186,7 +46186,7 @@
                           "id": "SsmrV",
                           "name": "Version",
                           "fill": "$fg-dim",
-                          "content": "Termul 0.4.21",
+                          "content": "itzTerm 0.4.21",
                           "fontFamily": "Inter",
                           "fontSize": 11,
                           "fontWeight": "normal"
@@ -46665,7 +46665,7 @@
                                   "fill": "$fg-secondary",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "Termul is dark-first. Every color comes from a semantic OKLCH token, so themes swap without code changes. Never put raw hex values in JSX.",
+                                  "content": "itzTerm is dark-first. Every color comes from a semantic OKLCH token, so themes swap without code changes. Never put raw hex values in JSX.",
                                   "lineHeight": 1.72,
                                   "fontFamily": "Inter",
                                   "fontSize": 15,
@@ -59414,7 +59414,7 @@
                   "fill": "$fg-muted",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "Today bg-secondary = bg-popover in Termul Dark (both chrome.elevated). Every menu highlight is invisible.",
+                  "content": "Today bg-secondary = bg-popover in itzTerm Dark (both chrome.elevated). Every menu highlight is invisible.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
                   "fontSize": 12,
@@ -59482,7 +59482,7 @@
                   "fill": "$fg-muted",
                   "textGrowth": "fixed-width",
                   "width": "fill_container",
-                  "content": "No state uses --accent, so Termul Light never shows maroon fills.",
+                  "content": "No state uses --accent, so itzTerm Light never shows maroon fills.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
                   "fontSize": 12,
@@ -66856,7 +66856,7 @@
       "id": "DpoGj",
       "x": 13160,
       "y": 0,
-      "name": "Termul Manager - Project-Aware Terminal",
+      "name": "itzTerm Manager - Project-Aware Terminal",
       "fill": [
         "#ffffff",
         {
@@ -71900,7 +71900,7 @@
                                       "fill": "$fg-dim",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Give it a short name. Termul shows this name, never the email.",
+                                      "content": "Give it a short name. itzTerm shows this name, never the email.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "Inter",
                                       "fontSize": 12,
@@ -74646,7 +74646,7 @@
                           "fill": "$fg-dim",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Add another Claude account and choose it per project. When one hits its limit, Termul can offer to switch.",
+                          "content": "Add another Claude account and choose it per project. When one hits its limit, itzTerm can offer to switch.",
                           "lineHeight": 1.45,
                           "fontFamily": "Inter",
                           "fontSize": 11,
@@ -79316,7 +79316,7 @@
       "id": "Gad2B",
       "x": 14829,
       "y": 0,
-      "name": "Termul — Rail + Side panel (current, as-built)",
+      "name": "itzTerm — Rail + Side panel (current, as-built)",
       "clip": true,
       "width": 472,
       "height": 837,
@@ -81109,7 +81109,7 @@
       "id": "HGnqH",
       "x": 15381,
       "y": 0,
-      "name": "Termul — Rail + Side panel (current, full dummy data)",
+      "name": "itzTerm — Rail + Side panel (current, full dummy data)",
       "clip": true,
       "width": 472,
       "height": 900,
@@ -85035,7 +85035,7 @@
       "id": "NEumb",
       "x": 15933,
       "y": 0,
-      "name": "Termul — Rail + Side panel (optimized v2)",
+      "name": "itzTerm — Rail + Side panel (optimized v2)",
       "clip": true,
       "width": 472,
       "height": 900,
@@ -85124,7 +85124,7 @@
                     {
                       "type": "frame",
                       "id": "y49qBP",
-                      "name": "Termul mark (brand)",
+                      "name": "itzTerm mark (brand)",
                       "width": 28,
                       "height": 28,
                       "cornerRadius": 6,
@@ -85134,7 +85134,7 @@
                         {
                           "type": "path",
                           "id": "aoAad",
-                          "name": "Termul T",
+                          "name": "itzTerm T",
                           "geometry": "M311.75 506.82l-60.68 0c7.6 0 14.11-5.46 15.42-12.95l92.11-411.82-116.91 0-92.69 406.35c-0.17 0.94-0.25 1.87-0.25 2.78 0-0.91 0.08-1.84 0.25-2.78l92.69-406.35 310.67 0c9.74 0 17.12 8.79 15.43 18.38l-19.47 110.72c-1.32 7.49-7.83 12.96-15.43 12.96l-138.59 0-67.12 269.76c-1.31 7.49-7.82 12.95-15.43 12.95z m-292.03-493.87l-19.48 110.73c-1.68 9.59 5.7 18.38 15.43 18.38l131.47 0-66.16 264.34c-1.69 9.59 5.69 18.37 15.43 18.37l147.39 0c7.6 0 14.11-5.46 15.43-12.95l88.87-393.44c1.68-9.59-5.69-18.38-15.43-18.38l-297.52 0c-7.61 0-14.11 5.46-15.43 12.95z",
                           "viewBox": [
                             0,
@@ -88626,7 +88626,7 @@
       "id": "wXUB4",
       "x": 16485,
       "y": 0,
-      "name": "Termul — Collapsed Rail + Side panel (optimized v2)",
+      "name": "itzTerm — Collapsed Rail + Side panel (optimized v2)",
       "clip": true,
       "width": 328,
       "height": 900,
@@ -88693,7 +88693,7 @@
                 {
                   "type": "frame",
                   "id": "x7VdvC",
-                  "name": "Termul mark (brand)",
+                  "name": "itzTerm mark (brand)",
                   "width": 28,
                   "height": 28,
                   "cornerRadius": 6,
@@ -88703,7 +88703,7 @@
                     {
                       "type": "path",
                       "id": "qL069",
-                      "name": "Termul T",
+                      "name": "itzTerm T",
                       "geometry": "M311.75 506.82l-60.68 0c7.6 0 14.11-5.46 15.42-12.95l92.11-411.82-116.91 0-92.69 406.35c-0.17 0.94-0.25 1.87-0.25 2.78 0-0.91 0.08-1.84 0.25-2.78l92.69-406.35 310.67 0c9.74 0 17.12 8.79 15.43 18.38l-19.47 110.72c-1.32 7.49-7.83 12.96-15.43 12.96l-138.59 0-67.12 269.76c-1.31 7.49-7.82 12.95-15.43 12.95z m-292.03-493.87l-19.48 110.73c-1.68 9.59 5.7 18.38 15.43 18.38l131.47 0-66.16 264.34c-1.69 9.59 5.69 18.37 15.43 18.37l147.39 0c7.6 0 14.11-5.46 15.43-12.95l88.87-393.44c1.68-9.59-5.69-18.38-15.43-18.38l-297.52 0c-7.61 0-14.11 5.46-15.43 12.95z",
                       "viewBox": [
                         0,
@@ -91063,7 +91063,7 @@
               "fill": "$fg-muted",
               "textGrowth": "fixed-width",
               "width": 900,
-              "content": "Termul mark stays top-left in every state. The Rail toggle never moves. The Side panel is hidden from its own header and shown again from where it was.",
+              "content": "itzTerm mark stays top-left in every state. The Rail toggle never moves. The Side panel is hidden from its own header and shown again from where it was.",
               "lineHeight": 1.5,
               "fontFamily": "Inter",
               "fontSize": 14,
@@ -91186,7 +91186,7 @@
                                 {
                                   "type": "frame",
                                   "id": "It0D6",
-                                  "name": "Termul mark (brand)",
+                                  "name": "itzTerm mark (brand)",
                                   "width": 28,
                                   "height": 28,
                                   "cornerRadius": 6,
@@ -91196,7 +91196,7 @@
                                     {
                                       "type": "path",
                                       "id": "Dlr6i",
-                                      "name": "Termul T",
+                                      "name": "itzTerm T",
                                       "geometry": "M311.75 506.82l-60.68 0c7.6 0 14.11-5.46 15.42-12.95l92.11-411.82-116.91 0-92.69 406.35c-0.17 0.94-0.25 1.87-0.25 2.78 0-0.91 0.08-1.84 0.25-2.78l92.69-406.35 310.67 0c9.74 0 17.12 8.79 15.43 18.38l-19.47 110.72c-1.32 7.49-7.83 12.96-15.43 12.96l-138.59 0-67.12 269.76c-1.31 7.49-7.82 12.95-15.43 12.95z m-292.03-493.87l-19.48 110.73c-1.68 9.59 5.7 18.38 15.43 18.38l131.47 0-66.16 264.34c-1.69 9.59 5.69 18.37 15.43 18.37l147.39 0c7.6 0 14.11-5.46 15.43-12.95l88.87-393.44c1.68-9.59-5.69-18.38-15.43-18.38l-297.52 0c-7.61 0-14.11 5.46-15.43 12.95z",
                                       "viewBox": [
                                         0,
@@ -94922,7 +94922,7 @@
                             {
                               "type": "frame",
                               "id": "ElnGm",
-                              "name": "Termul mark (brand)",
+                              "name": "itzTerm mark (brand)",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 6,
@@ -94932,7 +94932,7 @@
                                 {
                                   "type": "path",
                                   "id": "jaPol",
-                                  "name": "Termul T",
+                                  "name": "itzTerm T",
                                   "geometry": "M311.75 506.82l-60.68 0c7.6 0 14.11-5.46 15.42-12.95l92.11-411.82-116.91 0-92.69 406.35c-0.17 0.94-0.25 1.87-0.25 2.78 0-0.91 0.08-1.84 0.25-2.78l92.69-406.35 310.67 0c9.74 0 17.12 8.79 15.43 18.38l-19.47 110.72c-1.32 7.49-7.83 12.96-15.43 12.96l-138.59 0-67.12 269.76c-1.31 7.49-7.82 12.95-15.43 12.95z m-292.03-493.87l-19.48 110.73c-1.68 9.59 5.7 18.38 15.43 18.38l131.47 0-66.16 264.34c-1.69 9.59 5.69 18.37 15.43 18.37l147.39 0c7.6 0 14.11-5.46 15.43-12.95l88.87-393.44c1.68-9.59-5.69-18.38-15.43-18.38l-297.52 0c-7.61 0-14.11 5.46-15.43 12.95z",
                                   "viewBox": [
                                     0,
@@ -97535,7 +97535,7 @@
                                 {
                                   "type": "frame",
                                   "id": "aOjH5",
-                                  "name": "Termul mark (brand)",
+                                  "name": "itzTerm mark (brand)",
                                   "width": 28,
                                   "height": 28,
                                   "cornerRadius": 6,
@@ -97545,7 +97545,7 @@
                                     {
                                       "type": "path",
                                       "id": "I3Jvd",
-                                      "name": "Termul T",
+                                      "name": "itzTerm T",
                                       "geometry": "M311.75 506.82l-60.68 0c7.6 0 14.11-5.46 15.42-12.95l92.11-411.82-116.91 0-92.69 406.35c-0.17 0.94-0.25 1.87-0.25 2.78 0-0.91 0.08-1.84 0.25-2.78l92.69-406.35 310.67 0c9.74 0 17.12 8.79 15.43 18.38l-19.47 110.72c-1.32 7.49-7.83 12.96-15.43 12.96l-138.59 0-67.12 269.76c-1.31 7.49-7.82 12.95-15.43 12.95z m-292.03-493.87l-19.48 110.73c-1.68 9.59 5.7 18.38 15.43 18.38l131.47 0-66.16 264.34c-1.69 9.59 5.69 18.37 15.43 18.37l147.39 0c7.6 0 14.11-5.46 15.43-12.95l88.87-393.44c1.68-9.59-5.69-18.38-15.43-18.38l-297.52 0c-7.61 0-14.11 5.46-15.43 12.95z",
                                       "viewBox": [
                                         0,
@@ -99624,7 +99624,7 @@
                             {
                               "type": "frame",
                               "id": "qaVVE",
-                              "name": "Termul mark (brand)",
+                              "name": "itzTerm mark (brand)",
                               "width": 28,
                               "height": 28,
                               "cornerRadius": 6,
@@ -99634,7 +99634,7 @@
                                 {
                                   "type": "path",
                                   "id": "bNr2M",
-                                  "name": "Termul T",
+                                  "name": "itzTerm T",
                                   "geometry": "M311.75 506.82l-60.68 0c7.6 0 14.11-5.46 15.42-12.95l92.11-411.82-116.91 0-92.69 406.35c-0.17 0.94-0.25 1.87-0.25 2.78 0-0.91 0.08-1.84 0.25-2.78l92.69-406.35 310.67 0c9.74 0 17.12 8.79 15.43 18.38l-19.47 110.72c-1.32 7.49-7.83 12.96-15.43 12.96l-138.59 0-67.12 269.76c-1.31 7.49-7.82 12.95-15.43 12.95z m-292.03-493.87l-19.48 110.73c-1.68 9.59 5.7 18.38 15.43 18.38l131.47 0-66.16 264.34c-1.69 9.59 5.69 18.37 15.43 18.37l147.39 0c7.6 0 14.11-5.46 15.43-12.95l88.87-393.44c1.68-9.59-5.69-18.38-15.43-18.38l-297.52 0c-7.61 0-14.11 5.46-15.43 12.95z",
                                   "viewBox": [
                                     0,
@@ -100599,7 +100599,7 @@
             {
               "type": "frame",
               "id": "JRYu0",
-              "name": "Row Termul mark",
+              "name": "Row itzTerm mark",
               "width": "fill_container",
               "gap": 16,
               "children": [
@@ -100617,7 +100617,7 @@
                     {
                       "type": "path",
                       "id": "hkpub",
-                      "name": "Termul T",
+                      "name": "itzTerm T",
                       "geometry": "M311.75 506.82l-60.68 0c7.6 0 14.11-5.46 15.42-12.95l92.11-411.82-116.91 0-92.69 406.35c-0.17 0.94-0.25 1.87-0.25 2.78 0-0.91 0.08-1.84 0.25-2.78l92.69-406.35 310.67 0c9.74 0 17.12 8.79 15.43 18.38l-19.47 110.72c-1.32 7.49-7.83 12.96-15.43 12.96l-138.59 0-67.12 269.76c-1.31 7.49-7.82 12.95-15.43 12.95z m-292.03-493.87l-19.48 110.73c-1.68 9.59 5.7 18.38 15.43 18.38l131.47 0-66.16 264.34c-1.69 9.59 5.69 18.37 15.43 18.37l147.39 0c7.6 0 14.11-5.46 15.43-12.95l88.87-393.44c1.68-9.59-5.69-18.38-15.43-18.38l-297.52 0c-7.61 0-14.11 5.46-15.43 12.95z",
                       "viewBox": [
                         0,
@@ -100644,7 +100644,7 @@
                       "id": "A9Zidk",
                       "name": "Name",
                       "fill": "$fg",
-                      "content": "Termul mark",
+                      "content": "itzTerm mark",
                       "fontFamily": "Inter",
                       "fontSize": 13,
                       "fontWeight": "600"
@@ -103773,7 +103773,7 @@
                                   "fill": "$fg-muted",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "Choose whether Ctrl/Cmd+Click URLs from terminal output open in your system browser or a new Termul browser tab.",
+                                  "content": "Choose whether Ctrl/Cmd+Click URLs from terminal output open in your system browser or a new itzTerm browser tab.",
                                   "lineHeight": 1.4,
                                   "fontFamily": "Inter",
                                   "fontSize": 12,
@@ -119328,7 +119328,7 @@
                                   "fill": "$fg-muted",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "Add another Claude account and choose it per project. When one hits its limit, Termul can offer to switch.",
+                                  "content": "Add another Claude account and choose it per project. When one hits its limit, itzTerm can offer to switch.",
                                   "lineHeight": 1.5,
                                   "fontFamily": "Inter",
                                   "fontSize": 12,
@@ -120596,7 +120596,7 @@
                                       "fill": "$fg-muted",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Give it a short name. Termul shows this name, never the email.",
+                                      "content": "Give it a short name. itzTerm shows this name, never the email.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "Inter",
                                       "fontSize": 14,
@@ -120987,7 +120987,7 @@
                                       "fill": "$fg-muted",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Give it a short name. Termul shows this name, never the email.",
+                                      "content": "Give it a short name. itzTerm shows this name, never the email.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "Inter",
                                       "fontSize": 14,
@@ -121200,7 +121200,7 @@
                                       "fill": "$fg-muted",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Termul shows this name instead of the email address.",
+                                      "content": "itzTerm shows this name instead of the email address.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "Inter",
                                       "fontSize": 14,
@@ -123899,7 +123899,7 @@
                                   "fill": "$fg-muted",
                                   "textGrowth": "fixed-width",
                                   "width": "fill_container",
-                                  "content": "Agents may advertise an experimental mcpCapabilities.acp capability. Termul does not read it, and no native ACP transport can be configured until Termul has an in-process MCP server handler.",
+                                  "content": "Agents may advertise an experimental mcpCapabilities.acp capability. itzTerm does not read it, and no native ACP transport can be configured until itzTerm has an in-process MCP server handler.",
                                   "lineHeight": 1.45,
                                   "fontFamily": "Inter",
                                   "fontSize": 12,
@@ -126567,7 +126567,7 @@
                               "fill": "$fg-muted",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Agents may advertise an experimental mcpCapabilities.acp capability. Termul does not read it, and no native ACP transport can be configured until Termul has an in-process MCP server handler.",
+                              "content": "Agents may advertise an experimental mcpCapabilities.acp capability. itzTerm does not read it, and no native ACP transport can be configured until itzTerm has an in-process MCP server handler.",
                               "lineHeight": 1.45,
                               "fontFamily": "Inter",
                               "fontSize": 12,
@@ -137216,7 +137216,7 @@
                 {
                   "type": "frame",
                   "id": "PsO8u",
-                  "name": "State · Links open in Termul, notifications off",
+                  "name": "State · Links open in itzTerm, notifications off",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": 10,
@@ -137226,7 +137226,7 @@
                       "id": "aYKha",
                       "name": "State Label",
                       "fill": "$fg-muted",
-                      "content": "Links open in Termul, notifications off",
+                      "content": "Links open in itzTerm, notifications off",
                       "fontFamily": "Inter",
                       "fontSize": 12,
                       "fontWeight": "600"
@@ -137286,7 +137286,7 @@
                               "width": "fill_container",
                               "descendants": {
                                 "yBq31": {
-                                  "content": "Termul Browser"
+                                  "content": "itzTerm Browser"
                                 }
                               }
                             }
@@ -139972,7 +139972,7 @@
                           "fill": "$fg-muted",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Choose when Termul sends you a system notification.",
+                          "content": "Choose when itzTerm sends you a system notification.",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -143567,7 +143567,7 @@
                       "fill": "$fg-muted",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Agents can also advertise MCP-over-ACP (mcpCapabilities.acp). Termul does not use it yet.",
+                      "content": "Agents can also advertise MCP-over-ACP (mcpCapabilities.acp). itzTerm does not use it yet.",
                       "fontFamily": "Inter",
                       "fontSize": 12,
                       "fontWeight": "normal"
@@ -145003,7 +145003,7 @@
                                       "fill": "$fg-secondary",
                                       "textGrowth": "fixed-width",
                                       "width": "fill_container",
-                                      "content": "Termul could not start this server. Check the command and the environment values, then try again.",
+                                      "content": "itzTerm could not start this server. Check the command and the environment values, then try again.",
                                       "lineHeight": 1.45,
                                       "fontFamily": "Inter",
                                       "fontSize": 12,
@@ -147699,7 +147699,7 @@
                           "fill": "$fg-muted",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Time limits for agent chats, and the agents Termul can start.",
+                          "content": "Time limits for agent chats, and the agents itzTerm can start.",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -151388,7 +151388,7 @@
                               "fill": "$fg-secondary",
                               "textGrowth": "fixed-width",
                               "width": "fill_container",
-                              "content": "Termul could not read the current limit. Your choice is saved.",
+                              "content": "itzTerm could not read the current limit. Your choice is saved.",
                               "lineHeight": 1.45,
                               "fontFamily": "Inter",
                               "fontSize": 12,
@@ -155187,7 +155187,7 @@
                           "fill": "$fg-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Termul cannot read your Claude accounts right now. Chats keep using the account they started with.",
+                          "content": "itzTerm cannot read your Claude accounts right now. Chats keep using the account they started with.",
                           "lineHeight": 1.45,
                           "fontFamily": "Inter",
                           "fontSize": 12,
@@ -155499,7 +155499,7 @@
                           "fill": "$fg-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Add a second Claude account to keep work and personal apart. Termul can offer to switch when one reaches its limit.",
+                          "content": "Add a second Claude account to keep work and personal apart. itzTerm can offer to switch when one reaches its limit.",
                           "lineHeight": 1.45,
                           "fontFamily": "Inter",
                           "fontSize": 12,
@@ -156288,7 +156288,7 @@
                                           "fill": "$fg-muted",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Give it a short name. Termul shows this name, never the email.",
+                                          "content": "Give it a short name. itzTerm shows this name, never the email.",
                                           "lineHeight": 1.45,
                                           "fontFamily": "Inter",
                                           "fontSize": 14,
@@ -156680,7 +156680,7 @@
                                           "fill": "$fg-muted",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Give it a short name. Termul shows this name, never the email.",
+                                          "content": "Give it a short name. itzTerm shows this name, never the email.",
                                           "lineHeight": 1.45,
                                           "fontFamily": "Inter",
                                           "fontSize": 14,
@@ -156894,7 +156894,7 @@
                                           "fill": "$fg-muted",
                                           "textGrowth": "fixed-width",
                                           "width": "fill_container",
-                                          "content": "Termul shows this name instead of the email address.",
+                                          "content": "itzTerm shows this name instead of the email address.",
                                           "lineHeight": 1.45,
                                           "fontFamily": "Inter",
                                           "fontSize": 14,
@@ -158842,7 +158842,7 @@
                           "fill": "$fg-muted",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Change the keys for Termul commands. Select a shortcut, then press the new keys.",
+                          "content": "Change the keys for itzTerm commands. Select a shortcut, then press the new keys.",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -168894,7 +168894,7 @@
                           "fill": "$fg-muted",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Termul version, release channel and automatic checks.",
+                          "content": "itzTerm version, release channel and automatic checks.",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -168973,12 +168973,12 @@
                               "id": "wr5l9",
                               "type": "ref",
                               "ref": "dfJ81",
-                              "name": "Row · Termul 0.4.21",
+                              "name": "Row · itzTerm 0.4.21",
                               "width": "fill_container",
                               "strokeWidth": 0,
                               "descendants": {
                                 "yRSXA": {
-                                  "content": "Termul 0.4.21"
+                                  "content": "itzTerm 0.4.21"
                                 },
                                 "FfrRy": {
                                   "content": "Stable channel · last checked Oct 18, 2026 at 9:41 AM."
@@ -169131,7 +169131,7 @@
                                   "content": "Check for updates automatically"
                                 },
                                 "FfrRy": {
-                                  "content": "Termul checks for a new version from time to time."
+                                  "content": "itzTerm checks for a new version from time to time."
                                 },
                                 "fo52F": {
                                   "id": "o7tyf4",
@@ -170006,7 +170006,7 @@
                                   "content": "Log folder"
                                 },
                                 "FfrRy": {
-                                  "content": "Open the folder that holds the Termul logs."
+                                  "content": "Open the folder that holds the itzTerm logs."
                                 },
                                 "fo52F": {
                                   "type": "frame",
@@ -171890,7 +171890,7 @@
                 {
                   "type": "frame",
                   "id": "WgLVG",
-                  "name": "State · Screen reader mode on, links open in Termul",
+                  "name": "State · Screen reader mode on, links open in itzTerm",
                   "width": "fill_container",
                   "layout": "vertical",
                   "gap": 8,
@@ -171900,7 +171900,7 @@
                       "id": "thSfc",
                       "name": "Label",
                       "fill": "$fg-muted",
-                      "content": "Screen reader mode on, links open in Termul",
+                      "content": "Screen reader mode on, links open in itzTerm",
                       "fontFamily": "Inter",
                       "fontSize": 12,
                       "fontWeight": "600"
@@ -171959,7 +171959,7 @@
                               "name": "Control",
                               "descendants": {
                                 "p8TKWe": {
-                                  "content": "Termul browser tab"
+                                  "content": "itzTerm browser tab"
                                 }
                               }
                             }
@@ -173794,7 +173794,7 @@
                       "fill": "$fg-dim",
                       "textGrowth": "fixed-width",
                       "width": "fill_container",
-                      "content": "Says where Termul looked, so the user knows where to add one.",
+                      "content": "Says where itzTerm looked, so the user knows where to add one.",
                       "lineHeight": 1.4,
                       "fontFamily": "Inter",
                       "fontSize": 12,
@@ -173998,12 +173998,12 @@
                           "id": "ys3Ak",
                           "type": "ref",
                           "ref": "dfJ81",
-                          "name": "Row · Termul 0.4.21",
+                          "name": "Row · itzTerm 0.4.21",
                           "width": "fill_container",
                           "strokeWidth": 0,
                           "descendants": {
                             "yRSXA": {
-                              "content": "Termul 0.4.21"
+                              "content": "itzTerm 0.4.21"
                             },
                             "FfrRy": {
                               "content": "Stable channel · last checked Oct 18, 2026 at 9:41 AM."
@@ -174560,12 +174560,12 @@
                           "id": "USWNj",
                           "type": "ref",
                           "ref": "dfJ81",
-                          "name": "Row · Termul 0.4.21",
+                          "name": "Row · itzTerm 0.4.21",
                           "width": "fill_container",
                           "strokeWidth": 0,
                           "descendants": {
                             "yRSXA": {
-                              "content": "Termul 0.4.21"
+                              "content": "itzTerm 0.4.21"
                             },
                             "FfrRy": {
                               "content": "Stable channel · checking now."
@@ -174666,7 +174666,7 @@
                           "fill": "$fg-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Termul could not check for updates. Check your connection, then try again.",
+                          "content": "itzTerm could not check for updates. Check your connection, then try again.",
                           "lineHeight": 1.45,
                           "fontFamily": "Inter",
                           "fontSize": 12,
@@ -174750,7 +174750,7 @@
                           "fill": "$fg-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "You skipped version 0.4.20. Termul offers updates again when a newer version is out.",
+                          "content": "You skipped version 0.4.20. itzTerm offers updates again when a newer version is out.",
                           "lineHeight": 1.45,
                           "fontFamily": "Inter",
                           "fontSize": 12,
@@ -174823,7 +174823,7 @@
                           "fill": "$fg-secondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "This copy of Termul updates through the AUR. Run yay -S termul-manager to update.",
+                          "content": "This copy of itzTerm updates through the AUR. Run yay -S termul-manager to update.",
                           "lineHeight": 1.45,
                           "fontFamily": "Inter",
                           "fontSize": 12,
@@ -179811,7 +179811,7 @@
                           "fill": "$fg-muted",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Change the keys for Termul commands. Select a shortcut, then press the new keys.",
+                          "content": "Change the keys for itzTerm commands. Select a shortcut, then press the new keys.",
                           "fontFamily": "Inter",
                           "fontSize": 14,
                           "fontWeight": "normal"
@@ -185060,7 +185060,7 @@
                           "fill": "$fg-muted",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Version 0.4.22 is downloaded. Termul restarts to install it, and running terminal sessions close.",
+                          "content": "Version 0.4.22 is downloaded. itzTerm restarts to install it, and running terminal sessions close.",
                           "lineHeight": 1.45,
                           "fontFamily": "Inter",
                           "fontSize": 12,

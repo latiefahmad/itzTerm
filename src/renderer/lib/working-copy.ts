@@ -23,7 +23,7 @@ export type WorkingCopy =
       path: string
       worktreeId: string | null
     }
-  /** A path inside `<project>/.termul/worktrees/` that no listed worktree
+  /** A path inside `<project>/.itzterm/worktrees/` that no listed worktree
    * contains (pruned or not yet reconciled). `key`/`path` name the managed
    * worktree directory. Never falls back to the project folder. */
   | { state: 'unresolved'; key: string; path: string }
@@ -45,7 +45,7 @@ export interface ResolveActiveWorkingCopyInput {
   sources: TabPathSources
 }
 
-const MANAGED_SEGMENTS = '.termul/worktrees'
+const MANAGED_SEGMENTS = '.itzterm/worktrees'
 const DOT_SEGMENT = /(^|\/)\.\.?(\/|$)/
 const DRIVE_ROOT = /^[A-Za-z]:\/$/
 
@@ -162,7 +162,7 @@ function resolved(candidate: Candidate): WorkingCopy {
   }
 }
 
-/** The managed worktree directory (`<project>/.termul/worktrees/<name>`) a
+/** The managed worktree directory (`<project>/.itzterm/worktrees/<name>`) a
  * path sits strictly under, or `null`. */
 function managedWorktreeDir(
   path: string,
@@ -173,7 +173,7 @@ function managedWorktreeDir(
   const projectKey = normalizePath(project.path)
   const prefix = joinKey(projectKey, `${MANAGED_SEGMENTS}/`)
   if (!key.startsWith(prefix) || key.length === prefix.length) return null
-  const depth = prefix.split('/').length - 1 // segments in `<project>/.termul/worktrees`
+  const depth = prefix.split('/').length - 1 // segments in `<project>/.itzterm/worktrees`
   const dirKey = key
     .split('/')
     .slice(0, depth + 1)
@@ -188,7 +188,7 @@ function managedWorktreeDir(
 /**
  * The working copy that contains `path`: the deepest listed one (project folder
  * or any listed worktree) by segment-bounded prefix; the project folder wins
- * ties. A path under `<project>/.termul/worktrees/` that no listed worktree
+ * ties. A path under `<project>/.itzterm/worktrees/` that no listed worktree
  * contains is `unresolved`, never the project folder. Anything else is `null`.
  */
 export function workingCopyOf(

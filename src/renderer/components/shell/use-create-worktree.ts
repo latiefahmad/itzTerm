@@ -30,7 +30,7 @@ function refusalFor(project: CreateProject, name: string, locked: boolean): stri
   if (locked) return 'Another worktree operation is in progress'
   const exists = (project.worktrees ?? []).some((w) => w.branch === name || w.name === name)
   if (exists) return `A worktree for branch "${name}" already exists`
-  if (`${project.path ?? ''}/.termul/worktrees/${name}/`.length > MAX_TARGET_PATH) {
+  if (`${project.path ?? ''}/.itzterm/worktrees/${name}/`.length > MAX_TARGET_PATH) {
     return 'Path too long'
   }
   return null

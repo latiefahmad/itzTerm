@@ -19,7 +19,7 @@
 import { WS_PROTOCOL_VERSION } from '@shared/types/web-protocol.types'
 import { logFrontendError } from './log-api'
 
-export const PROTOCOL_RELOAD_LATCH_KEY = 'termul.protocolMismatchReload'
+export const PROTOCOL_RELOAD_LATCH_KEY = 'itzterm.protocolMismatchReload'
 
 /** Outcome of a mismatch report: a reload was (already) scheduled, or the loop latch stopped it. */
 export type ProtocolMismatchOutcome = 'reloading' | 'halted'

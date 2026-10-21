@@ -83,7 +83,7 @@ fn truncated_openssh_blob_is_not_a_key() {
 
 #[test]
 fn inspect_reports_missing_and_present_files() {
-    let dir = std::env::temp_dir().join(format!("termul-keys-{}", uuid::Uuid::new_v4()));
+    let dir = std::env::temp_dir().join(format!("itzterm-keys-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&dir).unwrap();
     let key_path = dir.join("id_test");
     std::fs::write(&key_path, ENCRYPTED_ED25519).unwrap();

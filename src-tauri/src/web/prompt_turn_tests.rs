@@ -41,7 +41,7 @@ async fn env_with(install: impl FnOnce(&Arc<AcpManager>, HashSet<String>)) -> En
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let root = std::env::temp_dir().join(format!("termul-prompt-turn-{stamp}"));
+    let root = std::env::temp_dir().join(format!("itzterm-prompt-turn-{stamp}"));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let persistence = SessionPersistence::open(root.join("sessions"))

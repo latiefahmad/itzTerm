@@ -177,7 +177,7 @@ describe('SubagentDetailsDialog agent prose', () => {
     )
 
     const dialog = screen.getByRole('dialog', { name: 'Audit branch code for slop' })
-    const fileButton = within(dialog).getByTestId('termul-file-path')
+    const fileButton = within(dialog).getByTestId('itzterm-file-path')
     expect(fileButton).toHaveAttribute('data-path', 'src/foo.ts')
     expect(fileButton).toHaveTextContent('src/foo.ts')
     await waitFor(() => {
@@ -233,7 +233,7 @@ describe('SubagentDetailsDialog file-path open', () => {
     const onOpenChange = vi.fn()
     render(<ClosableDialog onOpenChange={onOpenChange} />)
 
-    fireEvent.click(screen.getByTestId('termul-file-path'))
+    fireEvent.click(screen.getByTestId('itzterm-file-path'))
 
     expect(openFilePathMock).toHaveBeenCalledWith('src/foo.ts', {
       cwd: '/proj',
@@ -248,7 +248,7 @@ describe('SubagentDetailsDialog file-path open', () => {
     render(<ClosableDialog onOpenChange={() => {}} />)
     await waitForSentinelDepth(1)
 
-    fireEvent.click(screen.getByTestId('termul-file-path'))
+    fireEvent.click(screen.getByTestId('itzterm-file-path'))
 
     await waitForSentinelDepth(0)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
@@ -258,7 +258,7 @@ describe('SubagentDetailsDialog file-path open', () => {
     const onOpenChange = vi.fn()
     render(<ClosableDialog onOpenChange={onOpenChange} />)
 
-    fireEvent.click(screen.getByTestId('termul-file-path'), { shiftKey: true })
+    fireEvent.click(screen.getByTestId('itzterm-file-path'), { shiftKey: true })
 
     expect(openFilePathMock).not.toHaveBeenCalled()
     expect(onOpenChange).not.toHaveBeenCalled()

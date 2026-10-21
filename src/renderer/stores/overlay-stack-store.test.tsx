@@ -158,7 +158,7 @@ describe('overlay-stack-store', () => {
       pushOverlaySentinel()
       // Same URL (no hash change), new history entry with the marker state.
       expect(window.location.href).toBe(hrefBefore)
-      expect(history.state).toEqual({ termulOverlay: true })
+      expect(history.state).toEqual({ itztermOverlay: true })
     })
   })
 
@@ -229,7 +229,7 @@ describe('overlay-stack-store', () => {
       fireEvent(window, new Event('popstate'))
       expect(closeTop).toHaveBeenCalledTimes(1)
       // bottom-sheet still open → handler pushes a fresh sentinel.
-      expect(historySpy).toHaveBeenCalledWith({ termulOverlay: true }, '')
+      expect(historySpy).toHaveBeenCalledWith({ itztermOverlay: true }, '')
 
       // And the next back closes it.
       fireEvent(window, new Event('popstate'))

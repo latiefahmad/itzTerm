@@ -53,15 +53,15 @@ fn same_host_and_port_is_allowed() {
     assert!(origin_allowed(
         "POST",
         "/git/commit",
-        Some("https://termul.example"),
-        Some("termul.example"),
+        Some("https://itzterm.example"),
+        Some("itzterm.example"),
         &policy
     ));
     assert!(origin_allowed(
         "POST",
         "/git/commit",
-        Some("https://termul.example:443"),
-        Some("termul.example"),
+        Some("https://itzterm.example:443"),
+        Some("itzterm.example"),
         &policy
     ));
     assert!(origin_allowed(

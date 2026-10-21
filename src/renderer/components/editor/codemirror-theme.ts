@@ -7,9 +7,9 @@ import { BUNDLED_COLOR_THEMES } from '@/lib/themes/bundled-themes'
 import { resolveSyntaxColors } from '@/lib/themes/resolve-syntax'
 import type { ResolvedSyntaxColors } from '@/lib/themes/types'
 
-const defaultDarkSyntax: ResolvedSyntaxColors = resolveSyntaxColors(BUNDLED_COLOR_THEMES.termul)
+const defaultDarkSyntax: ResolvedSyntaxColors = resolveSyntaxColors(BUNDLED_COLOR_THEMES.itzterm)
 const defaultLightSyntax: ResolvedSyntaxColors = resolveSyntaxColors(
-  BUNDLED_COLOR_THEMES['termul-light']
+  BUNDLED_COLOR_THEMES['itzterm-light']
 )
 
 function buildHighlightStyle(colors: ResolvedSyntaxColors): HighlightStyle {
@@ -45,7 +45,7 @@ function buildHighlightStyle(colors: ResolvedSyntaxColors): HighlightStyle {
   ])
 }
 
-export function createTermulTheme(
+export function createItzTermTheme(
   isDark: boolean,
   syntaxColors?: ResolvedSyntaxColors | null
 ): Extension[] {

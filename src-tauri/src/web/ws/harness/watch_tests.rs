@@ -8,7 +8,7 @@ const WAIT: Duration = Duration::from_secs(15);
 
 fn project_dir(label: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!(
-        "termul-harness-watch-{label}-{}-{}",
+        "itzterm-harness-watch-{label}-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ));

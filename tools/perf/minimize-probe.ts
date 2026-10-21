@@ -72,7 +72,7 @@ const restore = (pid: number): void => {
 /** Sample CPU% + WS of every webview2 child under the app's PID. */
 const webviewStats = (): string =>
   ps(
-    `$app = Get-Process termul-manager -ErrorAction SilentlyContinue | Select-Object -First 1;` +
+    `$app = Get-Process itzterm-manager -ErrorAction SilentlyContinue | Select-Object -First 1;` +
       `if (-not $app) { 'no-app'; exit };` +
       `$a = Get-Date; $c1 = @{};` +
       `Get-Process msedgewebview2 -ErrorAction SilentlyContinue | ForEach-Object { $c1[$_.Id] = $_.TotalProcessorTime.TotalMilliseconds };` +
@@ -94,10 +94,10 @@ async function main(): Promise<void> {
 
   try {
     // Seed project + fake agent, reload so the launcher mounts.
-    mkdirSync(path.join(process.env.TEMP ?? 'C:\\temp', 'termul-perf-project'), {
+    mkdirSync(path.join(process.env.TEMP ?? 'C:\\temp', 'itzterm-perf-project'), {
       recursive: true
     })
-    await seedPerfProject(handle, path.join(process.env.TEMP ?? 'C:\\temp', 'termul-perf-project'))
+    await seedPerfProject(handle, path.join(process.env.TEMP ?? 'C:\\temp', 'itzterm-perf-project'))
     await registerFakeAgent(
       handle,
       buildFakeAgentConfig(REPO_ROOT, {

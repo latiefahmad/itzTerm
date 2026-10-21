@@ -3,7 +3,7 @@
 //!
 //! One shared service behind the desktop `collect_bug_report_context` /
 //! `submit_bug_report` commands and the `/log/…` web routes. The collect
-//! path is `AppHandle`-free so the standalone `termul-server` calls the same
+//! path is `AppHandle`-free so the standalone `itzterm-server` calls the same
 //! code with its own log path (or `None`). Every returned log line passes
 //! through the ACP stderr-ring secret mask plus a home-dir scrub before it
 //! leaves the host — renderers, agents and GitHub only ever see redacted
@@ -25,7 +25,7 @@ use crate::process_util::hide_console;
 const LOG_TAIL_BYTES: usize = 64 * 1024;
 
 /// Repo `gh issue create` files against.
-const ISSUE_REPO: &str = "gnoviawan/termul";
+const ISSUE_REPO: &str = "latiefahmad/itzTerm";
 /// Host `gh` must be authenticated against for the issue repo.
 const ISSUE_HOST: &str = "github.com";
 /// Most chars of `gh` stderr kept in a `Failed` reason.
@@ -310,7 +310,7 @@ fn drain_pipe<R: Read + Send + 'static>(pipe: Option<R>) -> JoinHandle<io::Resul
 /// reads it.
 fn write_body_file(body: &str) -> io::Result<BodyFile> {
     let path = std::env::temp_dir().join(format!(
-        "termul-bug-report-{}-{}.md",
+        "itzterm-bug-report-{}-{}.md",
         std::process::id(),
         uuid::Uuid::new_v4().simple()
     ));
@@ -424,7 +424,7 @@ fn read_log_tail(log_path: Option<&Path>) -> LogTail {
 
 /// Read at most the last `max` bytes of `path`: stat the file, seek to the
 /// window start and read only that span, so an unbounded log
-/// (`termul-server.log` is a raw stdout redirect) never loads fully into
+/// (`itzterm-server.log` is a raw stdout redirect) never loads fully into
 /// memory. Returns `(truncated, window)`; `truncated` is true iff the file
 /// is longer than `max` — the `log_truncated` semantics the whole-file read
 /// had.

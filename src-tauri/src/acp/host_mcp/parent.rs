@@ -12,7 +12,7 @@
 //!
 //! Runs on a dedicated OS thread with a current-thread tokio runtime (mirrors
 //! the per-agent driver-thread model in `AcpManager`) — works on both the
-//! desktop binary and the standalone `termul-server` (no `AppHandle`).
+//! desktop binary and the standalone `itzterm-server` (no `AppHandle`).
 
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
@@ -141,7 +141,7 @@ impl HostPlanServer {
         // listener is driven independently of the AcpManager's per-agent
         // driver threads + the desktop's Tauri runtime.
         let _handle: std::thread::JoinHandle<()> = std::thread::Builder::new()
-            .name("termul-host-mcp".to_string())
+            .name("itzterm-host-mcp".to_string())
             .spawn(move || {
                 let runtime = match tokio::runtime::Builder::new_current_thread()
                     .enable_all()
@@ -190,7 +190,7 @@ impl HostPlanServer {
                     }
                 });
             })
-            .expect("spawn termul-host-mcp thread");
+            .expect("spawn itzterm-host-mcp thread");
 
         // Block until the dedicated thread has bound + published the port.
         // (If the thread failed to bind, `port` is 0 — `register_session`
@@ -201,8 +201,8 @@ impl HostPlanServer {
 
     /// Register a session at injection time (before `session/new` is sent).
     /// Returns `(port, token, provisional_session_id)` to inject into the
-    /// `McpServer::Stdio` env: `TERMUL_PLAN_PORT`, `TERMUL_PLAN_TOKEN`,
-    /// `TERMUL_PLAN_SESSION_ID`.
+    /// `McpServer::Stdio` env: `ITZTERM_PLAN_PORT`, `ITZTERM_PLAN_TOKEN`,
+    /// `ITZTERM_PLAN_SESSION_ID`.
     ///
     /// The real ACP session_id isn't known yet — call `bind_session` after the
     /// `session/new` response arrives to bind it to the token.

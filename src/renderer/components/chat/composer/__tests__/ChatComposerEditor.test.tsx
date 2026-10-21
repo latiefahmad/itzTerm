@@ -241,8 +241,8 @@ describe('file pill icon (gh-896)', () => {
 
     await waitFor(() => expect(document.querySelector('[data-file-pill="true"]')).toBeTruthy())
     const pill = document.querySelector('[data-file-pill="true"]') as HTMLElement
-    expect(pill.querySelector('svg[data-termul-icon="Folder"]')).not.toBeNull()
-    expect(pill.querySelector('svg[data-termul-icon="File"]')).toBeNull()
+    expect(pill.querySelector('svg[data-itzterm-icon="Folder"]')).not.toBeNull()
+    expect(pill.querySelector('svg[data-itzterm-icon="File"]')).toBeNull()
   })
 
   it('still renders the File icon for a file token', async () => {
@@ -253,8 +253,8 @@ describe('file pill icon (gh-896)', () => {
 
     await waitFor(() => expect(document.querySelector('[data-file-pill="true"]')).toBeTruthy())
     const pill = document.querySelector('[data-file-pill="true"]') as HTMLElement
-    expect(pill.querySelector('svg[data-termul-icon="File"]')).not.toBeNull()
-    expect(pill.querySelector('svg[data-termul-icon="Folder"]')).toBeNull()
+    expect(pill.querySelector('svg[data-itzterm-icon="File"]')).not.toBeNull()
+    expect(pill.querySelector('svg[data-itzterm-icon="Folder"]')).toBeNull()
   })
 })
 

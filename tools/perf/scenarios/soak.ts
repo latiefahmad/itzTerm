@@ -57,7 +57,7 @@ async function drive(ctx: ScenarioContext): Promise<void> {
       await ctx.handle
         .evaluate(
           `(async () => {
-            const store = window.__termulAcpStore
+            const store = window.__itztermAcpStore
             if (!store) return 'noop'
             const active = store.getState().activeSessionId
             if (active) await store.getState().setActiveSession(active)

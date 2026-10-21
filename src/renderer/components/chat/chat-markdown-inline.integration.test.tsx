@@ -21,37 +21,37 @@ vi.mock('@/lib/tauri-runtime', async (importOriginal) => {
   return { ...actual, isTauriContext: () => isTauriContextMock() }
 })
 
-import { TermulFilePathButton, TermulMarkdownImage } from './ChatMessage'
+import { ItzTermFilePathButton, ItzTermMarkdownImage } from './ChatMessage'
 import { remarkFilePathLinks } from './chat-markdown-file-links'
-import { remarkTermulImages } from './chat-markdown-images'
+import { remarkItzTermImages } from './chat-markdown-images'
 
 const REMARK_PLUGINS = [
   ...Object.values(defaultRemarkPlugins),
-  remarkTermulImages,
+  remarkItzTermImages,
   remarkFilePathLinks
 ]
 
 const ALLOWED_TAGS = {
-  'termul-file-path': ['dataPath'],
-  'termul-image': ['dataUrl', 'dataAlt']
+  'itzterm-file-path': ['dataPath'],
+  'itzterm-image': ['dataUrl', 'dataAlt']
 }
 
 /** Mirrors the AgentProse wiring in ChatMessage.tsx with real Streamdown. */
 function chatElement(text: string, cwd?: string): React.JSX.Element {
   const components: Components = {
-    'termul-image': (props: Record<string, unknown>) => (
-      <TermulMarkdownImage
+    'itzterm-image': (props: Record<string, unknown>) => (
+      <ItzTermMarkdownImage
         url={typeof props['data-url'] === 'string' ? props['data-url'] : ''}
         alt={typeof props['data-alt'] === 'string' ? props['data-alt'] : ''}
         cwd={cwd}
       />
     ),
-    'termul-file-path': (props: Record<string, unknown>) => {
+    'itzterm-file-path': (props: Record<string, unknown>) => {
       const path = typeof props['data-path'] === 'string' ? props['data-path'] : ''
       return (
-        <TermulFilePathButton path={path} context={{ cwd }}>
+        <ItzTermFilePathButton path={path} context={{ cwd }}>
           {props.children as React.ReactNode}
-        </TermulFilePathButton>
+        </ItzTermFilePathButton>
       )
     }
   }
@@ -74,7 +74,7 @@ function renderChat(text: string, cwd?: string): ReturnType<typeof render> {
   return render(chatElement(text, cwd))
 }
 
-describe('chat inline termul tags with real Streamdown', () => {
+describe('chat inline itzterm tags with real Streamdown', () => {
   beforeEach(() => {
     readAttachmentBytesMock.mockReset()
     logFrontendErrorMock.mockClear()
@@ -103,7 +103,7 @@ describe('chat inline termul tags with real Streamdown', () => {
     const { container } = renderChat(markdown)
 
     await waitFor(() => {
-      const button = container.querySelector<HTMLElement>('button[data-testid="termul-file-path"]')
+      const button = container.querySelector<HTMLElement>('button[data-testid="itzterm-file-path"]')
       expect(button).not.toBeNull()
       expect(button).toHaveAttribute('data-path', path)
       expect(button).toHaveTextContent(label)
@@ -117,7 +117,7 @@ describe('chat inline termul tags with real Streamdown', () => {
     await waitFor(() => {
       expect(container.querySelector('a, button[data-streamdown="link"]')).not.toBeNull()
     })
-    expect(container.querySelector('[data-testid="termul-file-path"]')).toBeNull()
+    expect(container.querySelector('[data-testid="itzterm-file-path"]')).toBeNull()
   })
 
   it.each([
@@ -131,7 +131,7 @@ describe('chat inline termul tags with real Streamdown', () => {
     await waitFor(() => {
       expect(container.textContent).toContain('x')
     })
-    expect(container.querySelector('[data-testid="termul-file-path"]')).toBeNull()
+    expect(container.querySelector('[data-testid="itzterm-file-path"]')).toBeNull()
   })
 
   it('renders data: images inline with no [Image blocked', async () => {
@@ -152,7 +152,7 @@ describe('chat inline termul tags with real Streamdown', () => {
 
     await waitFor(() => {
       expect(screen.getByAltText('tiny')).toHaveAttribute('src', 'data:image/png;base64,QUJD')
-      expect(screen.getByTestId('termul-image-alt')).toHaveTextContent('chart')
+      expect(screen.getByTestId('itzterm-image-alt')).toHaveTextContent('chart')
     })
     expect(container.textContent).not.toContain('[Image blocked')
   })
@@ -187,7 +187,7 @@ describe('chat inline termul tags with real Streamdown', () => {
     const { container } = renderChat('![chart](output/chart.png)', '/proj')
 
     await waitFor(() => {
-      expect(screen.getByTestId('termul-image-alt')).toHaveTextContent('chart')
+      expect(screen.getByTestId('itzterm-image-alt')).toHaveTextContent('chart')
     })
     expect(container.querySelector('img')).toBeNull()
     expect(readAttachmentBytesMock).not.toHaveBeenCalled()
@@ -211,11 +211,11 @@ describe('chat inline termul tags with real Streamdown', () => {
     const { container } = renderChat('![chart](output/chart.png)', '/proj')
 
     await waitFor(() => {
-      expect(screen.getByTestId('termul-image-alt')).toHaveTextContent('chart')
+      expect(screen.getByTestId('itzterm-image-alt')).toHaveTextContent('chart')
     })
     expect(container.querySelector('img')).toBeNull()
     expect(logFrontendErrorMock).toHaveBeenCalledWith(
-      expect.objectContaining({ level: 'warn', source: 'ChatMessage.termulImage' })
+      expect.objectContaining({ level: 'warn', source: 'ChatMessage.itztermImage' })
     )
   })
 
@@ -232,7 +232,7 @@ describe('chat inline termul tags with real Streamdown', () => {
     rerender(chatElement('![other](missing/other.png)', '/proj'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('termul-image-alt')).toHaveTextContent('other')
+      expect(screen.getByTestId('itzterm-image-alt')).toHaveTextContent('other')
     })
     expect(container.querySelector('img')).toBeNull()
   })
@@ -241,7 +241,7 @@ describe('chat inline termul tags with real Streamdown', () => {
     isTauriContextMock.mockReturnValue(true)
     readAttachmentBytesMock.mockResolvedValueOnce(new Uint8Array([65, 66, 67]))
     const { rerender, container } = render(
-      <TermulMarkdownImage url="output/chart.png" alt="chart" cwd="/proj" />
+      <ItzTermMarkdownImage url="output/chart.png" alt="chart" cwd="/proj" />
     )
 
     await waitFor(() => {
@@ -249,13 +249,13 @@ describe('chat inline termul tags with real Streamdown', () => {
     })
 
     readAttachmentBytesMock.mockRejectedValueOnce(new Error('not under new root'))
-    rerender(<TermulMarkdownImage url="output/chart.png" alt="chart" cwd="/other" />)
+    rerender(<ItzTermMarkdownImage url="output/chart.png" alt="chart" cwd="/other" />)
 
     await waitFor(() => {
       expect(readAttachmentBytesMock).toHaveBeenCalledWith('/other/output/chart.png')
     })
     await waitFor(() => {
-      expect(screen.getByTestId('termul-image-alt')).toBeInTheDocument()
+      expect(screen.getByTestId('itzterm-image-alt')).toBeInTheDocument()
     })
     expect(container.querySelector('img')).toBeNull()
   })
@@ -265,7 +265,7 @@ describe('chat inline termul tags with real Streamdown', () => {
     const { container } = render(chatElement('![bad](file:///%zz)', '/proj'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('termul-image-alt')).toHaveTextContent('bad')
+      expect(screen.getByTestId('itzterm-image-alt')).toHaveTextContent('bad')
     })
     expect(container.querySelector('img')).toBeNull()
     expect(readAttachmentBytesMock).not.toHaveBeenCalled()
@@ -278,11 +278,11 @@ describe('chat inline termul tags with real Streamdown', () => {
     fireEvent.error(img)
 
     await waitFor(() => {
-      expect(screen.getByTestId('termul-image-alt')).toHaveTextContent('tiny')
+      expect(screen.getByTestId('itzterm-image-alt')).toHaveTextContent('tiny')
     })
     expect(container.querySelector('img')).toBeNull()
     expect(logFrontendErrorMock).toHaveBeenCalledWith(
-      expect.objectContaining({ level: 'warn', source: 'ChatMessage.termulImage' })
+      expect.objectContaining({ level: 'warn', source: 'ChatMessage.itztermImage' })
     )
   })
 })

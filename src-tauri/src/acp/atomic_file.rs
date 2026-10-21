@@ -249,8 +249,8 @@ impl std::fmt::Display for NewerSchema {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "'{}' was written by a newer Termul (schema version {}, this build understands up to {}); \
-             refusing to open it. Upgrade Termul or restore a backup; the file was left untouched",
+            "'{}' was written by a newer itzTerm (schema version {}, this build understands up to {}); \
+             refusing to open it. Upgrade itzTerm or restore a backup; the file was left untouched",
             self.path.display(),
             self.found,
             self.supported

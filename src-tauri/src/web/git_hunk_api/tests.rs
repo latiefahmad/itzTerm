@@ -17,7 +17,7 @@ fn unique_dir(label: &str) -> PathBuf {
         .duration_since(UNIX_EPOCH)
         .expect("clock")
         .as_nanos();
-    let path = std::env::temp_dir().join(format!("termul-web-hunkapi-{label}-{nanos}"));
+    let path = std::env::temp_dir().join(format!("itzterm-web-hunkapi-{label}-{nanos}"));
     std::fs::create_dir_all(&path).expect("create temp dir");
     path
 }

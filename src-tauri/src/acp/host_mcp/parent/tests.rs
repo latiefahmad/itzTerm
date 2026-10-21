@@ -226,7 +226,7 @@ fn end_turn_removes_routing_candidate() {
 #[test]
 fn browser_frame_without_host_fails_closed_with_typed_code() {
     // The `browser` tool dispatch is host-gated: without a registered
-    // BrowserHost (termul-server, tests, non-desktop surfaces) the frame is
+    // BrowserHost (itzterm-server, tests, non-desktop surfaces) the frame is
     // rejected with the typed `capability_unavailable` code — the agent sees
     // a clean capability signal, never a panic or silent no-op.
     // Serialize on the shared host lock — sibling tests register a stub host.
@@ -520,7 +520,7 @@ fn browser_failures_log_code_and_arg_key_names_never_values() {
 #[test]
 fn browser_frame_from_flat_call_carries_folded_args_to_dispatch() {
     // End-to-end wire shape: a FLAT tool call (folded by the child's
-    // `TermulBrowserInput` deserializer) → TCP frame → parent Browser arm →
+    // `ItzTermBrowserInput` deserializer) → TCP frame → parent Browser arm →
     // `dispatch` — the dispatched `BrowserCall` args must carry the folded
     // keys. A stub host echoes the args it received as the reply result.
     // Serialize on the shared host lock — sibling tests touch the host.
@@ -555,7 +555,7 @@ fn browser_frame_from_flat_call_carries_folded_args_to_dispatch() {
     }
     crate::browser_automation::set_browser_host(std::sync::Arc::new(EchoHost));
 
-    let input: crate::acp::host_mcp::TermulBrowserInput = serde_json::from_value(
+    let input: crate::acp::host_mcp::ItzTermBrowserInput = serde_json::from_value(
         serde_json::json!({ "action": "navigate", "url": "https://example.com" }),
     )
     .unwrap();
@@ -612,7 +612,7 @@ fn bad_token_alone_is_rejected() {
 
 #[test]
 fn bound_title_call_persists_and_broadcasts() {
-    let root = std::env::temp_dir().join(format!("termul-host-mcp-title-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-host-mcp-title-{}", uuid::Uuid::new_v4()));
     let cwd = root.join("cwd");
     std::fs::create_dir_all(&cwd).unwrap();
     let runtime = Runtime::new().unwrap();
@@ -668,7 +668,7 @@ fn second_title_call_same_session_is_success_noop() {
     // stops retrying) without writing a second persistence record or
     // emitting a second session_info_update.
     let root = std::env::temp_dir().join(format!(
-        "termul-host-mcp-title-noop-{}",
+        "itzterm-host-mcp-title-noop-{}",
         uuid::Uuid::new_v4()
     ));
     let cwd = root.join("cwd");
@@ -741,7 +741,7 @@ fn title_per_session_flag_survives_a_new_turn() {
     // must NOT reset the title flag — the agent can't set the title again
     // on a later turn.
     let root = std::env::temp_dir().join(format!(
-        "termul-host-mcp-title-turn-{}",
+        "itzterm-host-mcp-title-turn-{}",
         uuid::Uuid::new_v4()
     ));
     let cwd = root.join("cwd");

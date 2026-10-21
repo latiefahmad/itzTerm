@@ -7,7 +7,7 @@ const worktree = (overrides: Partial<Worktree> = {}): Worktree => ({
   id: 'w1',
   name: 'feature',
   branch: 'feat/x',
-  path: '/repo/.termul/worktrees/feature',
+  path: '/repo/.itzterm/worktrees/feature',
   createdAt: '2026-01-01T00:00:00.000Z',
   ...overrides
 })
@@ -47,7 +47,7 @@ describe('buildChatCards', () => {
     const cards = buildChatCards({
       sessionIndex: [
         entry('root', { cwd: '/repo' }),
-        entry('wt', { cwd: '/repo/.termul/worktrees/feature/src' }),
+        entry('wt', { cwd: '/repo/.itzterm/worktrees/feature/src' }),
         entry('orphan', { cwd: '/elsewhere' })
       ],
       project: project(),
@@ -61,29 +61,29 @@ describe('buildChatCards', () => {
     const cards = buildChatCards({
       sessionIndex: [
         entry('root', { cwd: '/repo' }),
-        entry('wt', { cwd: '/repo/.termul/worktrees/feature/src' }),
+        entry('wt', { cwd: '/repo/.itzterm/worktrees/feature/src' }),
         entry('orphan', { cwd: '/elsewhere' })
       ],
       project: project(),
-      pick: '/repo/.termul/worktrees/feature',
+      pick: '/repo/.itzterm/worktrees/feature',
       agentNames
     })
     expect(cards.map((c) => c.entry.id)).toEqual(['wt'])
   })
 
   it('falls back to every chat when the pick is pruned or outside the root', () => {
-    const sessionIndex = [entry('root'), entry('wt', { cwd: '/repo/.termul/worktrees/feature' })]
+    const sessionIndex = [entry('root'), entry('wt', { cwd: '/repo/.itzterm/worktrees/feature' })]
     const pruned = buildChatCards({
       sessionIndex,
       project: project(),
-      pick: '/repo/.termul/worktrees/gone',
+      pick: '/repo/.itzterm/worktrees/gone',
       agentNames
     })
     expect(pruned).toHaveLength(2)
     const outside = buildChatCards({
       sessionIndex,
       project: project({ worktrees: [worktree({ outsideProjectRoot: true })] }),
-      pick: '/repo/.termul/worktrees/feature',
+      pick: '/repo/.itzterm/worktrees/feature',
       agentNames
     })
     expect(outside).toHaveLength(2)
@@ -112,7 +112,7 @@ describe('buildChatCards', () => {
 describe('branchLineOf', () => {
   it('shows the listed worktree branch, renamed or not', () => {
     const line = branchLineOf(
-      entry('a', { cwd: '/repo/.termul/worktrees/feature', worktreeBranch: 'old-name' }),
+      entry('a', { cwd: '/repo/.itzterm/worktrees/feature', worktreeBranch: 'old-name' }),
       project()
     )
     expect(line).toBe('feat/x')
@@ -120,7 +120,7 @@ describe('branchLineOf', () => {
 
   it('falls back to the stored branch when the listed worktree has no branch', () => {
     const line = branchLineOf(
-      entry('a', { cwd: '/repo/.termul/worktrees/feature', worktreeBranch: 'stored' }),
+      entry('a', { cwd: '/repo/.itzterm/worktrees/feature', worktreeBranch: 'stored' }),
       project({ worktrees: [worktree({ branch: '' })] })
     )
     expect(line).toBe('stored')
@@ -129,8 +129,8 @@ describe('branchLineOf', () => {
   it('shows the stored branch for a deleted worktree', () => {
     const line = branchLineOf(
       entry('a', {
-        cwd: '/repo/.termul/worktrees/gone',
-        worktreePath: '/repo/.termul/worktrees/gone',
+        cwd: '/repo/.itzterm/worktrees/gone',
+        worktreePath: '/repo/.itzterm/worktrees/gone',
         worktreeBranch: 'feat/gone'
       }),
       project()
@@ -151,7 +151,7 @@ describe('filterChatCards', () => {
   const cards = buildChatCards({
     sessionIndex: [
       entry('a', { title: 'Refactor Auth', agentConfigId: 'cfg-1', cwd: '/repo' }),
-      entry('b', { title: 'Add tests', cwd: '/repo/.termul/worktrees/feature' })
+      entry('b', { title: 'Add tests', cwd: '/repo/.itzterm/worktrees/feature' })
     ],
     project: project(),
     pick: undefined,

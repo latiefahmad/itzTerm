@@ -1,15 +1,15 @@
 ---
 title: Let an agent use the browser
-description: Allow an agent to open pages, click, and type in a Termul browser tab while you watch.
+description: Allow an agent to open pages, click, and type in a itzTerm browser tab while you watch.
 ---
 
 <Callout type="info">This works in the desktop app only.</Callout>
 
-An agent in a Termul chat can use a browser tab by itself. It can open your app, click through it, fill in a form, and check the result. You see every step in a visible tab, and the agent asks for your permission first.
+An agent in a itzTerm chat can use a browser tab by itself. It can open your app, click through it, fill in a form, and check the result. You see every step in a visible tab, and the agent asks for your permission first.
 
 ## Allow the agent to use the browser
 
-The first time an agent in a chat tries to use the browser, Termul asks you. The prompt reads **Allow browser automation?** and names the agent and what it wants to do, for example "Claude wants to drive this app's browser for this session. It wants to navigate."
+The first time an agent in a chat tries to use the browser, itzTerm asks you. The prompt reads **Allow browser automation?** and names the agent and what it wants to do, for example "Claude wants to drive this app's browser for this session. It wants to navigate."
 
 The prompt shows up in one of two places:
 
@@ -18,16 +18,16 @@ The prompt shows up in one of two places:
 
 Choose one:
 
-- **Allow for this session** lets the agent use the browser for the rest of this chat's agent session. Termul doesn't ask again in this chat.
-- **Deny** stops the request. The agent gets an error. If it tries again later, Termul asks again.
+- **Allow for this session** lets the agent use the browser for the rest of this chat's agent session. itzTerm doesn't ask again in this chat.
+- **Deny** stops the request. The agent gets an error. If it tries again later, itzTerm asks again.
 
-If you don't answer within 2 minutes, Termul denies the request.
+If you don't answer within 2 minutes, itzTerm denies the request.
 
 The prompt appears only in the desktop app. If you follow the chat from a phone or the browser version, you won't see it. Answer it on the desktop, or the request is denied after 2 minutes.
 
 ## Watch the agent work
 
-When the agent opens its first page, Termul splits the pane you are working in and puts the agent's browser tab on the right. Your cursor stays in the chat. Later pages from the same chat open in that same pane.
+When the agent opens its first page, itzTerm splits the pane you are working in and puts the agent's browser tab on the right. Your cursor stays in the chat. Later pages from the same chat open in that same pane.
 
 You can tell an agent's tab by:
 
@@ -61,4 +61,4 @@ On macOS and Linux:
 
 Close the agent's browser tab. The agent loses control of that tab.
 
-Your permission still lasts for the rest of the chat's agent session. The agent can open a new tab without asking again. When the agent session ends, Termul closes the agent's browser tabs and forgets the permission.
+Your permission still lasts for the rest of the chat's agent session. The agent can open a new tab without asking again. When the agent session ends, itzTerm closes the agent's browser tabs and forgets the permission.

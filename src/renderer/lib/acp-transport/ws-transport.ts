@@ -144,8 +144,8 @@ const SEND_PROMPT_GRACE_MS = 10_000
  * session, so it normally never fires pre-auth) with a bounded, setTimeout-safe
  * 1h budget.
  *
- * NOTE: a deployment that sets `TERMUL_ACP_TURN_TIMEOUT_SECS` /
- * `TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS` publishes those bounded values, which the
+ * NOTE: a deployment that sets `ITZTERM_ACP_TURN_TIMEOUT_SECS` /
+ * `ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS` publishes those bounded values, which the
  * client honours instead of this fallback.
  */
 const FALLBACK_SEND_PROMPT_INACTIVITY_MS = 3_600_000
@@ -836,7 +836,7 @@ export class WsAcpTransport implements AcpTransport {
 
   async probeMcpServer(server: McpServerConfig): Promise<ProbeResult> {
     // Web parity: POST /mcp-servers/probe runs the rmcp client on the
-    // termul-server host (where stdio commands execute). The route returns
+    // itzterm-server host (where stdio commands execute). The route returns
     // `IpcBody<ProbeResult>`; a `success:false` body is a transport/config
     // failure (mapped to AcpTransportError), while `success:true` carries the
     // probe outcome (which may itself be `status:'disconnected'` — that is a
@@ -850,22 +850,22 @@ export class WsAcpTransport implements AcpTransport {
 
   async setTurnTimeout(_secs: number | null): Promise<void> {
     // Desktop-only: the standalone server has no settings surface and
-    // configures the turn timeout via TERMUL_ACP_TURN_TIMEOUT_SECS.
+    // configures the turn timeout via ITZTERM_ACP_TURN_TIMEOUT_SECS.
   }
 
   async setTurnIdleTimeout(_secs: number | null): Promise<void> {
     // Desktop-only: the standalone server has no settings surface and
-    // configures the turn idle timeout via TERMUL_ACP_TURN_IDLE_TIMEOUT_SECS.
+    // configures the turn idle timeout via ITZTERM_ACP_TURN_IDLE_TIMEOUT_SECS.
   }
 
   async setSessionNewTimeout(_secs: number | null): Promise<void> {
     // Desktop-only: the standalone server has no settings surface and configures
-    // the session/new timeout via TERMUL_ACP_SESSION_NEW_TIMEOUT_SECS.
+    // the session/new timeout via ITZTERM_ACP_SESSION_NEW_TIMEOUT_SECS.
   }
 
   async setSessionReopenTimeout(_secs: number | null): Promise<void> {
     // Desktop-only: the standalone server has no settings surface and configures
-    // the session reopen timeout via TERMUL_ACP_SESSION_REOPEN_TIMEOUT_SECS.
+    // the session reopen timeout via ITZTERM_ACP_SESSION_REOPEN_TIMEOUT_SECS.
   }
 
   async setAgentIdleWindow(secs: number | null): Promise<void> {
@@ -1356,7 +1356,7 @@ export class WsAcpTransport implements AcpTransport {
     // `pi_terminal_login`) to the host's `AcpManager::authenticate` over the
     // authenticated WS connection. The host runs the method on the agent
     // process (the provider owns the login UX, often opening its own
-    // browser); Termul never invents a redirect URL or stores credentials.
+    // browser); itzTerm never invents a redirect URL or stores credentials.
     await this.connect()
     await this.request('authenticate_agent', { agentId, methodId, gateway }, undefined, options)
   }

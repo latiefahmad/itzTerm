@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # The runtime base matches the release runner (ubuntu-22.04) that builds the
-# termul-server assets, so the binary loads the same library versions it was
+# itzterm-server assets, so the binary loads the same library versions it was
 # linked against.
 ARG UBUNTU_VERSION=22.04
 
@@ -9,7 +9,7 @@ ARG UBUNTU_VERSION=22.04
 FROM ubuntu:24.04 AS fetch
 ARG TARGETARCH
 # A GitHub release tag (v0.5.0, nightly), or "latest" for the newest stable release.
-ARG TERMUL_RELEASE=latest
+ARG ITZTERM_RELEASE=latest
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates curl minisign \
 	&& rm -rf /var/lib/apt/lists/*
@@ -17,34 +17,34 @@ COPY src-tauri/tauri.conf.json /tmp/tauri.conf.json
 WORKDIR /fetch
 RUN set -eu; \
 	case "$TARGETARCH" in \
-		amd64) asset=termul-server ;; \
-		arm64) asset=termul-server-linux-aarch64 ;; \
+		amd64) asset=itzterm-server ;; \
+		arm64) asset=itzterm-server-linux-aarch64 ;; \
 		*) echo "unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
 	esac; \
-	if [ "$TERMUL_RELEASE" = latest ]; then \
-		base=https://github.com/gnoviawan/termul/releases/latest/download; \
+	if [ "$ITZTERM_RELEASE" = latest ]; then \
+		base=https://github.com/latiefahmad/itzTerm/releases/latest/download; \
 	else \
-		base="https://github.com/gnoviawan/termul/releases/download/$TERMUL_RELEASE"; \
+		base="https://github.com/latiefahmad/itzTerm/releases/download/$ITZTERM_RELEASE"; \
 	fi; \
-	curl -fsSL --proto '=https' --retry 3 -o termul-server "$base/$asset"; \
-	curl -fsSL --proto '=https' --retry 3 -o termul-server.sig "$base/$asset.sig"; \
+	curl -fsSL --proto '=https' --retry 3 -o itzterm-server "$base/$asset"; \
+	curl -fsSL --proto '=https' --retry 3 -o itzterm-server.sig "$base/$asset.sig"; \
 	sed -n 's/.*"pubkey": *"\([^"]*\)".*/\1/p' /tmp/tauri.conf.json | base64 -d > minisign.pub; \
-	base64 -d termul-server.sig > termul-server.minisig; \
-	minisign -V -m termul-server -x termul-server.minisig -p minisign.pub; \
-	chmod 0755 termul-server
+	base64 -d itzterm-server.sig > itzterm-server.minisig; \
+	minisign -V -m itzterm-server -x itzterm-server.minisig -p minisign.pub; \
+	chmod 0755 itzterm-server
 
 FROM ubuntu:${UBUNTU_VERSION}
-ARG TERMUL_RELEASE=latest
-ARG TERMUL_UID=1000
-ARG TERMUL_GID=1000
+ARG ITZTERM_RELEASE=latest
+ARG ITZTERM_UID=1000
+ARG ITZTERM_GID=1000
 
-LABEL org.opencontainers.image.title="termul-server" \
-	org.opencontainers.image.description="Standalone Termul server: browser terminals, git, and ACP agents over HTTP and WebSocket" \
-	org.opencontainers.image.source="https://github.com/gnoviawan/termul" \
+LABEL org.opencontainers.image.title="itzterm-server" \
+	org.opencontainers.image.description="Standalone itzTerm server: browser terminals, git, and ACP agents over HTTP and WebSocket" \
+	org.opencontainers.image.source="https://github.com/latiefahmad/itzTerm" \
 	org.opencontainers.image.licenses="MIT" \
-	org.opencontainers.image.version="${TERMUL_RELEASE}"
+	org.opencontainers.image.version="${ITZTERM_RELEASE}"
 
-# termul-server links WebKitGTK and GTK through the shared Tauri crate even
+# itzterm-server links WebKitGTK and GTK through the shared Tauri crate even
 # though the server never opens a window. The ldd check below fails the build
 # if a linked library is missing.
 RUN apt-get update \
@@ -59,27 +59,27 @@ RUN apt-get update \
 		procps \
 		tini \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& groupadd --non-unique --gid "$TERMUL_GID" termul \
-	&& useradd --non-unique --uid "$TERMUL_UID" --gid termul --create-home --shell /bin/bash termul \
-	&& mkdir -p /home/termul/.local/bin /home/termul/.local/state/termul /workspace \
-	&& chown -R termul:termul /home/termul /workspace
+	&& groupadd --non-unique --gid "$ITZTERM_GID" itzterm \
+	&& useradd --non-unique --uid "$ITZTERM_UID" --gid itzterm --create-home --shell /bin/bash itzterm \
+	&& mkdir -p /home/itzterm/.local/bin /home/itzterm/.local/state/itzterm /workspace \
+	&& chown -R itzterm:itzterm /home/itzterm /workspace
 
-COPY --from=fetch /fetch/termul-server /usr/local/bin/termul-server
-RUN if ldd /usr/local/bin/termul-server | grep 'not found'; then exit 1; fi
+COPY --from=fetch /fetch/itzterm-server /usr/local/bin/itzterm-server
+RUN if ldd /usr/local/bin/itzterm-server | grep 'not found'; then exit 1; fi
 
-ENV HOME=/home/termul \
-	PATH=/home/termul/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+ENV HOME=/home/itzterm \
+	PATH=/home/itzterm/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
 	LANG=C.UTF-8 \
-	TERMUL_SERVER_UPDATE_ENABLED=false
+	ITZTERM_SERVER_UPDATE_ENABLED=false
 
-USER termul
+USER itzterm
 WORKDIR /workspace
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 	CMD curl -fsS http://127.0.0.1:8080/health > /dev/null || exit 1
 
-# A public bind with no TERMUL_WEB_AUTH_TOKEN makes the server generate a token
+# A public bind with no ITZTERM_WEB_AUTH_TOKEN makes the server generate a token
 # into <state dir>/web-auth-token and refuse unauthenticated clients.
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/termul-server"]
-CMD ["--host", "0.0.0.0", "--port", "8080", "--state-dir", "/home/termul/.local/state/termul"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/itzterm-server"]
+CMD ["--host", "0.0.0.0", "--port", "8080", "--state-dir", "/home/itzterm/.local/state/itzterm"]

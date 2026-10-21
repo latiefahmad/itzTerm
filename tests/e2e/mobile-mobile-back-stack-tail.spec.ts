@@ -27,7 +27,7 @@ import { launchChat, openRailNewProjectModal, openWorkspace } from './ui'
  * - the desktop shell registers none of the new overlays and makes no history call.
  *
  * The browser's history is read through the Navigation API (`index` of the
- * current entry) plus `history.state`, the `termulOverlay` marker the app puts
+ * current entry) plus `history.state`, the `itztermOverlay` marker the app puts
  * on its sentinel entries. A system back is a real history traversal
  * (`page.goBack()`), the same thing Android's back button does. The Navigation
  * API is Chromium-only, which is the only engine this suite runs on.
@@ -68,7 +68,7 @@ interface HistoryPosition {
   /** Index of the current entry in this tab's history (Navigation API). */
   index: number
   hash: string
-  /** `termulOverlayDepth` of the current entry; 0 when it is not a sentinel. */
+  /** `itztermOverlayDepth` of the current entry; 0 when it is not a sentinel. */
   sentinelDepth: number
 }
 
@@ -140,7 +140,7 @@ async function bootMobileShell(
   const project = await registerActiveProject(options)
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)
@@ -157,11 +157,11 @@ async function historyPosition(page: Page): Promise<HistoryPosition> {
   return page.evaluate(() => {
     const navigation = (window as unknown as { navigation: { currentEntry: { index: number } } })
       .navigation
-    const state = history.state as { termulOverlay?: boolean; termulOverlayDepth?: number } | null
+    const state = history.state as { itztermOverlay?: boolean; itztermOverlayDepth?: number } | null
     return {
       index: navigation.currentEntry.index,
       hash: location.hash,
-      sentinelDepth: state?.termulOverlay === true ? (state.termulOverlayDepth ?? 1) : 0
+      sentinelDepth: state?.itztermOverlay === true ? (state.itztermOverlayDepth ?? 1) : 0
     }
   })
 }
@@ -197,7 +197,7 @@ async function pressSystemBack(page: Page): Promise<void> {
 
 async function openDrawer(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Open menu' }).tap()
-  await expect(page.getByRole('dialog', { name: 'Termul', exact: true })).toBeVisible()
+  await expect(page.getByRole('dialog', { name: 'itzTerm', exact: true })).toBeVisible()
 }
 
 /**
@@ -666,7 +666,7 @@ test('a route pushed under an open drawer re-arms its entry: one back closes the
   const gate = await installReplyGate(page, (frame) => frame.type === 'create_session')
   gate.arm()
   const { base } = await bootMobileShell(page)
-  const drawer = page.getByRole('dialog', { name: 'Termul', exact: true })
+  const drawer = page.getByRole('dialog', { name: 'itzTerm', exact: true })
 
   // The launcher is still settling (no warm-up can be waited for with its reply
   // held): a remount can swallow the text, so type until the Start button takes it.

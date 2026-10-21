@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 fn temp_dir(label: &str) -> PathBuf {
     let path = std::env::temp_dir().join(format!(
-        "termul-acp-install-{label}-{}-{}",
+        "itzterm-acp-install-{label}-{}-{}",
         std::process::id(),
         now_millis()
     ));
@@ -93,7 +93,7 @@ fn sample_binary_agent(
 /// expected sha256 hex.
 fn tiny_zip(payload: &str) -> (Vec<u8>, String) {
     use std::io::Write;
-    let tmp = std::env::temp_dir().join(format!("termul-acp-install-zip-{}", uuid::Uuid::new_v4()));
+    let tmp = std::env::temp_dir().join(format!("itzterm-acp-install-zip-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&tmp).unwrap();
     let payload_path = tmp.join("acp");
     let mut f = std::fs::File::create(&payload_path).unwrap();
@@ -641,7 +641,7 @@ async fn extraction_failure_propagates_code() {
 fn slip_zip() -> (Vec<u8>, String) {
     use std::io::Write;
     let tmp =
-        std::env::temp_dir().join(format!("termul-acp-install-slip-{}", uuid::Uuid::new_v4()));
+        std::env::temp_dir().join(format!("itzterm-acp-install-slip-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&tmp).unwrap();
     let zip_path = tmp.join("evil.zip");
     {
@@ -672,7 +672,7 @@ fn slip_zip() -> (Vec<u8>, String) {
 fn slip_tar_gz() -> (Vec<u8>, String) {
     use std::io::Write;
     let tmp = std::env::temp_dir().join(format!(
-        "termul-acp-install-tarslip-{}",
+        "itzterm-acp-install-tarslip-{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&tmp).unwrap();
@@ -719,7 +719,7 @@ fn slip_tar_gz() -> (Vec<u8>, String) {
 fn overfull_zip(n: usize) -> (Vec<u8>, String) {
     use std::io::Write;
     let tmp = std::env::temp_dir().join(format!(
-        "termul-acp-install-overfull-{}",
+        "itzterm-acp-install-overfull-{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&tmp).unwrap();

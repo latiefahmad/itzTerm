@@ -35,7 +35,7 @@ use crate::acp::host_mcp::canvas::{
 };
 
 fn malformed(id: String, request: &str, want: &str, error: &serde_json::Error) -> WsReply {
-    warn!(target: "termul::web::ws", "{request} refused: failure=malformed_payload");
+    warn!(target: "itzterm::web::ws", "{request} refused: failure=malformed_payload");
     WsReply::err(
         id,
         WsErrorCode::Unsupported,
@@ -115,7 +115,7 @@ pub(super) fn handle_canvas_reply(id: String, payload: &Value, env: &HandlerEnv)
     let (call_id, mount_seq) = (parsed.call_id, parsed.mount_seq);
     if parsed.partial {
         let Some(slice) = parsed.result.as_deref().filter(|_| parsed.ok) else {
-            warn!(target: "termul::web::ws", "canvas_reply refused: failure=partial_without_result");
+            warn!(target: "itzterm::web::ws", "canvas_reply refused: failure=partial_without_result");
             return WsReply::err(
                 id,
                 WsErrorCode::Unsupported,
@@ -136,7 +136,7 @@ pub(super) fn handle_canvas_reply(id: String, payload: &Value, env: &HandlerEnv)
     );
     if !resolved {
         debug!(
-            target: "termul::web::ws",
+            target: "itzterm::web::ws",
             call_id,
             "canvas_reply for a call that is no longer waiting"
         );

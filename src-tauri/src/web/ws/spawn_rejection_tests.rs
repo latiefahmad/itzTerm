@@ -22,7 +22,7 @@ fn missing_agent_binary_is_agent_unavailable_without_transport_prefix() {
     let reply = spawn_agent(json!({
         "configId": "custom-missing",
         "name": "ghost",
-        "command": "termul-no-such-agent-binary-4b",
+        "command": "itzterm-no-such-agent-binary-4b",
     }));
     assert!(!reply.ok);
     let err = reply.err.expect("spawn failure carries an error");

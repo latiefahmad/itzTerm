@@ -213,7 +213,7 @@ describe('use-app-settings', () => {
       success: true,
       data: {
         ...DEFAULT_APP_SETTINGS,
-        colorTheme: 'termul-light',
+        colorTheme: 'itzterm-light',
         appearanceMode: undefined
       }
     })
@@ -223,7 +223,7 @@ describe('use-app-settings', () => {
     await waitFor(() => {
       expect(mockPersistenceWriteDebounced).toHaveBeenCalledWith(
         PersistenceKeys.appSettings,
-        expect.objectContaining({ colorTheme: 'termul', appearanceMode: 'light' })
+        expect.objectContaining({ colorTheme: 'itzterm', appearanceMode: 'light' })
       )
     })
   })

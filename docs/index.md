@@ -1,4 +1,4 @@
-# termul Documentation Index
+# itzterm Documentation Index
 
 **Type:** monolith
 **Primary Language:** TypeScript and Rust
@@ -7,7 +7,7 @@
 
 ## Project Overview
 
-Termul Manager is a project-aware desktop terminal workspace built with Tauri 2. It combines terminal management, project organization, snapshots, file exploration, editor panels, embedded browser tabs, and browser annotation workflows inside a single desktop shell.
+itzTerm is a project-aware desktop terminal workspace built with Tauri 2. It combines terminal management, project organization, snapshots, file exploration, editor panels, embedded browser tabs, and browser annotation workflows inside a single desktop shell.
 
 ## Quick Reference
 
@@ -29,7 +29,7 @@ Termul Manager is a project-aware desktop terminal workspace built with Tauri 2.
 - [Design system](../DESIGN.md) - Token and component rules for renderer UI (`docs/design/` for topics)
 - [Development Guide](./development-guide.md) - Local setup, commands, and developer workflows
 - [API Contracts](./api-contracts.md) - Internal Tauri IPC command/event contracts
-- [Deployment Guide](./deployment-guide.md) - Release, packaging, updater workflow, and running `termul-server` in Docker
+- [Deployment Guide](./deployment-guide.md) - Release, packaging, updater workflow, and running `itzterm-server` in Docker
 - [Contribution Guide](./contribution-guide.md) - Contribution process and coding conventions
 - [Native SSH](./ssh-native.md) - SSH sessions, host keys, credentials and the russh stack
 - [Canvas](./canvas.md) - The built-in figcraft design editor: documents, lifecycle, persistence, access control, agent gateway and the pinned bundle
@@ -47,8 +47,8 @@ Termul Manager is a project-aware desktop terminal workspace built with Tauri 2.
 - [Claude Agent ACP](./claude-agent-acp.md) - Host install, prerequisites, auth, and headless administration
 - [In-Chat Agent Switch](./in-chat-agent-switch.md) - Mid-conversation agent switching with context handoff, busy behavior, and reopen resolution
 - [ADR-0004: Claude accounts use linked config directories](./adr/0004-claude-accounts-linked-config-dirs.md) - Per-account `CLAUDE_CONFIG_DIR` with shared history, settings, and skills; spike results
-- [QA Report 2026-09-15](./qa-report-2026-09-15.md) - termul-server e2e: protocol, ACP UI, persistence (auth/posture findings)
-- [QA Report 2026-09-16](./qa-report-2026-09-16-termul-server-e2e.md) - Combined e2e + mobile UX design audit: WebGL-DPR, editor-save, nav-trap, touch-target findings; merged fix plan
+- [QA Report 2026-09-15](./qa-report-2026-09-15.md) - itzterm-server e2e: protocol, ACP UI, persistence (auth/posture findings)
+- [QA Report 2026-09-16](./qa-report-2026-09-16-itzterm-server-e2e.md) - Combined e2e + mobile UX design audit: WebGL-DPR, editor-save, nav-trap, touch-target findings; merged fix plan
 - [PR Template](../.github/PULL_REQUEST_TEMPLATE.md) - Pull request guidance
 - [PR Validation Workflow](../.github/workflows/pr-validation.yml) - CI validation rules for pull requests
 - [Release Workflow](../.github/workflows/release.yml) - Release build and publish automation

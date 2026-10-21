@@ -2,24 +2,24 @@
 
 load "helpers.bash"
 
-fixture_sums="$TERMUL_TEST_REPO_ROOT/scripts/tests/fixtures/SHA256SUMS.txt"
+fixture_sums="$ITZTERM_TEST_REPO_ROOT/scripts/tests/fixtures/SHA256SUMS.txt"
 
 setup() {
   make_tmp
-  export HOME="$TERMUL_TEST_TMP_DIR/home"
-  export TERMUL_TEST_LOG="$TERMUL_TEST_TMP_DIR/commands.log"
-  export TERMUL_INSTALL_APPLICATIONS_DIR="$TERMUL_TEST_TMP_DIR/Applications"
-  export TERMUL_INSTALL_BIN_DIR="$HOME/.local/bin"
-  export TERMUL_INSTALL_DESKTOP_DIR="$HOME/.local/share/applications"
-  mkdir -p "$HOME" "$TERMUL_INSTALL_APPLICATIONS_DIR"
-  : >"$TERMUL_TEST_LOG"
+  export HOME="$ITZTERM_TEST_TMP_DIR/home"
+  export ITZTERM_TEST_LOG="$ITZTERM_TEST_TMP_DIR/commands.log"
+  export ITZTERM_INSTALL_APPLICATIONS_DIR="$ITZTERM_TEST_TMP_DIR/Applications"
+  export ITZTERM_INSTALL_BIN_DIR="$HOME/.local/bin"
+  export ITZTERM_INSTALL_DESKTOP_DIR="$HOME/.local/share/applications"
+  mkdir -p "$HOME" "$ITZTERM_INSTALL_APPLICATIONS_DIR"
+  : >"$ITZTERM_TEST_LOG"
 }
 
 teardown() {
-  unset TERMUL_INSTALL_YES
-  unset TERMUL_INSTALL_APPLICATIONS_DIR
-  unset TERMUL_INSTALL_BIN_DIR
-  unset TERMUL_INSTALL_DESKTOP_DIR
+  unset ITZTERM_INSTALL_YES
+  unset ITZTERM_INSTALL_APPLICATIONS_DIR
+  unset ITZTERM_INSTALL_BIN_DIR
+  unset ITZTERM_INSTALL_DESKTOP_DIR
   cleanup_tmp
 }
 
@@ -37,18 +37,18 @@ esac
 }
 
 stub_common_tools() {
-  stub_cmd curl "printf 'curl %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\""
-  stub_cmd mktemp "if [[ \"\${1:-}\" == '-d' ]]; then dir=\"\$TERMUL_TEST_TMP_DIR/mktemp.\$RANDOM\"; mkdir -p \"\$dir\"; printf '%s\\n' \"\$dir\"; else file=\"\$TERMUL_TEST_TMP_DIR/mktemp.\$RANDOM\"; : >\"\$file\"; printf '%s\\n' \"\$file\"; fi"
+  stub_cmd curl "printf 'curl %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\""
+  stub_cmd mktemp "if [[ \"\${1:-}\" == '-d' ]]; then dir=\"\$ITZTERM_TEST_TMP_DIR/mktemp.\$RANDOM\"; mkdir -p \"\$dir\"; printf '%s\\n' \"\$dir\"; else file=\"\$ITZTERM_TEST_TMP_DIR/mktemp.\$RANDOM\"; : >\"\$file\"; printf '%s\\n' \"\$file\"; fi"
 }
 
 stub_curl_release_flow() {
   local payload="$1"
 
   stub_cmd curl "
-printf 'curl %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"
+printf 'curl %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"
 args=\" \$* \"
 if [[ \"\$args\" == *'/releases/latest'* ]]; then
-  printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
+  printf '%s\\n' 'https://github.com/latiefahmad/itzTerm/releases/tag/v1.2.3'
   exit 0
 fi
 out=''
@@ -70,7 +70,7 @@ fi
 
 stub_macos_install_tools() {
   stub_cmd hdiutil "
-printf 'hdiutil %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"
+printf 'hdiutil %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"
 if [[ \"\$1\" == 'attach' ]]; then
   mountpoint=''
   prev=''
@@ -81,35 +81,35 @@ if [[ \"\$1\" == 'attach' ]]; then
     fi
     prev=\"\$arg\"
   done
-  mkdir -p \"\$mountpoint/Termul Manager.app\"
+  mkdir -p \"\$mountpoint/itzTerm.app\"
 fi
 "
   stub_cmd cp "
-printf 'cp %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"
-if [[ \"\${TERMUL_TEST_CP_FAIL_ONCE:-}\" == '1' && ! -f \"\$TERMUL_TEST_TMP_DIR/cp_failed\" ]]; then
-  : >\"\$TERMUL_TEST_TMP_DIR/cp_failed\"
+printf 'cp %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"
+if [[ \"\${ITZTERM_TEST_CP_FAIL_ONCE:-}\" == '1' && ! -f \"\$ITZTERM_TEST_TMP_DIR/cp_failed\" ]]; then
+  : >\"\$ITZTERM_TEST_TMP_DIR/cp_failed\"
   exit 1
 fi
 exit 0
 "
-  stub_cmd sudo "printf 'sudo %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\""
-  stub_cmd xattr "printf 'xattr %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\""
+  stub_cmd sudo "printf 'sudo %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\""
+  stub_cmd xattr "printf 'xattr %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\""
 }
 
 stub_logging_rm() {
   stub_cmd rm "
-printf 'rm %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"
+printf 'rm %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"
 /bin/rm \"\$@\"
 "
 }
 
 stub_linux_install_tools() {
   stub_cmd cp "
-printf 'cp %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"
+printf 'cp %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"
 command cp \"\$@\"
 "
   stub_cmd chmod "
-printf 'chmod %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"
+printf 'chmod %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"
 command chmod \"\$@\"
 "
 }
@@ -159,8 +159,8 @@ command chmod \"\$@\"
 
   [ "$status" -ne 0 ]
   [[ "$output" == *".exe or .msi"* ]]
-  [[ "$output" == *"https://github.com/gnoviawan/termul/releases"* ]]
-  ! grep -q "^curl " "$TERMUL_TEST_LOG"
+  [[ "$output" == *"https://github.com/latiefahmad/itzTerm/releases"* ]]
+  ! grep -q "^curl " "$ITZTERM_TEST_LOG"
 }
 
 @test "require_tools fails early and names missing tools before download" {
@@ -168,10 +168,10 @@ command chmod \"\$@\"
   load_install
   # Stubs are `#!/usr/bin/env bash` scripts, so bash must stay resolvable
   # once PATH is narrowed to the stub dir; nothing else from the system leaks in.
-  printf '#!/bin/sh\nexec "%s" "$@"\n' "$(command -v bash)" >"$TERMUL_TEST_STUB_BIN/bash"
-  chmod +x "$TERMUL_TEST_STUB_BIN/bash"
+  printf '#!/bin/sh\nexec "%s" "$@"\n' "$(command -v bash)" >"$ITZTERM_TEST_STUB_BIN/bash"
+  chmod +x "$ITZTERM_TEST_STUB_BIN/bash"
   local saved_path="$PATH"
-  PATH="$TERMUL_TEST_STUB_BIN"
+  PATH="$ITZTERM_TEST_STUB_BIN"
 
   run main
 
@@ -181,13 +181,13 @@ command chmod \"\$@\"
   [[ "$output" == *"Missing required tools"* ]]
   [[ "$output" == *"curl"* ]]
   [[ "$output" == *"mktemp"* ]]
-  ! grep -q "curl" "$TERMUL_TEST_LOG"
+  ! grep -q "curl" "$ITZTERM_TEST_LOG"
 }
 
 @test "resolve_version parses latest redirect without api.github.com" {
   stub_cmd curl "
-printf '%s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"
-printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
+printf '%s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"
+printf '%s\\n' 'https://github.com/latiefahmad/itzTerm/releases/tag/v1.2.3'
 "
   load_install
 
@@ -195,32 +195,32 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
 
   [ "$status" -eq 0 ]
   [ "$output" = "v1.2.3" ]
-  ! grep -q "api.github.com" "$TERMUL_TEST_LOG"
-  grep -q "https://github.com/gnoviawan/termul/releases/latest" "$TERMUL_TEST_LOG"
+  ! grep -q "api.github.com" "$ITZTERM_TEST_LOG"
+  grep -q "https://github.com/latiefahmad/itzTerm/releases/latest" "$ITZTERM_TEST_LOG"
 }
 
 @test "verify_sha256 succeeds for matching fixture" {
   load_install
-  local payload="$TERMUL_TEST_TMP_DIR/Termul.Manager_1.2.3_amd64.AppImage"
+  local payload="$ITZTERM_TEST_TMP_DIR/itzTerm.Manager_1.2.3_amd64.AppImage"
   printf '%s' "linux appimage payload" >"$payload"
 
-  run verify_sha256 "$payload" "Termul.Manager_1.2.3_amd64.AppImage" "$fixture_sums"
+  run verify_sha256 "$payload" "itzTerm.Manager_1.2.3_amd64.AppImage" "$fixture_sums"
 
   [ "$status" -eq 0 ]
 }
 
 @test "verify_sha256 fails missing and mismatched entries without creating install targets" {
   load_install
-  local payload="$TERMUL_TEST_TMP_DIR/payload"
-  local target="$TERMUL_INSTALL_BIN_DIR/termul-manager"
+  local payload="$ITZTERM_TEST_TMP_DIR/payload"
+  local target="$ITZTERM_INSTALL_BIN_DIR/itzterm-manager"
   printf '%s' "tampered payload" >"$payload"
 
-  run verify_sha256 "$payload" "Termul.Manager_9.9.9_amd64.AppImage" "$fixture_sums"
+  run verify_sha256 "$payload" "itzTerm.Manager_9.9.9_amd64.AppImage" "$fixture_sums"
   [ "$status" -ne 0 ]
   [[ "$output" == *"Integrity check failed, nothing was installed"* ]]
   [ ! -e "$target" ]
 
-  run verify_sha256 "$payload" "Termul.Manager_1.2.3_amd64.AppImage" "$fixture_sums"
+  run verify_sha256 "$payload" "itzTerm.Manager_1.2.3_amd64.AppImage" "$fixture_sums"
   [ "$status" -ne 0 ]
   [[ "$output" == *"Integrity check failed, nothing was installed"* ]]
   [ ! -e "$target" ]
@@ -228,49 +228,49 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
 
 @test "confirm_install aborts non-tty without env var" {
   load_install
-  unset TERMUL_INSTALL_YES
+  unset ITZTERM_INSTALL_YES
 
-  run confirm_install "Install Termul Manager?"
+  run confirm_install "Install itzTerm?"
 
   [ "$status" -ne 0 ]
-  [[ "$output" == *"TERMUL_INSTALL_YES=1"* ]]
+  [[ "$output" == *"ITZTERM_INSTALL_YES=1"* ]]
 }
 
 @test "confirm_install proceeds with env var and echoes prompt" {
   load_install
-  export TERMUL_INSTALL_YES=1
+  export ITZTERM_INSTALL_YES=1
 
-  run confirm_install "Install Termul Manager v1.2.3?"
+  run confirm_install "Install itzTerm v1.2.3?"
 
   [ "$status" -eq 0 ]
-  [[ "$output" == *"TERMUL_INSTALL_YES=1"* ]]
-  [[ "$output" == *"Install Termul Manager v1.2.3?"* ]]
+  [[ "$output" == *"ITZTERM_INSTALL_YES=1"* ]]
+  [[ "$output" == *"Install itzTerm v1.2.3?"* ]]
 }
 
 @test "install_macos downloads correct DMG, verifies before copy fallback, detaches, then xattrs" {
   stub_common_tools
   stub_curl_release_flow "mac dmg payload"
   stub_macos_install_tools
-  export TERMUL_TEST_CP_FAIL_ONCE=1
+  export ITZTERM_TEST_CP_FAIL_ONCE=1
   load_install
 
   run install_macos "v1.2.3" "aarch64" "$fixture_sums"
 
   [ "$status" -eq 0 ]
-  grep -q "releases/download/v1.2.3/Termul.Manager_1.2.3_aarch64.dmg" "$TERMUL_TEST_LOG"
-  ! grep -q "Termul.Manager_v1.2.3_aarch64.dmg" "$TERMUL_TEST_LOG"
+  grep -q "releases/download/v1.2.3/itzTerm.Manager_1.2.3_aarch64.dmg" "$ITZTERM_TEST_LOG"
+  ! grep -q "itzTerm.Manager_v1.2.3_aarch64.dmg" "$ITZTERM_TEST_LOG"
   local verify_line
   local attach_line
   local cp_line
   local sudo_line
   local detach_line
   local xattr_line
-  verify_line="$(grep -n "curl .*Termul.Manager_1.2.3_aarch64.dmg" "$TERMUL_TEST_LOG" | head -n1 | cut -d: -f1)"
-  attach_line="$(grep -n "hdiutil attach" "$TERMUL_TEST_LOG" | cut -d: -f1)"
-  cp_line="$(grep -n "^cp " "$TERMUL_TEST_LOG" | head -n1 | cut -d: -f1)"
-  sudo_line="$(grep -n "^sudo cp" "$TERMUL_TEST_LOG" | cut -d: -f1)"
-  detach_line="$(grep -n "hdiutil detach" "$TERMUL_TEST_LOG" | cut -d: -f1)"
-  xattr_line="$(grep -n "^xattr " "$TERMUL_TEST_LOG" | cut -d: -f1)"
+  verify_line="$(grep -n "curl .*itzTerm.Manager_1.2.3_aarch64.dmg" "$ITZTERM_TEST_LOG" | head -n1 | cut -d: -f1)"
+  attach_line="$(grep -n "hdiutil attach" "$ITZTERM_TEST_LOG" | cut -d: -f1)"
+  cp_line="$(grep -n "^cp " "$ITZTERM_TEST_LOG" | head -n1 | cut -d: -f1)"
+  sudo_line="$(grep -n "^sudo cp" "$ITZTERM_TEST_LOG" | cut -d: -f1)"
+  detach_line="$(grep -n "hdiutil detach" "$ITZTERM_TEST_LOG" | cut -d: -f1)"
+  xattr_line="$(grep -n "^xattr " "$ITZTERM_TEST_LOG" | cut -d: -f1)"
   [ "$verify_line" -lt "$attach_line" ]
   [ "$attach_line" -lt "$cp_line" ]
   [ "$cp_line" -lt "$sudo_line" ]
@@ -282,16 +282,16 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
   stub_common_tools
   stub_curl_release_flow "mac dmg payload"
   stub_macos_install_tools
-  stub_cmd cp "printf 'cp %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"; exit 1"
-  stub_cmd sudo "printf 'sudo %s\\n' \"\$*\" >>\"\$TERMUL_TEST_LOG\"; exit 1"
+  stub_cmd cp "printf 'cp %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"; exit 1"
+  stub_cmd sudo "printf 'sudo %s\\n' \"\$*\" >>\"\$ITZTERM_TEST_LOG\"; exit 1"
   load_install
 
   run install_macos "v1.2.3" "x86_64" "$fixture_sums"
 
   [ "$status" -ne 0 ]
-  grep -q "Termul.Manager_1.2.3_x64.dmg" "$TERMUL_TEST_LOG"
-  ! grep -q "Termul.Manager_v1.2.3_x64.dmg" "$TERMUL_TEST_LOG"
-  grep -q "hdiutil detach" "$TERMUL_TEST_LOG"
+  grep -q "itzTerm.Manager_1.2.3_x64.dmg" "$ITZTERM_TEST_LOG"
+  ! grep -q "itzTerm.Manager_v1.2.3_x64.dmg" "$ITZTERM_TEST_LOG"
+  grep -q "hdiutil detach" "$ITZTERM_TEST_LOG"
 }
 
 @test "install_macos replaces existing app bundle before copying" {
@@ -299,7 +299,7 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
   stub_curl_release_flow "mac dmg payload"
   stub_macos_install_tools
   stub_logging_rm
-  mkdir -p "$TERMUL_INSTALL_APPLICATIONS_DIR/Termul Manager.app"
+  mkdir -p "$ITZTERM_INSTALL_APPLICATIONS_DIR/itzTerm.app"
   load_install
 
   run install_macos "v1.2.3" "aarch64" "$fixture_sums"
@@ -307,8 +307,8 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
   [ "$status" -eq 0 ]
   local rm_line
   local cp_line
-  rm_line="$(grep -n "^rm -rf .*Termul Manager.app" "$TERMUL_TEST_LOG" | head -n1 | cut -d: -f1)"
-  cp_line="$(grep -n "^cp -R " "$TERMUL_TEST_LOG" | head -n1 | cut -d: -f1)"
+  rm_line="$(grep -n "^rm -rf .*itzTerm.app" "$ITZTERM_TEST_LOG" | head -n1 | cut -d: -f1)"
+  cp_line="$(grep -n "^cp -R " "$ITZTERM_TEST_LOG" | head -n1 | cut -d: -f1)"
   [ -n "$rm_line" ]
   [ -n "$cp_line" ]
   [ "$rm_line" -lt "$cp_line" ]
@@ -322,11 +322,11 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
   run install_linux "v1.2.3" "x86_64" "$fixture_sums"
 
   [ "$status" -eq 0 ]
-  grep -q "releases/download/v1.2.3/Termul.Manager_1.2.3_amd64.AppImage" "$TERMUL_TEST_LOG"
-  ! grep -q "Termul.Manager_v1.2.3_amd64.AppImage" "$TERMUL_TEST_LOG"
-  [ -x "$TERMUL_INSTALL_BIN_DIR/termul-manager" ]
-  [ -f "$TERMUL_INSTALL_DESKTOP_DIR/termul-manager.desktop" ]
-  grep -q "Exec=$TERMUL_INSTALL_BIN_DIR/termul-manager" "$TERMUL_INSTALL_DESKTOP_DIR/termul-manager.desktop"
+  grep -q "releases/download/v1.2.3/itzTerm.Manager_1.2.3_amd64.AppImage" "$ITZTERM_TEST_LOG"
+  ! grep -q "itzTerm.Manager_v1.2.3_amd64.AppImage" "$ITZTERM_TEST_LOG"
+  [ -x "$ITZTERM_INSTALL_BIN_DIR/itzterm-manager" ]
+  [ -f "$ITZTERM_INSTALL_DESKTOP_DIR/itzterm-manager.desktop" ]
+  grep -q "Exec=$ITZTERM_INSTALL_BIN_DIR/itzterm-manager" "$ITZTERM_INSTALL_DESKTOP_DIR/itzterm-manager.desktop"
   [[ "$output" == *"not in PATH"* ]]
 }
 
@@ -335,30 +335,30 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
   stub_common_tools
   stub_curl_release_flow "mac dmg payload"
   stub_macos_install_tools
-  export TERMUL_INSTALL_YES=1
+  export ITZTERM_INSTALL_YES=1
   load_install
 
   run main
 
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Install Termul Manager v1.2.3 (darwin-aarch64) to $TERMUL_INSTALL_APPLICATIONS_DIR?"* ]]
-  [ "$(grep -c "hdiutil attach" "$TERMUL_TEST_LOG")" -eq 1 ]
+  [[ "$output" == *"Install itzTerm v1.2.3 (darwin-aarch64) to $ITZTERM_INSTALL_APPLICATIONS_DIR?"* ]]
+  [ "$(grep -c "hdiutil attach" "$ITZTERM_TEST_LOG")" -eq 1 ]
 }
 
 @test "main happy Linux prompt includes platform tuple and installs AppImage" {
   stub_uname Linux x86_64
   stub_common_tools
   stub_curl_release_flow "linux appimage payload"
-  export TERMUL_INSTALL_YES=1
+  export ITZTERM_INSTALL_YES=1
   load_install
 
   run main
 
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Install Termul Manager v1.2.3 (linux-x86_64) to $HOME/.local/bin?"* ]]
-  [ -x "$TERMUL_INSTALL_BIN_DIR/termul-manager" ]
-  grep -q "Termul.Manager_1.2.3_amd64.AppImage" "$TERMUL_TEST_LOG"
-  ! grep -q "Termul.Manager_v1.2.3_amd64.AppImage" "$TERMUL_TEST_LOG"
+  [[ "$output" == *"Install itzTerm v1.2.3 (linux-x86_64) to $HOME/.local/bin?"* ]]
+  [ -x "$ITZTERM_INSTALL_BIN_DIR/itzterm-manager" ]
+  grep -q "itzTerm.Manager_1.2.3_amd64.AppImage" "$ITZTERM_TEST_LOG"
+  ! grep -q "itzTerm.Manager_v1.2.3_amd64.AppImage" "$ITZTERM_TEST_LOG"
 }
 
 @test "main non-tty abort runs no install commands" {
@@ -366,15 +366,15 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
   stub_common_tools
   stub_curl_release_flow "mac dmg payload"
   stub_macos_install_tools
-  unset TERMUL_INSTALL_YES
+  unset ITZTERM_INSTALL_YES
   load_install
 
   run main
 
   [ "$status" -ne 0 ]
-  ! grep -q "hdiutil" "$TERMUL_TEST_LOG"
-  ! grep -q "^cp " "$TERMUL_TEST_LOG"
-  ! grep -q "xattr" "$TERMUL_TEST_LOG"
+  ! grep -q "hdiutil" "$ITZTERM_TEST_LOG"
+  ! grep -q "^cp " "$ITZTERM_TEST_LOG"
+  ! grep -q "xattr" "$ITZTERM_TEST_LOG"
 }
 
 @test "main tampered download aborts before hdiutil cp or xattr" {
@@ -382,22 +382,22 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
   stub_common_tools
   stub_curl_release_flow "tampered payload"
   stub_macos_install_tools
-  export TERMUL_INSTALL_YES=1
+  export ITZTERM_INSTALL_YES=1
   load_install
 
   run main
 
   [ "$status" -ne 0 ]
   [[ "$output" == *"Integrity check failed, nothing was installed"* ]]
-  ! grep -q "hdiutil" "$TERMUL_TEST_LOG"
-  ! grep -q "^cp " "$TERMUL_TEST_LOG"
-  ! grep -q "xattr" "$TERMUL_TEST_LOG"
+  ! grep -q "hdiutil" "$ITZTERM_TEST_LOG"
+  ! grep -q "^cp " "$ITZTERM_TEST_LOG"
+  ! grep -q "xattr" "$ITZTERM_TEST_LOG"
 }
 
 @test "piping the script to bash runs main without an unbound BASH_SOURCE error" {
   stub_uname Plan9 x86_64
 
-  run bash -c 'cat "$1" | bash' _ "$TERMUL_TEST_REPO_ROOT/scripts/install.sh"
+  run bash -c 'cat "$1" | bash' _ "$ITZTERM_TEST_REPO_ROOT/scripts/install.sh"
 
   [ "$status" -ne 0 ]
   [[ "$output" == *"Unsupported operating system"* ]]
@@ -407,7 +407,7 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
 @test "executing the script directly runs main" {
   stub_uname Plan9 x86_64
 
-  run bash "$TERMUL_TEST_REPO_ROOT/scripts/install.sh"
+  run bash "$ITZTERM_TEST_REPO_ROOT/scripts/install.sh"
 
   [ "$status" -ne 0 ]
   [[ "$output" == *"Unsupported operating system"* ]]
@@ -416,7 +416,7 @@ printf '%s\\n' 'https://github.com/gnoviawan/termul/releases/tag/v1.2.3'
 @test "sourcing the script does not run main" {
   stub_uname Plan9 x86_64
 
-  run bash -c 'source "$1"; declare -F main >/dev/null && echo defined' _ "$TERMUL_TEST_REPO_ROOT/scripts/install.sh"
+  run bash -c 'source "$1"; declare -F main >/dev/null && echo defined' _ "$ITZTERM_TEST_REPO_ROOT/scripts/install.sh"
 
   [ "$status" -eq 0 ]
   [ "$output" = "defined" ]

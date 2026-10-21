@@ -72,7 +72,7 @@ impl PresenceRegistry {
             );
             if first {
                 tracing::info!(
-                    target: "termul::web::presence",
+                    target: "itzterm::web::presence",
                     device_id = %ClientIdentity::log_label(&identity.device_id),
                     carrier = carrier.as_str(),
                     "device connected (first connection)"
@@ -81,7 +81,7 @@ impl PresenceRegistry {
             connections.len()
         };
         tracing::debug!(
-            target: "termul::web::presence",
+            target: "itzterm::web::presence",
             device_id = %ClientIdentity::log_label(&identity.device_id),
             carrier = carrier.as_str(),
             connections = total,
@@ -105,7 +105,7 @@ impl PresenceRegistry {
         if connections.is_empty() {
             devices.remove(device_id);
             tracing::info!(
-                target: "termul::web::presence",
+                target: "itzterm::web::presence",
                 device_id = %ClientIdentity::log_label(device_id),
                 "device disconnected (last connection closed)"
             );

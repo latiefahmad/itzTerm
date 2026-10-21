@@ -214,10 +214,10 @@ export interface AcpTransport {
   getAgentIdleWindow(): Promise<AgentIdleWindowStatus>
   fetchRegistrySnapshot(reason: RegistryCheckReason): Promise<AcpRegistrySnapshot>
   /**
-   * On-demand MCP client probe (Termul's own rmcp client connection — NOT the
+   * On-demand MCP client probe (itzTerm's own rmcp client connection — NOT the
    * agent's). Stateless: takes the renderer-supplied wire config, opens a fresh
    * rmcp client, calls `initialize` + `tools/list`, then closes. Desktop↔web
-   * parity: on web the probe runs on the termul-server host via
+   * parity: on web the probe runs on the itzterm-server host via
    * `POST /mcp-servers/probe`. Never logs env/header values, tokens, or
    * credentials. The probe never throws on a disconnected server — it returns
    * `ProbeResult { status: 'disconnected', error }`; only transport/parse

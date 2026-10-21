@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OWNER="gnoviawan"
-REPO="termul"
+REPO="itzterm"
 BASE_URL="https://github.com/${OWNER}/${REPO}"
 
 die() {
@@ -96,7 +96,7 @@ resolve_version() {
   version="${effective_url##*/}"
 
   if [[ ! "$version" =~ ^v[0-9]+[.][0-9]+[.][0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
-    die "Could not resolve latest Termul version from ${BASE_URL}/releases/latest"
+    die "Could not resolve latest itzTerm version from ${BASE_URL}/releases/latest"
     return 1
   fi
 
@@ -154,19 +154,19 @@ confirm_install() {
   local prompt="$1"
   local reply
 
-  if [[ "${TERMUL_INSTALL_YES:-}" == "1" ]]; then
-    printf 'TERMUL_INSTALL_YES=1: %s\n' "$prompt"
+  if [[ "${ITZTERM_INSTALL_YES:-}" == "1" ]]; then
+    printf 'ITZTERM_INSTALL_YES=1: %s\n' "$prompt"
     return 0
   fi
 
   if [[ ! -r /dev/tty ]]; then
-    die "Interactive confirmation requires /dev/tty. Set TERMUL_INSTALL_YES=1 to install non-interactively."
+    die "Interactive confirmation requires /dev/tty. Set ITZTERM_INSTALL_YES=1 to install non-interactively."
     return 1
   fi
 
   printf '%s [y/N] ' "$prompt" >/dev/tty
   if ! IFS= read -r reply </dev/tty; then
-    die "Interactive confirmation requires /dev/tty. Set TERMUL_INSTALL_YES=1 to install non-interactively."
+    die "Interactive confirmation requires /dev/tty. Set ITZTERM_INSTALL_YES=1 to install non-interactively."
     return 1
   fi
 
@@ -197,7 +197,7 @@ install_macos() {
   local tmpdir
   local dmg_path
   local mount_dir
-  local applications_dir="${TERMUL_INSTALL_APPLICATIONS_DIR:-/Applications}"
+  local applications_dir="${ITZTERM_INSTALL_APPLICATIONS_DIR:-/Applications}"
   local app_source
   local app_target
 
@@ -215,7 +215,7 @@ install_macos() {
   esac
 
   normalized_version="$(asset_version "$version")"
-  asset_name="Termul.Manager_${normalized_version}_${suffix}.dmg"
+  asset_name="itzTerm.Manager_${normalized_version}_${suffix}.dmg"
   tmpdir="$(mktemp -d)"
   dmg_path="${tmpdir}/${asset_name}"
   mount_dir="${tmpdir}/mount"
@@ -224,10 +224,10 @@ install_macos() {
   (
     set -euo pipefail
 
-    termul_macos_mounted=0
-    termul_macos_mount_dir="$mount_dir"
-    termul_macos_tmpdir="$tmpdir"
-    trap 'if [[ "${termul_macos_mounted:-0}" == "1" ]]; then hdiutil detach "${termul_macos_mount_dir:-}" >/dev/null 2>&1 || true; fi; rm -rf "${termul_macos_tmpdir:-}"' EXIT
+    itzterm_macos_mounted=0
+    itzterm_macos_mount_dir="$mount_dir"
+    itzterm_macos_tmpdir="$tmpdir"
+    trap 'if [[ "${itzterm_macos_mounted:-0}" == "1" ]]; then hdiutil detach "${itzterm_macos_mount_dir:-}" >/dev/null 2>&1 || true; fi; rm -rf "${itzterm_macos_tmpdir:-}"' EXIT
 
     if [[ -z "$sums_file" ]]; then
       sums_file="$(fetch_sha256sums "$version" "${tmpdir}/SHA256SUMS.txt")" || exit 1
@@ -237,10 +237,10 @@ install_macos() {
     verify_sha256 "$dmg_path" "$asset_name" "$sums_file" || exit 1
 
     hdiutil attach -nobrowse -mountpoint "$mount_dir" "$dmg_path" || exit 1
-    termul_macos_mounted=1
+    itzterm_macos_mounted=1
 
-    app_source="${mount_dir}/Termul Manager.app"
-    app_target="${applications_dir}/Termul Manager.app"
+    app_source="${mount_dir}/itzTerm.app"
+    app_target="${applications_dir}/itzTerm.app"
     if [[ -e "$app_target" ]]; then
       if ! rm -rf "$app_target"; then
         sudo rm -rf "$app_target" || exit 1
@@ -252,9 +252,9 @@ install_macos() {
     fi
 
     hdiutil detach "$mount_dir" || exit 1
-    termul_macos_mounted=0
+    itzterm_macos_mounted=0
     xattr -dr com.apple.quarantine "$app_target" 2>/dev/null || true
-    printf 'Installed Termul Manager to %s\n' "$app_target"
+    printf 'Installed itzTerm to %s\n' "$app_target"
   )
 }
 
@@ -266,10 +266,10 @@ install_linux() {
   local asset_name
   local tmpdir
   local appimage_path
-  local bin_dir="${TERMUL_INSTALL_BIN_DIR:-${HOME}/.local/bin}"
-  local desktop_dir="${TERMUL_INSTALL_DESKTOP_DIR:-${HOME}/.local/share/applications}"
-  local target_path="${bin_dir}/termul-manager"
-  local desktop_path="${desktop_dir}/termul-manager.desktop"
+  local bin_dir="${ITZTERM_INSTALL_BIN_DIR:-${HOME}/.local/bin}"
+  local desktop_dir="${ITZTERM_INSTALL_DESKTOP_DIR:-${HOME}/.local/share/applications}"
+  local target_path="${bin_dir}/itzterm-manager"
+  local desktop_path="${desktop_dir}/itzterm-manager.desktop"
 
   if [[ "$arch" != "x86_64" ]]; then
     die "Unsupported Linux architecture: ${arch}"
@@ -277,15 +277,15 @@ install_linux() {
   fi
 
   normalized_version="$(asset_version "$version")"
-  asset_name="Termul.Manager_${normalized_version}_amd64.AppImage"
+  asset_name="itzTerm.Manager_${normalized_version}_amd64.AppImage"
   tmpdir="$(mktemp -d)"
   appimage_path="${tmpdir}/${asset_name}"
 
   (
     set -euo pipefail
 
-    termul_linux_tmpdir="$tmpdir"
-    trap 'rm -rf "${termul_linux_tmpdir:-}"' EXIT
+    itzterm_linux_tmpdir="$tmpdir"
+    trap 'rm -rf "${itzterm_linux_tmpdir:-}"' EXIT
 
     if [[ -z "$sums_file" ]]; then
       sums_file="$(fetch_sha256sums "$version" "${tmpdir}/SHA256SUMS.txt")" || exit 1
@@ -300,7 +300,7 @@ install_linux() {
     cat >"$desktop_path" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=Termul Manager
+Name=itzTerm
 Exec=${target_path}
 Terminal=false
 Categories=Development;Utility;
@@ -310,11 +310,11 @@ DESKTOP
       *":${bin_dir}:"*)
         ;;
       *)
-        printf 'Warning: %s is not in PATH. Add it to run termul-manager from your shell.\n' "$bin_dir" >&2
+        printf 'Warning: %s is not in PATH. Add it to run itzterm-manager from your shell.\n' "$bin_dir" >&2
         ;;
     esac
 
-    printf 'Installed Termul Manager to %s\n' "$target_path"
+    printf 'Installed itzTerm to %s\n' "$target_path"
   )
 }
 
@@ -332,10 +332,10 @@ main() {
 
   case "$os" in
     darwin)
-      confirm_install "Install Termul Manager ${version} (${os}-${arch}) to ${TERMUL_INSTALL_APPLICATIONS_DIR:-/Applications}?" || return 1
+      confirm_install "Install itzTerm ${version} (${os}-${arch}) to ${ITZTERM_INSTALL_APPLICATIONS_DIR:-/Applications}?" || return 1
       ;;
     linux)
-      confirm_install "Install Termul Manager ${version} (${os}-${arch}) to ${TERMUL_INSTALL_BIN_DIR:-${HOME}/.local/bin}?" || return 1
+      confirm_install "Install itzTerm ${version} (${os}-${arch}) to ${ITZTERM_INSTALL_BIN_DIR:-${HOME}/.local/bin}?" || return 1
       ;;
     *)
       die "Unsupported operating system: ${os}"
@@ -347,8 +347,8 @@ main() {
   (
     set -euo pipefail
 
-    termul_main_tmpdir="$tmpdir"
-    trap 'rm -rf "${termul_main_tmpdir:-}"' EXIT
+    itzterm_main_tmpdir="$tmpdir"
+    trap 'rm -rf "${itzterm_main_tmpdir:-}"' EXIT
 
     sums_file="$(fetch_sha256sums "$version" "${tmpdir}/SHA256SUMS.txt")" || exit 1
 

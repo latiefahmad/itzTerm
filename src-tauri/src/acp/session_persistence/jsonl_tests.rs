@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 
 fn temp_file(label: &str, bytes: &[u8]) -> (PathBuf, PathBuf) {
     let dir = std::env::temp_dir().join(format!(
-        "termul-jsonl-{label}-{}-{}",
+        "itzterm-jsonl-{label}-{}-{}",
         std::process::id(),
         now_millis()
     ));

@@ -10,7 +10,7 @@ use crate::trackers::GitStatus;
 #[tokio::test]
 async fn spawn_to_attach_snapshot_carries_spawn_time_cwd() {
     let manager = crate::web::test_pty_manager();
-    let dir = std::env::temp_dir().join(format!("termul-test-spawn-cwd-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("itzterm-test-spawn-cwd-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     // Canonicalize + strip the Windows verbatim prefix exactly as
     // `spawn_pty` does, so the assertion compares like with like.
@@ -213,7 +213,7 @@ fn directly_executable_windows_composite_suffix_does_not_match() {
 fn parse_npm_cmd_shim_rewrites_to_node_script() {
     // Write a simulated npm .cmd shim matching the real opencode.cmd format
     // that nvm-windows generates.
-    let dir = std::env::temp_dir().join("termul-test-cmd-shim");
+    let dir = std::env::temp_dir().join("itzterm-test-cmd-shim");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
 
@@ -268,7 +268,7 @@ fn parse_npm_cmd_shim_rewrites_npm_launcher_with_set_indirection() {
     //   "%NODE_EXE%" "%NPX_CLI_JS%" %*
     // The parser must resolve the %VAR% indirection, not only the simple
     // `"%dp0%\node.exe" "<script>"` package-bin form.
-    let dir = std::env::temp_dir().join("termul-test-npx-launcher-shim");
+    let dir = std::env::temp_dir().join("itzterm-test-npx-launcher-shim");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("node.exe"), b"MZ").unwrap();
@@ -312,7 +312,7 @@ fn parse_npm_cmd_shim_resolves_native_binary_shim() {
     // bundled PE image directly — one quoted path, no interpreter/script
     // pair:
     //   "%dp0%\node_modules\@anthropic-ai\claude-code\bin\claude.exe"   %*
-    let dir = std::env::temp_dir().join("termul-test-native-bin-shim");
+    let dir = std::env::temp_dir().join("itzterm-test-native-bin-shim");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("node_modules\\@anthropic-ai\\claude-code\\bin")).unwrap();
     std::fs::write(
@@ -349,7 +349,7 @@ fn parse_npm_cmd_shim_resolves_native_binary_shim() {
 fn resolve_spawn_program_rewrites_native_binary_cmd_shim() {
     // The same single-quote form through the public resolver entrypoint
     // (explicit path), the way `claude_cli_command` hands the shim over.
-    let dir = std::env::temp_dir().join("termul-test-resolve-native-bin-shim");
+    let dir = std::env::temp_dir().join("itzterm-test-resolve-native-bin-shim");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("node_modules\\pkg\\bin")).unwrap();
     std::fs::write(dir.join("node_modules\\pkg\\bin\\tool.exe"), b"MZ").unwrap();
@@ -377,7 +377,7 @@ fn resolve_spawn_program_rewrites_native_binary_cmd_shim() {
 #[cfg(target_os = "windows")]
 #[test]
 fn parse_npm_cmd_shim_rejects_single_quote_non_pe_and_flagged_forms() {
-    let dir = std::env::temp_dir().join("termul-test-native-bin-reject");
+    let dir = std::env::temp_dir().join("itzterm-test-native-bin-reject");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("tool.exe"), b"MZ").unwrap();
@@ -407,7 +407,7 @@ fn parse_npm_cmd_shim_rejects_single_quote_non_pe_and_flagged_forms() {
 #[cfg(target_os = "windows")]
 #[test]
 fn parse_powershell_cmd_shim_rewrites_cursor_agent_style() {
-    let dir = std::env::temp_dir().join("termul-test-ps-shim");
+    let dir = std::env::temp_dir().join("itzterm-test-ps-shim");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
 
@@ -454,7 +454,7 @@ fn parse_powershell_cmd_shim_rewrites_cursor_agent_style() {
 #[cfg(target_os = "windows")]
 #[test]
 fn win_agent_resolution_skips_extensionless_before_pe() {
-    let dir = std::env::temp_dir().join("termul-test-pe-resolve");
+    let dir = std::env::temp_dir().join("itzterm-test-pe-resolve");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
 
@@ -494,7 +494,7 @@ fn win_agent_resolution_skips_extensionless_before_pe() {
 #[cfg(target_os = "windows")]
 #[test]
 fn try_parse_windows_cmd_shim_prefers_npm_over_powershell() {
-    let dir = std::env::temp_dir().join("termul-test-shim-priority");
+    let dir = std::env::temp_dir().join("itzterm-test-shim-priority");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("node.exe"), b"MZ").unwrap();
@@ -519,7 +519,7 @@ fn try_parse_windows_cmd_shim_prefers_npm_over_powershell() {
 #[cfg(target_os = "windows")]
 #[test]
 fn resolve_spawn_program_rewrites_npm_cmd_shim() {
-    let dir = std::env::temp_dir().join("termul-test-resolve-npm-shim");
+    let dir = std::env::temp_dir().join("itzterm-test-resolve-npm-shim");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("node.exe"), b"MZ").unwrap();
@@ -552,7 +552,7 @@ fn resolve_spawn_program_rewrites_npm_cmd_shim() {
 #[cfg(target_os = "windows")]
 #[test]
 fn resolve_spawn_program_rewrites_powershell_cmd_shim() {
-    let dir = std::env::temp_dir().join("termul-test-resolve-ps-shim");
+    let dir = std::env::temp_dir().join("itzterm-test-resolve-ps-shim");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("cursor-agent.ps1"), b"").unwrap();
@@ -593,7 +593,7 @@ fn resolve_spawn_program_rewrites_powershell_cmd_shim() {
 #[cfg(target_os = "windows")]
 #[test]
 fn resolve_spawn_program_keeps_native_exe_without_prepend() {
-    let dir = std::env::temp_dir().join("termul-test-resolve-native-exe");
+    let dir = std::env::temp_dir().join("itzterm-test-resolve-native-exe");
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     let exe_path = dir.join("agent.exe");

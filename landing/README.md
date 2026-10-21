@@ -1,6 +1,6 @@
-# Termul Landing Page
+# itzTerm Landing Page
 
-A standalone Vite + React marketing page for Termul Manager, hosted on Cloudflare Pages.
+A standalone Vite + React marketing page for itzTerm, hosted on Cloudflare Pages.
 
 ## Prerequisites
 
@@ -42,18 +42,18 @@ bun run build
 bun run deploy
 ```
 
-The `deploy` script invokes `wrangler pages deploy dist` and uploads the build output to the `termul-landing` project.
+The `deploy` script invokes `wrangler pages deploy dist` and uploads the build output to the `itzterm-landing` project.
 
 **First-time setup:**
 
 1. Run `bunx wrangler login` to authenticate with your Cloudflare account.
-2. Create the Pages project (already done — `termul-landing`):
+2. Create the Pages project (already done — `itzterm-landing`):
    ```bash
-   bunx wrangler pages project create termul-landing --production-branch main
+   bunx wrangler pages project create itzterm-landing --production-branch main
    ```
-3. Connect the custom domain `termul.dev`:
-   - Go to [Cloudflare Pages → termul-landing → Custom domains](https://dash.cloudflare.com/?to=/:account/pages/view/termul-landing/custom-domains)
-   - Click **Set up a custom domain** and enter `termul.dev`
+3. Connect the custom domain `itzterm.dev`:
+   - Go to [Cloudflare Pages → itzterm-landing → Custom domains](https://dash.cloudflare.com/?to=/:account/pages/view/itzterm-landing/custom-domains)
+   - Click **Set up a custom domain** and enter `itzterm.dev`
    - Cloudflare auto-provisions SSL and routes traffic (DNS must be on Cloudflare)
 
 **SPA routing:** The `public/_redirects` file rewrites all paths to `/index.html` with a 200 status, replacing the nginx `try_files` rule used in the previous Docker setup.
@@ -65,8 +65,8 @@ homepage testimonials marquee are served by a Cloudflare Pages Function
 (`functions/api/[[path]].ts`) backed by a D1 database and an R2 bucket. Bindings
 are declared in `wrangler.toml`:
 
-- `DB` — D1 database `termul` (table schema in `migrations/0001_testimonials.sql`)
-- `TESTIMONIAL_AVATARS` — R2 bucket `termul` for uploaded avatar images
+- `DB` — D1 database `itzterm` (table schema in `migrations/0001_testimonials.sql`)
+- `TESTIMONIAL_AVATARS` — R2 bucket `itzterm` for uploaded avatar images
 - `TESTIMONIALS_ADMIN_TOKEN` — bearer token guarding the `/api/admin/*` routes
 
 ### Local development
@@ -100,7 +100,7 @@ TOKEN=$(grep TESTIMONIALS_ADMIN_TOKEN .dev.vars | cut -d= -f2)
 
 # submit (pending)
 curl -X POST $BASE/api/testimonials \
-  -F "quote=Termul keeps every project terminal in one workspace." \
+  -F "quote=itzTerm keeps every project terminal in one workspace." \
   -F "name=Alex Chen" -F "role=Staff Engineer" -F "avatarUrl=https://example.com/a.png"
 
 # moderate (use the id returned above)
@@ -113,17 +113,17 @@ curl $BASE/api/testimonials
 
 ### Production setup (one-time)
 
-These resources already exist for `termul-landing`; recreate only when
+These resources already exist for `itzterm-landing`; recreate only when
 provisioning a fresh environment.
 
 1. Authenticate: `bunx wrangler login`.
 2. Create the D1 database and copy its `database_id` into `wrangler.toml`:
    ```bash
-   bunx wrangler d1 create termul
+   bunx wrangler d1 create itzterm
    ```
 3. Create the R2 bucket:
    ```bash
-   bunx wrangler r2 bucket create termul
+   bunx wrangler r2 bucket create itzterm
    ```
 4. Apply migrations to the remote database:
    ```bash
@@ -131,7 +131,7 @@ provisioning a fresh environment.
    ```
 5. Set the admin token as a Pages secret (do **not** commit it):
    ```bash
-   bunx wrangler pages secret put TESTIMONIALS_ADMIN_TOKEN --project-name termul-landing
+   bunx wrangler pages secret put TESTIMONIALS_ADMIN_TOKEN --project-name itzterm-landing
    ```
 
 The CI deploy workflow (`.github/workflows/deploy-landing.yml`) handles building
@@ -144,4 +144,4 @@ After `bun run build`:
 
 1. Open `dist/index.html` and confirm `#app` contains rendered markup (e.g. "Terminal, reimagined", feature titles, footer CTA).
 2. Run `bun run verify:prerender` for an automated check.
-3. After deploy to `https://termul.dev`, validate with [Google Rich Results Test](https://search.google.com/test/rich-results) or view-source in the browser.
+3. After deploy to `https://itzterm.dev`, validate with [Google Rich Results Test](https://search.google.com/test/rich-results) or view-source in the browser.

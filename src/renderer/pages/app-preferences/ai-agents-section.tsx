@@ -94,7 +94,7 @@ export function AiAgentsSection({
 
   useEffect(() => {
     // `agentIdleWindowSecs` is the refetch key. The host answer can differ
-    // from the saved value when TERMUL_AGENT_IDLE_REAP_SECS is set.
+    // from the saved value when ITZTERM_AGENT_IDLE_REAP_SECS is set.
     let cancelled = false
     void agentIdleWindowSecs
     void acpApi

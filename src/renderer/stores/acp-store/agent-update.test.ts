@@ -604,7 +604,7 @@ describe('applyAgentUpdate', () => {
           configId: 'acp-registry:claude-acp',
           name: 'Claude Agent',
           command: 'node',
-          args: ['/termul/cache/old/dist/index.js'],
+          args: ['/itzterm/cache/old/dist/index.js'],
           env: {},
           allowTerminal: false
         }
@@ -616,7 +616,7 @@ describe('applyAgentUpdate', () => {
           success: true,
           data: {
             command: 'node',
-            args: ['/termul/cache/new/dist/index.js']
+            args: ['/itzterm/cache/new/dist/index.js']
           }
         })
       }
@@ -640,7 +640,7 @@ describe('applyAgentUpdate', () => {
       true
     )
     expect(updated?.command).toBe('node')
-    expect(updated?.args).toEqual(['/termul/cache/new/dist/index.js'])
+    expect(updated?.args).toEqual(['/itzterm/cache/new/dist/index.js'])
   })
 
   it('preserves user-added env values on conflict and fills registry env keys the config lacks', async () => {

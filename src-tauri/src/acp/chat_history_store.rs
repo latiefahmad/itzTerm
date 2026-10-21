@@ -554,7 +554,7 @@ fn temp_dir(label: &str) -> PathBuf {
         .unwrap()
         .as_nanos();
     let path = std::env::temp_dir().join(format!(
-        "termul-chat-history-{label}-{}-{suffix}",
+        "itzterm-chat-history-{label}-{}-{suffix}",
         std::process::id()
     ));
     fs::create_dir_all(&path).unwrap();

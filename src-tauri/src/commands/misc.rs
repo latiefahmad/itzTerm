@@ -145,7 +145,7 @@ pub async fn fs_scope_grant(
         match validate_project_path(&raw) {
             Ok(path) => {
                 // Recursive so the file explorer can descend the whole tree,
-                // including `.termul/worktrees/*` created under the root.
+                // including `.itzterm/worktrees/*` created under the root.
                 match app.fs_scope().allow_directory(&path, true) {
                     Ok(()) => granted.push(path.to_string_lossy().into_owned()),
                     Err(e) => {

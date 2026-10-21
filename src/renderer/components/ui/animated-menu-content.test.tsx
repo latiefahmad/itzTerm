@@ -83,7 +83,7 @@ describe('AnimatedMenuContent', () => {
     const body = screen.getByText('Menu body')
     const content = body.closest('[data-menu-motion]') as HTMLElement
     expect(content).toHaveAttribute('data-menu-motion', 'dropdown')
-    expect(content).toHaveClass('termul-popover-transition')
+    expect(content).toHaveClass('itzterm-popover-transition')
     const layer = body.parentElement as HTMLElement
     expect(layer.style.transformOrigin).toBe('var(--radix-popover-content-transform-origin)')
   })

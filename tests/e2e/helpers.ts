@@ -19,7 +19,7 @@ export const E2E_BASE_URL = `http://127.0.0.1:${E2E_PORT}`
 
 /**
  * The `deviceId` of every browser context in the suite: playwright.config
- * seeds it into `localStorage['termul.deviceId']`, and the WS helpers below
+ * seeds it into `localStorage['itzterm.deviceId']`, and the WS helpers below
  * authenticate with it, so device-scoped keys a spec seeds land in the
  * partition the page reads (`device/<deviceId>/…`).
  */
@@ -73,11 +73,11 @@ export interface SeededServer {
 
 /** The release binary name (`.exe` on Windows). */
 export function serverBinaryName(): string {
-  return process.platform === 'win32' ? 'termul-server.exe' : 'termul-server'
+  return process.platform === 'win32' ? 'itzterm-server.exe' : 'itzterm-server'
 }
 
 /**
- * Spawn an isolated termul-server with a throwaway state dir, register the
+ * Spawn an isolated itzterm-server with a throwaway state dir, register the
  * suite's projects (proj-a/b/c/e/w/x) and seed the fake long-running agent
  * config in the server-side store (shared `acp/agents`) so the web launcher
  * shows a ready agent without any user setup.
@@ -87,7 +87,7 @@ export async function startSeededServer(opts: {
   workspaceRoot: string
   fakeAgentScript: string
 }): Promise<SeededServer> {
-  const stateDir = await mkdtemp(join(tmpdir(), 'termul-e2e-state-'))
+  const stateDir = await mkdtemp(join(tmpdir(), 'itzterm-e2e-state-'))
   const projectsFile = join(stateDir, 'projects.json')
   const child = spawn(
     opts.serverBinary,
@@ -107,8 +107,8 @@ export async function startSeededServer(opts: {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: {
         ...process.env,
-        TERMUL_WEB_AUTH_TOKEN: E2E_TOKEN,
-        RUST_LOG: 'termul_manager_lib=info'
+        ITZTERM_WEB_AUTH_TOKEN: E2E_TOKEN,
+        RUST_LOG: 'itzterm_manager_lib=info'
       }
     }
   )
@@ -134,7 +134,7 @@ export async function startSeededServer(opts: {
       child.once('exit', (code, signal) => {
         reject(
           new Error(
-            `termul-server exited during startup (code=${code} signal=${signal}) — port ${E2E_PORT} may already be bound by a leaked server`
+            `itzterm-server exited during startup (code=${code} signal=${signal}) — port ${E2E_PORT} may already be bound by a leaked server`
           )
         )
       })
@@ -157,7 +157,7 @@ export async function startSeededServer(opts: {
       // Bound the wait: a healthy port answer with no bind log and a live
       // child would otherwise hang forever (weird partial-start state).
       sleep(30_000).then(() => {
-        throw new Error(`termul-server did not report its bind on port ${E2E_PORT} within 30s`)
+        throw new Error(`itzterm-server did not report its bind on port ${E2E_PORT} within 30s`)
       })
     ])
 
@@ -197,7 +197,7 @@ export async function startSeededServer(opts: {
       command: 'bun',
       args: [opts.fakeAgentScript],
       env: {
-        TERMUL_FAKE_CRASH_ARM: join(stateDir, 'fake-crash-arm'),
+        ITZTERM_FAKE_CRASH_ARM: join(stateDir, 'fake-crash-arm'),
         WIRE_LOG: join(stateDir, 'fake-wire.log')
       },
       allowTerminal: false

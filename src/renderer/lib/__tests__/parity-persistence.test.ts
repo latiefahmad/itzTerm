@@ -60,8 +60,8 @@ describe('shell-layout persistence parity', () => {
 
   it('keeps the legacy layout keys read-only: resize code no longer touches localStorage', () => {
     const migration = read(SHELL_LAYOUT_SOURCES.migration)
-    expect(migration).toContain("'termul:file-explorer-width'")
-    expect(migration).toContain("'termul-ssh-panel-height'")
+    expect(migration).toContain("'itzterm:file-explorer-width'")
+    expect(migration).toContain("'itzterm-ssh-panel-height'")
     expect(
       existsSync(join(RENDERER_DIR, 'components', 'file-explorer', 'use-explorer-resize.ts'))
     ).toBe(false)

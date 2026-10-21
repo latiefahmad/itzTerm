@@ -15,7 +15,7 @@ pub(super) fn quiet_command(program: &str) -> Command {
 /// Directories that should never be symlinked into worktrees.
 const SYMLINK_EXCLUSION_LIST: &[&str] = &[
     ".git",
-    ".termul",
+    ".itzterm",
     ".worktrees",
     ".claude",
     ".codex",

@@ -7,7 +7,7 @@ import {
 } from '@/components/agents/pending-launcher-options'
 import { MODEL_CATEGORY } from '@/components/chat/chat-input-bar-config'
 import { SkillFilesProvider } from '@/components/chat/skill-file-links'
-import { TermulMark } from '@/components/TermulMark'
+import { ItzTermMark } from '@/components/ItzTermMark'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useAcpStoreVisible } from '@/hooks/use-acp-visible-store'
@@ -89,7 +89,7 @@ function ChatRestorePreload(): React.JSX.Element {
       aria-label="Restoring chat"
     >
       <div className="flex size-16 items-center justify-center">
-        <TermulMark
+        <ItzTermMark
           size={52}
           className="animate-pulse text-foreground motion-reduce:animate-none"
         />
@@ -642,7 +642,7 @@ export function AgentChatPanel({
   // where `/fs/info` is loopback-guarded on remote peers, resolution falls
   // back to the deliberately unguarded `/fs/read` open path (the same one
   // ChatChangedFilesPanel uses). Local-image reads stay Tauri-only inside
-  // `TermulMarkdownImage` (alt-chip fallback).
+  // `ItzTermMarkdownImage` (alt-chip fallback).
   const projects = useProjectStore((state) => state.projects)
   const filePathContext = useMemo(
     () => ({
@@ -826,7 +826,7 @@ export function AgentChatPanel({
       // `showOskSpacer` gate ensures this only fires in the mobile web shell.
       style={
         showOskSpacer
-          ? { paddingBottom: `var(--termul-keyboard-height, ${osk.keyboardHeight}px)` }
+          ? { paddingBottom: `var(--itzterm-keyboard-height, ${osk.keyboardHeight}px)` }
           : undefined
       }
     >

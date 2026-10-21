@@ -9,7 +9,7 @@ use uuid::Uuid;
 use super::HostPlanServer;
 use crate::acp::config::{AgentId, SessionId};
 use crate::acp::events::{self, AskUserQuestionEvent, QuestionCancelledEvent, QuestionOption};
-use crate::acp::host_mcp::{FrameReply, TermulAskUserInput};
+use crate::acp::host_mcp::{FrameReply, ItzTermAskUserInput};
 
 /// How a parked `ask_user` call ended (issue #784).
 #[derive(Debug)]
@@ -39,7 +39,7 @@ impl HostPlanServer {
         &self,
         agent_id: &str,
         session_id: &str,
-        input: TermulAskUserInput,
+        input: ItzTermAskUserInput,
         hung_up: impl Future<Output = ()>,
     ) -> FrameReply {
         if input.question.trim().is_empty() {

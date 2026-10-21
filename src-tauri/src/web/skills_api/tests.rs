@@ -127,7 +127,7 @@ async fn skill_index_lists_project_harness_skills() {
     let root = std::env::temp_dir()
         .canonicalize()
         .unwrap_or_else(|_| std::env::temp_dir())
-        .join(format!("termul-skills-index-route-{}", std::process::id()));
+        .join(format!("itzterm-skills-index-route-{}", std::process::id()));
     let skill_dir = root.join(".opencode").join("skills").join("route-skill");
     std::fs::create_dir_all(&skill_dir).unwrap();
     let skill_md = skill_dir.join("SKILL.md");
@@ -174,7 +174,7 @@ async fn skill_index_does_not_walk_an_unresolvable_root_into_another_repo() {
     let base = std::env::temp_dir()
         .canonicalize()
         .unwrap_or_else(|_| std::env::temp_dir())
-        .join(format!("termul-skills-index-walk-{}", std::process::id()));
+        .join(format!("itzterm-skills-index-walk-{}", std::process::id()));
     let registered = base.join("registered");
     let other_repo = base.join("other-repo");
     std::fs::create_dir_all(&registered).unwrap();

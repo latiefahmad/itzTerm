@@ -88,7 +88,7 @@ pub(super) async fn stop_all(
         if let Err(error) = pty.force_kill(terminal_id).await {
             if !error.starts_with("Terminal not found") {
                 tracing::warn!(
-                    target: "termul::web::project_registry",
+                    target: "itzterm::web::project_registry",
                     project_id,
                     terminal_id = %terminal_id,
                     %error,

@@ -143,7 +143,7 @@ fn body<T>(operation: &str, project_id: &str, result: Result<T, CanvasError>) ->
         Ok(value) => IpcBody::ok(value),
         Err(err) => {
             tracing::warn!(
-                target: "termul::web::canvas",
+                target: "itzterm::web::canvas",
                 "canvas {operation} failed project_id={} code={}",
                 crate::commands::sanitize_log_field(project_id),
                 err.code
@@ -232,11 +232,11 @@ async fn write_snapshot(
         let project_id = crate::commands::sanitize_log_field(&req.project_id);
         match (&outcome.mark_saved, &outcome.view.save_error) {
             (Some(version), _) => tracing::info!(
-                target: "termul::web::canvas",
+                target: "itzterm::web::canvas",
                 "canvas saved project_id={project_id} content_version={version}"
             ),
             (None, Some(error)) => tracing::warn!(
-                target: "termul::web::canvas",
+                target: "itzterm::web::canvas",
                 "canvas save failed project_id={project_id}: {error}"
             ),
             (None, None) => {}
@@ -275,7 +275,7 @@ async fn resolve_conflict(
         return Json(forbidden);
     }
     tracing::info!(
-        target: "termul::web::canvas",
+        target: "itzterm::web::canvas",
         "canvas conflict resolved project_id={} choice={:?}",
         crate::commands::sanitize_log_field(&req.project_id),
         req.choice

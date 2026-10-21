@@ -69,10 +69,10 @@ describe('buildCanvasEmbedUrl', () => {
     expect(
       buildCanvasEmbedUrl(
         { baseUrl: '', canvasId: 'cv1', canvasToken: 'ff' },
-        'https://termul.example',
+        'https://itzterm.example',
         1
       )
-    ).toBe('/canvas/cv1/ff/?embed=kiosk&ho=https%3A%2F%2Ftermul.example&ms=1')
+    ).toBe('/canvas/cv1/ff/?embed=kiosk&ho=https%3A%2F%2Fitzterm.example&ms=1')
   })
 })
 

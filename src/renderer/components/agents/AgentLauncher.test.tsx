@@ -2718,13 +2718,13 @@ describe('AgentLauncher worktree isolation', () => {
   beforeEach(() => {
     enableDesktopGitRepo()
     mockWorktreeCreate.mockReset()
-    // Default success: returns a worktree at /work/.termul/worktrees/{name}/
+    // Default success: returns a worktree at /work/.itzterm/worktrees/{name}/
     mockWorktreeCreate.mockResolvedValue({
       success: true,
       data: {
         name: 'abcd1234',
         branch: 'chat/abcd1234',
-        path: '/work/.termul/worktrees/abcd1234',
+        path: '/work/.itzterm/worktrees/abcd1234',
         headCommit: ''
       }
     })
@@ -2741,7 +2741,7 @@ describe('AgentLauncher worktree isolation', () => {
         id: 'wt-stored-1',
         name: 'abcd1234',
         branch: 'chat/abcd1234',
-        path: '/work/.termul/worktrees/abcd1234'
+        path: '/work/.itzterm/worktrees/abcd1234'
       })
       return 'updated'
     })
@@ -2903,8 +2903,8 @@ describe('AgentLauncher worktree isolation', () => {
       worktreePath?: string
       worktreeBranch?: string
     }
-    expect(finalizeArgs.cwd).toBe('/work/.termul/worktrees/abcd1234')
-    expect(finalizeArgs.worktreePath).toBe('/work/.termul/worktrees/abcd1234')
+    expect(finalizeArgs.cwd).toBe('/work/.itzterm/worktrees/abcd1234')
+    expect(finalizeArgs.worktreePath).toBe('/work/.itzterm/worktrees/abcd1234')
     expect(finalizeArgs.worktreeBranch).toMatch(/^chat\/[a-f0-9]+$/)
   })
 
@@ -2954,7 +2954,7 @@ describe('AgentLauncher worktree isolation', () => {
         configValues: Record<string, string>
       } | null
     }
-    expect(finalizeArgs.cwd).toBe('/work/.termul/worktrees/abcd1234')
+    expect(finalizeArgs.cwd).toBe('/work/.itzterm/worktrees/abcd1234')
     // The displayed snapshot, rebuilt as a pending payload — including the
     // model pick that was only ever applied to the discarded warm session.
     // The mode-category config option stays out of configValues (the native
@@ -3048,7 +3048,7 @@ describe('AgentLauncher worktree isolation', () => {
         data: {
           name: 'abcd1234-2',
           branch: 'chat/abcd1234-2',
-          path: '/work/.termul/worktrees/abcd1234-2',
+          path: '/work/.itzterm/worktrees/abcd1234-2',
           headCommit: ''
         }
       })
@@ -3057,7 +3057,7 @@ describe('AgentLauncher worktree isolation', () => {
         id: 'wt-retry',
         name: 'abcd1234-2',
         branch: 'chat/abcd1234-2',
-        path: '/work/.termul/worktrees/abcd1234-2'
+        path: '/work/.itzterm/worktrees/abcd1234-2'
       })
       return 'updated'
     })
@@ -3139,7 +3139,7 @@ describe('AgentLauncher worktree isolation', () => {
 
   // Story 29: the Workspace chip's Existing worktree mode.
   describe('Workspace chip: Existing worktree', () => {
-    const WT_PATH = '/work/.termul/worktrees/wt1'
+    const WT_PATH = '/work/.itzterm/worktrees/wt1'
 
     function listWorktree(
       extra: { outsideProjectRoot?: boolean; id?: string; path?: string } = {}
@@ -3232,8 +3232,8 @@ describe('AgentLauncher worktree isolation', () => {
     const topologies = [
       { name: 'desktop / local (writes admitted)', admitted: true },
       { name: 'shared-live (writes denied)', admitted: false },
-      { name: 'termul-server without --allow-remote-writes', admitted: false },
-      { name: 'termul-server with --allow-remote-writes', admitted: true }
+      { name: 'itzterm-server without --allow-remote-writes', admitted: false },
+      { name: 'itzterm-server with --allow-remote-writes', admitted: true }
     ]
     it.each(topologies)('launches into the existing worktree without creating one: $name', async ({
       admitted
@@ -3683,7 +3683,7 @@ describe('AgentLauncher per-agent update badge', () => {
       data: {
         name: 'abcd1234',
         branch: 'chat/abcd1234',
-        path: '/work/.termul/worktrees/abcd1234',
+        path: '/work/.itzterm/worktrees/abcd1234',
         headCommit: ''
       }
     })
@@ -3738,9 +3738,9 @@ describe('AgentLauncher per-agent update badge', () => {
         expect.objectContaining({
           placeholderId: 'launch-placeholder-1',
           configId: 'acp-registry:factory-droid',
-          cwd: '/work/.termul/worktrees/abcd1234',
+          cwd: '/work/.itzterm/worktrees/abcd1234',
           projectId: 'p1',
-          worktreePath: '/work/.termul/worktrees/abcd1234',
+          worktreePath: '/work/.itzterm/worktrees/abcd1234',
           worktreeBranch: expect.stringMatching(/^chat\//)
         })
       )
@@ -3760,7 +3760,7 @@ describe('AgentLauncher per-agent update badge', () => {
       id: 'wt1',
       name: 'wt1',
       branch: 'feat/wt1',
-      path: '/work/.termul/worktrees/wt1'
+      path: '/work/.itzterm/worktrees/wt1'
     })
     mockWorktreeResolveBaseBranch.mockResolvedValue({
       success: true,
@@ -3789,10 +3789,10 @@ describe('AgentLauncher per-agent update badge', () => {
       await waitFor(() =>
         expect(mockStartChat).toHaveBeenCalledWith(
           config.id,
-          '/work/.termul/worktrees/wt1',
+          '/work/.itzterm/worktrees/wt1',
           undefined,
           'p1',
-          { worktreePath: '/work/.termul/worktrees/wt1', worktreeBranch: 'feat/wt1' }
+          { worktreePath: '/work/.itzterm/worktrees/wt1', worktreeBranch: 'feat/wt1' }
         )
       )
       expect(mockWorktreeCreate).not.toHaveBeenCalled()

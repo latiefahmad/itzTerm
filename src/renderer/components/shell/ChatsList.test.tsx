@@ -50,7 +50,7 @@ const project = {
       id: 'w1',
       name: 'feature',
       branch: 'feat/x',
-      path: '/repo/.termul/worktrees/feature',
+      path: '/repo/.itzterm/worktrees/feature',
       createdAt: '2026-01-01T00:00:00.000Z'
     }
   ]
@@ -127,15 +127,15 @@ describe('ChatsList scope and order', () => {
   })
 
   it('narrows to the picked worktree and ignores a pruned pick', () => {
-    setIndex([entry('root'), entry('wt', { cwd: '/repo/.termul/worktrees/feature' })])
+    setIndex([entry('root'), entry('wt', { cwd: '/repo/.itzterm/worktrees/feature' })])
     useShellLayoutStore.setState({
-      worktreePickByProject: { p1: '/repo/.termul/worktrees/feature' }
+      worktreePickByProject: { p1: '/repo/.itzterm/worktrees/feature' }
     })
     const { unmount } = render(<ChatsList project={project} />)
     expect(titles()).toEqual(['Chat wt'])
     unmount()
 
-    useShellLayoutStore.setState({ worktreePickByProject: { p1: '/repo/.termul/worktrees/gone' } })
+    useShellLayoutStore.setState({ worktreePickByProject: { p1: '/repo/.itzterm/worktrees/gone' } })
     render(<ChatsList project={project} />)
     expect(cardButtons()).toHaveLength(2)
   })
@@ -163,7 +163,7 @@ describe('ChatsList search', () => {
     })
     setIndex([
       entry('a', { title: 'Refactor Auth', agentConfigId: 'cfg-1' }),
-      entry('b', { title: 'Add tests', cwd: '/repo/.termul/worktrees/feature' })
+      entry('b', { title: 'Add tests', cwd: '/repo/.itzterm/worktrees/feature' })
     ])
   })
 
@@ -207,7 +207,7 @@ describe('ChatsList card content', () => {
       entry('indexed', { agentConfigId: 'cfg-1', modelName: 'Opus', lastActivityAt: 30 }),
       entry('bare', { agentConfigId: 'cfg-1', lastActivityAt: 20 }),
       entry('wt', {
-        cwd: '/repo/.termul/worktrees/feature',
+        cwd: '/repo/.itzterm/worktrees/feature',
         agentConfigId: 'cfg-1',
         lastActivityAt: 10
       })

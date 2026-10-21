@@ -100,8 +100,8 @@ describe('scheduleGitStatusRefreshForPath', () => {
   })
 
   it('refreshes only the deepest tracked key when worktrees are nested', async () => {
-    const worktree = 'C:/project/.termul/worktrees/feat'
-    track({ 'c:/project': REPO, 'c:/project/.termul/worktrees/feat': worktree })
+    const worktree = 'C:/project/.itzterm/worktrees/feat'
+    track({ 'c:/project': REPO, 'c:/project/.itzterm/worktrees/feat': worktree })
 
     scheduleGitStatusRefreshForPath(`${worktree}/src/foo.ts`)
     await vi.advanceTimersByTimeAsync(1000)

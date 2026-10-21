@@ -11,7 +11,7 @@ import {
   lineNumbers
 } from '@codemirror/view'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createTermulTheme } from '@/components/editor/codemirror-theme'
+import { createItzTermTheme } from '@/components/editor/codemirror-theme'
 import { requestSaveEditorFile } from '@/lib/editor-save'
 import { logFrontendError } from '@/lib/log-api'
 import {
@@ -279,7 +279,7 @@ export function useCodeMirror(
         ])
       ),
       keymap.of([...defaultKeymap, ...historyKeymap, indentWithTab]),
-      themeCompartment.current.of(createTermulTheme(isDark, syntaxColorsRef.current)),
+      themeCompartment.current.of(createItzTermTheme(isDark, syntaxColorsRef.current)),
       updateListener,
       scrollListener,
       EditorView.lineWrapping
@@ -368,7 +368,7 @@ export function useCodeMirror(
       const isDarkNow = document.documentElement.classList.contains('dark')
       view.dispatch({
         effects: themeCompartment.current.reconfigure(
-          createTermulTheme(isDarkNow, syntaxColorsRef.current)
+          createItzTermTheme(isDarkNow, syntaxColorsRef.current)
         )
       })
     }

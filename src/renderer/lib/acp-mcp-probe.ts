@@ -3,13 +3,13 @@
  *
  * Statelessly probes a configured MCP server: opens a fresh rmcp client
  * connection, calls `initialize` + `tools/list`, then closes. The probe reflects
- * **Termul's own client connection** (NOT the agent's — the agent owns its own
- * connection inside its process). The status dot therefore answers "can Termul
+ * **itzTerm's own client connection** (NOT the agent's — the agent owns its own
+ * connection inside its process). The status dot therefore answers "can itzTerm
  * reach this server and list its tools?" — see the spec's Design Notes.
  *
  * Branches on `isTauriContext()`:
  * - Desktop: Tauri `invoke('acp_probe_mcp_server', { server })`.
- * - Web/remote: `POST /mcp-servers/probe` runs the probe on the termul-server
+ * - Web/remote: `POST /mcp-servers/probe` runs the probe on the itzterm-server
  *   host (where stdio commands execute — matches GH-287's web-parity decision)
  *   and returns the same `IpcBody<ProbeResult>` shape.
  *

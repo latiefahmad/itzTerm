@@ -47,19 +47,19 @@ describe('MarqueeText', () => {
 
     const el = screen.getByText('short title')
     expect(el).toHaveClass('min-w-0', 'flex-1', 'truncate')
-    expect(el.querySelector('.termul-marquee')).toBeNull()
+    expect(el.querySelector('.itzterm-marquee')).toBeNull()
   })
 
   it('marquees an overflowing title with the measured distance inline', () => {
     fakeWidths(300, 100)
     render(<MarqueeText text="a very long chat title that overflows" />)
 
-    const runner = document.querySelector<HTMLElement>('.termul-marquee')
+    const runner = document.querySelector<HTMLElement>('.itzterm-marquee')
     expect(runner).not.toBeNull()
-    expect(runner?.style.getPropertyValue('--termul-marquee-distance')).toBe('200px')
+    expect(runner?.style.getPropertyValue('--itzterm-marquee-distance')).toBe('200px')
     // Duration scales with distance but stays inside the clamp band.
     const duration = Number(
-      runner?.style.getPropertyValue('--termul-marquee-duration').replace('ms', '')
+      runner?.style.getPropertyValue('--itzterm-marquee-duration').replace('ms', '')
     )
     expect(duration).toBeGreaterThanOrEqual(6000)
     expect(duration).toBeLessThanOrEqual(16000)
@@ -86,7 +86,7 @@ describe('MarqueeText', () => {
 
     const el = screen.getByText('a very long chat title that overflows')
     expect(el).toHaveClass('truncate')
-    expect(document.querySelector('.termul-marquee')).toBeNull()
+    expect(document.querySelector('.itzterm-marquee')).toBeNull()
   })
 
   it('re-measures when the text prop changes', () => {
@@ -97,13 +97,13 @@ describe('MarqueeText', () => {
     widths.scroll = 100
     rerender(<MarqueeText text="fits" />)
     expect(screen.getByText('fits')).toHaveClass('truncate')
-    expect(document.querySelector('.termul-marquee')).toBeNull()
+    expect(document.querySelector('.itzterm-marquee')).toBeNull()
 
     // New text that overflows → marquee mounts with the fresh distance.
     widths.scroll = 260
     rerender(<MarqueeText text="second longer title that now overflows" />)
-    const runner = document.querySelector<HTMLElement>('.termul-marquee')
-    expect(runner?.style.getPropertyValue('--termul-marquee-distance')).toBe('160px')
+    const runner = document.querySelector<HTMLElement>('.itzterm-marquee')
+    expect(runner?.style.getPropertyValue('--itzterm-marquee-distance')).toBe('160px')
   })
 
   it('passes className and span props through to the label', () => {

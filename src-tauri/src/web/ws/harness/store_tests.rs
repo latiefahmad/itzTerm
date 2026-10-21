@@ -16,7 +16,7 @@ struct Fixture {
 impl Fixture {
     fn new(label: &str) -> Self {
         let dir = std::env::temp_dir().join(format!(
-            "termul-harness-store-{label}-{}-{}",
+            "itzterm-harness-store-{label}-{}-{}",
             std::process::id(),
             uuid::Uuid::new_v4()
         ));

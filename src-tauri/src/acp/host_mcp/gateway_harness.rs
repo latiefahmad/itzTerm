@@ -24,7 +24,7 @@ impl Harness {
     pub(crate) fn new(sessions: &[(&str, Option<&str>)]) -> (Self, Vec<ChildConfig>) {
         let runtime = tokio::runtime::Runtime::new().unwrap();
         let root =
-            std::env::temp_dir().join(format!("termul-canvas-bridge-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("itzterm-canvas-bridge-{}", uuid::Uuid::new_v4()));
         let cwd = root.join("cwd");
         std::fs::create_dir_all(&cwd).unwrap();
         let persistence = runtime.block_on(async {

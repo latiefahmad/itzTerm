@@ -7,12 +7,12 @@ use super::*;
 fn take_is_consume_once_and_requires_matching_branch() {
     let mut registry = LaunchRegistry::default();
     let now = Instant::now();
-    registry.note_at("/p/.termul/worktrees/ab12cd34/", "chat/ab12cd34", now);
+    registry.note_at("/p/.itzterm/worktrees/ab12cd34/", "chat/ab12cd34", now);
 
     // A different branch never claims the note (and does not burn it).
-    assert!(!registry.take_at("/p/.termul/worktrees/ab12cd34", "chat/other", now));
-    assert!(registry.take_at("/p/.termul/worktrees/ab12cd34", "chat/ab12cd34", now));
-    assert!(!registry.take_at("/p/.termul/worktrees/ab12cd34", "chat/ab12cd34", now));
+    assert!(!registry.take_at("/p/.itzterm/worktrees/ab12cd34", "chat/other", now));
+    assert!(registry.take_at("/p/.itzterm/worktrees/ab12cd34", "chat/ab12cd34", now));
+    assert!(!registry.take_at("/p/.itzterm/worktrees/ab12cd34", "chat/ab12cd34", now));
 }
 
 #[test]
@@ -51,29 +51,29 @@ fn non_chat_branches_are_never_noted() {
 fn path_forms_resolve_to_the_same_note() {
     let mut registry = LaunchRegistry::default();
     let now = Instant::now();
-    registry.note_at(r"E:\proj\.termul\worktrees\ab12\", "chat/ab12", now);
-    assert!(registry.take_at(r"\\?\e:\proj\.termul\worktrees\ab12", "chat/ab12", now));
+    registry.note_at(r"E:\proj\.itzterm\worktrees\ab12\", "chat/ab12", now);
+    assert!(registry.take_at(r"\\?\e:\proj\.itzterm\worktrees\ab12", "chat/ab12", now));
 
-    registry.note_at("E:/proj/.termul/worktrees/ab12/", "chat/ab12", now);
-    assert!(registry.take_at(r"E:\PROJ\.termul\worktrees\ab12", "chat/ab12", now));
+    registry.note_at("E:/proj/.itzterm/worktrees/ab12/", "chat/ab12", now);
+    assert!(registry.take_at(r"E:\PROJ\.itzterm\worktrees\ab12", "chat/ab12", now));
 }
 
 #[test]
 fn worktree_path_key_normalizes_separators_prefix_and_case() {
     assert_eq!(
-        worktree_path_key(r"\\?\C:\Repo\.termul\worktrees\X\"),
-        "c:/repo/.termul/worktrees/x"
+        worktree_path_key(r"\\?\C:\Repo\.itzterm\worktrees\X\"),
+        "c:/repo/.itzterm/worktrees/x"
     );
     assert_eq!(
-        worktree_path_key("/home/u/Repo/.termul/worktrees/X/"),
-        "/home/u/Repo/.termul/worktrees/X"
+        worktree_path_key("/home/u/Repo/.itzterm/worktrees/X/"),
+        "/home/u/Repo/.itzterm/worktrees/X"
     );
     assert_eq!(worktree_path_key("/"), "/");
 }
 
 #[test]
 fn global_registry_round_trip_uses_take_once() {
-    let path = format!("/tmp/termul-launch-registry-{}", std::process::id());
+    let path = format!("/tmp/itzterm-launch-registry-{}", std::process::id());
     launch_registry::note_launch_created(&path, "chat/zz99");
     assert!(take_launch_created(&path, "chat/zz99"));
     assert!(!take_launch_created(&path, "chat/zz99"));

@@ -39,29 +39,29 @@ export function resolveAppExe(override?: string): string {
     return override
   }
   const candidates = [
-    // Worktree dev-identifier build first: com.termul-manager.app.dev escapes
+    // Worktree dev-identifier build first: com.itzterm.app.dev escapes
     // the single-instance mutex held by any running user install
-    // (com.termul-manager.app) — otherwise the spawned exe silently exits via
+    // (com.itzterm.app) — otherwise the spawned exe silently exits via
     // the single-instance plugin before CDP ever answers.
-    path.join(REPO_ROOT, 'src-tauri', 'target', 'release', 'termul-manager.exe'),
+    path.join(REPO_ROOT, 'src-tauri', 'target', 'release', 'itzterm-manager.exe'),
     path.join(
       REPO_ROOT,
       'src-tauri',
       'target',
       'x86_64-pc-windows-msvc',
       'release',
-      'termul-manager.exe'
+      'itzterm-manager.exe'
     ),
     // Main checkout fallback (same repo, built there before the worktree split).
     path.resolve(
       REPO_ROOT,
       '..',
-      'termul',
+      'itzterm',
       'src-tauri',
       'target',
       'x86_64-pc-windows-msvc',
       'release',
-      'termul-manager.exe'
+      'itzterm-manager.exe'
     )
   ]
   for (const c of candidates) {
@@ -378,22 +378,21 @@ function buildHandle(args: HandleArgs): AppHandle {
   }
 
   /**
-   * The plugin-store file (`termul-data.json`) and the app's other persisted
+   * The plugin-store file (`itzterm-data.json`) and the app's other persisted
    * state live under the identifier's *shared* app-data dir, not under the
    * scratch WEBVIEW2_USER_DATA_FOLDER — the scratch dir only isolates browser
    * state. Without wiping it, persisted projects/chats/agent registrations
    * leak from one run into the next (the launcher never appears on a profile
    * that boots into restored chats, so stream-storm's start-button wait
    * times out). This wipes the dev-identifier's app-data dirs; the identity
-   * `com.termul-manager.app.dev` is perf-toolkit-only, so nothing user-owned
+   * `com.itzterm.app.dev` is perf-toolkit-only, so nothing user-owned
    * lives there.
    */
   function wipeDevAppData(): void {
     const appData = process.env.APPDATA
     const localAppData = process.env.LOCALAPPDATA
     for (const root of [appData, localAppData]) {
-      if (root)
-        rmSync(path.join(root, 'com.termul-manager.app.dev'), { recursive: true, force: true })
+      if (root) rmSync(path.join(root, 'com.itzterm.app.dev'), { recursive: true, force: true })
     }
   }
 

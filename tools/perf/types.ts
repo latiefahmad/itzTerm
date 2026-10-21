@@ -142,7 +142,7 @@ export interface RunMeta {
   /** CLI args the scenario received (seed, agents, duration...). */
   params: Record<string, string | number | boolean>
   seed: number
-  /** Lane: 'desktop' (WebView2 real app) or 'browser' (termul-server). */
+  /** Lane: 'desktop' (WebView2 real app) or 'browser' (itzterm-server). */
   lane: 'desktop' | 'browser'
   /** Absolute path of the app exe / server URL used. */
   appTarget: string

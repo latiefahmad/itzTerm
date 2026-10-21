@@ -82,7 +82,7 @@ impl HostShutdown {
         }
         let stragglers = self.tracker.len();
         warn!(
-            target: "termul::web::shutdown",
+            target: "itzterm::web::shutdown",
             stragglers,
             "sockets still open after the drain bound; aborting them"
         );
@@ -95,7 +95,7 @@ impl HostShutdown {
         }
         let leaked = self.tracker.len();
         warn!(
-            target: "termul::web::shutdown",
+            target: "itzterm::web::shutdown",
             leaked,
             "aborted sockets did not unwind within the grace period"
         );
@@ -126,7 +126,7 @@ impl SocketLease {
             () = serve => {}
             () = self.abort.cancelled() => {
                 warn!(
-                    target: "termul::web::shutdown",
+                    target: "itzterm::web::shutdown",
                     "socket ignored the host stop; aborted"
                 );
             }
@@ -195,12 +195,12 @@ where
     match tokio::time::timeout(CLOSE_DRAIN_TIMEOUT, sink.send(Message::Close(Some(frame)))).await {
         Ok(Ok(())) => {}
         Ok(Err(_)) => tracing::debug!(
-            target: "termul::web::shutdown",
+            target: "itzterm::web::shutdown",
             code,
             "close frame not delivered: peer already gone"
         ),
         Err(_) => warn!(
-            target: "termul::web::shutdown",
+            target: "itzterm::web::shutdown",
             code,
             "close frame not delivered within the drain timeout; closing anyway"
         ),

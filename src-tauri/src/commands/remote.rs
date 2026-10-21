@@ -11,7 +11,7 @@ use tauri::State;
 /// Shares the desktop's live `AcpManager` sessions with a phone/browser client.
 ///
 /// Starts the in-process localhost web server (the same one the standalone
-/// `termul-server` binary uses), then brings up a built-in cloudflared
+/// `itzterm-server` binary uses), then brings up a built-in cloudflared
 /// quick-tunnel so the phone can reach it on any network — the popover renders
 /// the ephemeral `https://*.trycloudflare.com` URL as a QR. The `bind_mode`
 /// param is accepted for API stability but ignored (the tunnel targets
@@ -221,11 +221,11 @@ pub async fn remote_sync_chat_history(
 }
 
 /// Mirror the desktop app-store MCP registry to the named project's
-/// `.termul/mcp-servers.json` (CAP-7 — registry sync gap).
+/// `.itzterm/mcp-servers.json` (CAP-7 — registry sync gap).
 ///
 /// Desktop MCP servers live in the host store key `shared/lww/acp/mcp-servers`
 /// (the desktop renderer's channel connection), while the web `GET /mcp-servers?projectId=`
-/// route reads `{project_root}/.termul/mcp-servers.json`. Without this bridge the web
+/// route reads `{project_root}/.itzterm/mcp-servers.json`. Without this bridge the web
 /// route never sees desktop-configured servers, so `McpBadge` stays hidden on
 /// web/mobile. Called best-effort after every desktop MCP save and when the
 /// host default project changes — a sync failure is logged but never blocks the app-store save.
@@ -246,7 +246,7 @@ pub async fn remote_sync_mcp_registry(
 }
 
 /// Testable core of `remote_sync_mcp_registry`: writes `registry` to
-/// `{project_root}/.termul/mcp-servers.json` via `atomic_file::replace`.
+/// `{project_root}/.itzterm/mcp-servers.json` via `atomic_file::replace`.
 /// Extracted so a Rust unit test can exercise the write path without a Tauri
 /// `AppHandle` (CAP-7 regression guard).
 pub(crate) async fn sync_mcp_registry_to_project_file(

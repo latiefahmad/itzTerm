@@ -5,8 +5,8 @@ use std::path::Path;
 /// into a `compile_error!`, so only the desktop binary is blocked: a build
 /// script cannot see which `--bin` targets Cargo selected, but the guard then
 /// fires exactly when the desktop binary compiles, whatever features are on.
-/// The `termul-server` binary (`server_main.rs`) and the library never trip it.
-const RELEASE_WITHOUT_CUSTOM_PROTOCOL_CFG: &str = "termul_release_without_custom_protocol";
+/// The `itzterm-server` binary (`server_main.rs`) and the library never trip it.
+const RELEASE_WITHOUT_CUSTOM_PROTOCOL_CFG: &str = "itzterm_release_without_custom_protocol";
 
 /// Whether a release-profile build lacks `custom-protocol`, which makes the
 /// desktop binary load `devUrl` and show "Could not connect to localhost".
@@ -21,7 +21,7 @@ fn release_without_custom_protocol(profile: &str, dev: bool, allow_override: &st
 
 fn main() {
     // The Vite web build output (`../dist-web/`) is embedded into BOTH the
-    // standalone `termul-server` binary and the desktop app (the desktop's
+    // standalone `itzterm-server` binary and the desktop app (the desktop's
     // in-process shared-live server serves the embedded bundle in a release
     // install). Watch it so a web-client rebuild triggers a cargo rebuild, for
     // both build targets.
@@ -57,7 +57,7 @@ fn main() {
     // every static route — a silent deploy bug. Emit a `web_embed_missing` cfg
     // so the release path (NOT debug) hits a `compile_error!` in `assets.rs`
     // telling the operator to run `bun run build:web` first. The Vite build
-    // MUST run before `cargo build --bin termul-server` (rust-embed embeds at
+    // MUST run before `cargo build --bin itzterm-server` (rust-embed embeds at
     // build time) — CI enforces this ordering (`.github/workflows/*`).
     // `index.html` alone is not sufficient: a stale `dist-web/` that predates
     // the PWA files would compile cleanly yet ship an `index.html` linking a
@@ -84,11 +84,11 @@ fn main() {
     // Block a raw release desktop build without `custom-protocol` (enforced by
     // the `compile_error!` in `src/main.rs`).
     println!("cargo:rustc-check-cfg=cfg({RELEASE_WITHOUT_CUSTOM_PROTOCOL_CFG})");
-    println!("cargo:rerun-if-env-changed=TERMUL_ALLOW_RELEASE_WITHOUT_CUSTOM_PROTOCOL");
+    println!("cargo:rerun-if-env-changed=ITZTERM_ALLOW_RELEASE_WITHOUT_CUSTOM_PROTOCOL");
     if release_without_custom_protocol(
         &std::env::var("PROFILE").unwrap_or_default(),
         tauri_build::is_dev(),
-        &std::env::var("TERMUL_ALLOW_RELEASE_WITHOUT_CUSTOM_PROTOCOL").unwrap_or_default(),
+        &std::env::var("ITZTERM_ALLOW_RELEASE_WITHOUT_CUSTOM_PROTOCOL").unwrap_or_default(),
     ) {
         println!("cargo:rustc-cfg={RELEASE_WITHOUT_CUSTOM_PROTOCOL_CFG}");
     }

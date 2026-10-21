@@ -95,7 +95,7 @@ pub async fn ensure_no_active_turn_in_checkout(
 /// Whether the session directory `dir` lies inside `target` AND is rewritten
 /// by an operation on it. Containment is component-wise (`/a/b-other` is NOT
 /// inside `/a/b`). A directory that belongs to a different, nested git work
-/// tree (a linked worktree under `<repo>/.termul/worktrees/…`) has its own
+/// tree (a linked worktree under `<repo>/.itzterm/worktrees/…`) has its own
 /// index and HEAD, so an operation on the enclosing tree does not touch it.
 /// Blocking: canonicalizes and may run git.
 fn is_rewritten_by(dir: &Path, target: &Path) -> bool {

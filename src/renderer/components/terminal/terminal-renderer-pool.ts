@@ -80,7 +80,7 @@ let recyclerContainer: HTMLDivElement | null = null
 function getRecyclerContainer(): HTMLDivElement {
   if (!recyclerContainer) {
     recyclerContainer = document.createElement('div')
-    recyclerContainer.setAttribute('data-termul-recycler', '')
+    recyclerContainer.setAttribute('data-itzterm-recycler', '')
     recyclerContainer.style.cssText = `
 			position: fixed;
 			left: -99999px;

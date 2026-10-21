@@ -67,7 +67,7 @@ pub(super) fn forbidden_reply(
     // Boundary log: request type + carrier + device label only — never the
     // payload (it can carry prompt text or store values).
     warn!(
-        target: "termul::web::ws",
+        target: "itzterm::web::ws",
         request_id = %id,
         request_type = %request_type,
         carrier = access.capabilities().carrier.as_str(),

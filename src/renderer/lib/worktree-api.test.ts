@@ -77,7 +77,7 @@ describe('worktreeApi', () => {
         data: {
           name: 'feat-1',
           branch: 'feat-1',
-          path: '/project/.termul/worktrees/feat-1',
+          path: '/project/.itzterm/worktrees/feat-1',
           headCommit: 'def5678'
         }
       }
@@ -128,13 +128,13 @@ describe('worktreeApi', () => {
 
       const result = await worktreeApi.remove(
         '/test/project',
-        '/project/.termul/worktrees/feat-1',
+        '/project/.itzterm/worktrees/feat-1',
         false
       )
 
       expect(mockInvoke).toHaveBeenCalledWith('worktree_remove', {
         projectPath: '/test/project',
-        worktreePath: '/project/.termul/worktrees/feat-1',
+        worktreePath: '/project/.itzterm/worktrees/feat-1',
         force: false
       })
       expect(result.success).toBe(true)
@@ -143,11 +143,11 @@ describe('worktreeApi', () => {
     it('passes force=true when requested', async () => {
       mockInvoke.mockResolvedValue({ success: true, data: null })
 
-      await worktreeApi.remove('/test/project', '/project/.termul/worktrees/feat-1', true)
+      await worktreeApi.remove('/test/project', '/project/.itzterm/worktrees/feat-1', true)
 
       expect(mockInvoke).toHaveBeenCalledWith('worktree_remove', {
         projectPath: '/test/project',
-        worktreePath: '/project/.termul/worktrees/feat-1',
+        worktreePath: '/project/.itzterm/worktrees/feat-1',
         force: true
       })
     })
@@ -181,10 +181,10 @@ describe('worktreeApi', () => {
       }
       mockInvoke.mockResolvedValue(mockResult)
 
-      const result = await worktreeApi.checkDirty('/project/.termul/worktrees/feat-1')
+      const result = await worktreeApi.checkDirty('/project/.itzterm/worktrees/feat-1')
 
       expect(mockInvoke).toHaveBeenCalledWith('worktree_check_dirty', {
-        worktreePath: '/project/.termul/worktrees/feat-1'
+        worktreePath: '/project/.itzterm/worktrees/feat-1'
       })
       if (result.success) {
         expect(result.data.hasChanges).toBe(true)
@@ -200,13 +200,13 @@ describe('worktreeApi', () => {
           id: '1',
           name: 'feat-1',
           branch: 'feat-1',
-          path: '/project/.termul/worktrees/feat-1',
+          path: '/project/.itzterm/worktrees/feat-1',
           createdAt: '2026-01-01'
         }
       ])
       const mockResult = {
         success: true,
-        data: [{ worktreePath: '/project/.termul/worktrees/feat-1', success: true, error: null }]
+        data: [{ worktreePath: '/project/.itzterm/worktrees/feat-1', success: true, error: null }]
       }
       mockInvoke.mockResolvedValue(mockResult)
 
@@ -228,13 +228,13 @@ describe('worktreeApi', () => {
       mockInvoke.mockResolvedValue({ success: true, data: null })
 
       const result = await worktreeApi.renameBranch(
-        '/project/.termul/worktrees/ab12cd34',
+        '/project/.itzterm/worktrees/ab12cd34',
         'chat/ab12cd34',
         'chat/fix-login'
       )
 
       expect(mockInvoke).toHaveBeenCalledWith('worktree_rename_branch', {
-        worktreePath: '/project/.termul/worktrees/ab12cd34',
+        worktreePath: '/project/.itzterm/worktrees/ab12cd34',
         oldBranch: 'chat/ab12cd34',
         newBranch: 'chat/fix-login',
         commandId: expect.stringMatching(/^[A-Za-z0-9_-]{1,128}$/)
@@ -266,7 +266,7 @@ describe('worktreeApi', () => {
       } as Response)
 
       const result = await worktreeApi.renameBranch(
-        '/project/.termul/worktrees/ab12cd34',
+        '/project/.itzterm/worktrees/ab12cd34',
         'chat/ab12cd34',
         'chat/fix-login'
       )
@@ -277,7 +277,7 @@ describe('worktreeApi', () => {
       expect(url).toMatch(/\/worktree\/rename-branch$/)
       expect(init.method).toBe('POST')
       expect(JSON.parse(String(init.body))).toEqual({
-        worktreePath: '/project/.termul/worktrees/ab12cd34',
+        worktreePath: '/project/.itzterm/worktrees/ab12cd34',
         oldBranch: 'chat/ab12cd34',
         newBranch: 'chat/fix-login'
       })

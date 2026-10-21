@@ -5,7 +5,7 @@ import { useThemePickerStore } from '@/stores/theme-picker-store'
 import { ThemePicker } from './ThemePicker'
 
 function openPicker(): HTMLElement {
-  act(() => useThemePickerStore.getState().open('termul'))
+  act(() => useThemePickerStore.getState().open('itzterm'))
   return screen.getByRole('dialog', { name: 'Color theme picker' })
 }
 

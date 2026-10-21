@@ -199,15 +199,15 @@ describe('pure history helpers', () => {
     // sidebar must list root-cwd sessions AND the project's worktree-cwd
     // sessions so a worktree chat stays reachable without a restart.
     const root = entry('root', { cwd: '/project' })
-    const wtChat = entry('wt-chat', { cwd: '/project/.termul/worktrees/wt' })
+    const wtChat = entry('wt-chat', { cwd: '/project/.itzterm/worktrees/wt' })
     const otherProjectWt = entry('other-wt', {
       projectId: 'project-2',
-      cwd: '/project/.termul/worktrees/wt'
+      cwd: '/project/.itzterm/worktrees/wt'
     })
     const entries = [root, wtChat, otherProjectWt]
 
     expect(
-      scopeSessionIndex(entries, 'project-1', '/project', ['/project/.termul/worktrees/wt']).map(
+      scopeSessionIndex(entries, 'project-1', '/project', ['/project/.itzterm/worktrees/wt']).map(
         ({ id }) => id
       )
     ).toEqual(['root', 'wt-chat'])
@@ -218,12 +218,12 @@ describe('pure history helpers', () => {
     // chat; the root-cwd chat is not in the worktreePath set so it is hidden,
     // matching the prior scoped-to-active-cwd behavior.
     const root = entry('root', { cwd: '/project' })
-    const wtChat = entry('wt-chat', { cwd: '/project/.termul/worktrees/wt' })
+    const wtChat = entry('wt-chat', { cwd: '/project/.itzterm/worktrees/wt' })
     const entries = [root, wtChat]
 
     expect(
-      scopeSessionIndex(entries, 'project-1', '/project/.termul/worktrees/wt', [
-        '/project/.termul/worktrees/wt'
+      scopeSessionIndex(entries, 'project-1', '/project/.itzterm/worktrees/wt', [
+        '/project/.itzterm/worktrees/wt'
       ]).map(({ id }) => id)
     ).toEqual(['wt-chat'])
   })
@@ -233,23 +233,23 @@ describe('pure history helpers', () => {
     // project's scoping; and the worktree-inclusive set never duplicates an
     // entry already matched by exact-cwd (filter, not concat).
     const root = entry('root', { cwd: '/project' })
-    const wtChat = entry('wt-chat', { cwd: '/project/.termul/worktrees/wt' })
+    const wtChat = entry('wt-chat', { cwd: '/project/.itzterm/worktrees/wt' })
     const foreignWt = entry('foreign', {
       projectId: 'project-2',
-      cwd: '/other/.termul/worktrees/x'
+      cwd: '/other/.itzterm/worktrees/x'
     })
     const entries = [root, wtChat, foreignWt]
 
     // Foreign worktree path is not in the active project's worktreePaths.
     expect(
-      scopeSessionIndex(entries, 'project-1', '/project', ['/project/.termul/worktrees/wt']).map(
+      scopeSessionIndex(entries, 'project-1', '/project', ['/project/.itzterm/worktrees/wt']).map(
         ({ id }) => id
       )
     ).toEqual(['root', 'wt-chat'])
 
     // projectId-only fallback when the scoped set (exact + worktree) is empty.
     expect(
-      scopeSessionIndex(entries, 'project-2', '/nowhere', ['/project/.termul/worktrees/wt']).map(
+      scopeSessionIndex(entries, 'project-2', '/nowhere', ['/project/.itzterm/worktrees/wt']).map(
         ({ id }) => id
       )
     ).toEqual(['foreign'])
@@ -264,14 +264,14 @@ describe('pure history helpers', () => {
     // appear in BOTH forms (471 unprefixed + 94 prefixed in real data).
     const rootUnprefixed = entry('root-unprefixed', { cwd: 'E:\\project' })
     const rootPrefixed = entry('root-prefixed', { cwd: '\\\\?\\E:\\project' })
-    const wtChat = entry('wt-chat', { cwd: '\\\\?\\E:\\project\\.termul\\worktrees\\wt' })
+    const wtChat = entry('wt-chat', { cwd: '\\\\?\\E:\\project\\.itzterm\\worktrees\\wt' })
     const entries = [rootUnprefixed, rootPrefixed, wtChat]
 
     // Root view: activeCwd is the project root (store form, backslashes);
     // worktreePaths is the store form (forward slashes, no prefix). Both root
     // forms AND the worktree chat must be listed.
     expect(
-      scopeSessionIndex(entries, 'project-1', 'E:\\project', ['E:/project/.termul/worktrees/wt'])
+      scopeSessionIndex(entries, 'project-1', 'E:\\project', ['E:/project/.itzterm/worktrees/wt'])
         .map(({ id }) => id)
         .sort()
     ).toEqual(['root-prefixed', 'root-unprefixed', 'wt-chat'])
@@ -279,8 +279,8 @@ describe('pure history helpers', () => {
     // Active-worktree view: activeCwd is the store worktree path (forward
     // slashes); the prefixed-backslash session cwd must still match exactly.
     expect(
-      scopeSessionIndex(entries, 'project-1', 'E:/project/.termul/worktrees/wt', [
-        'E:/project/.termul/worktrees/wt'
+      scopeSessionIndex(entries, 'project-1', 'E:/project/.itzterm/worktrees/wt', [
+        'E:/project/.itzterm/worktrees/wt'
       ]).map(({ id }) => id)
     ).toEqual(['wt-chat'])
   })
@@ -667,7 +667,7 @@ describe('provider routing', () => {
     // Boot race: the WS transport reports the default 'live_only' until
     // connect()'s authenticate handshake negotiates the real mode. The index
     // load must await connect() and re-read the mode before concluding
-    // "live-only", otherwise the sidebar never populates on termul-server.
+    // "live-only", otherwise the sidebar never populates on itzterm-server.
     // The mode flip is gated on connect() SETTLING (a microtask, so no real
     // timer): a dropped await in loadSessionIndex re-reads the mode
     // synchronously, still sees 'live_only', and this test fails.
@@ -953,7 +953,7 @@ describe('bounded full-payload cache', () => {
   })
 
   it('keeps a plan fence from the dropped copy and merges it into the host tail by message id', async () => {
-    const fence = '```termul-plan\n[{"content":"ship","status":"completed"}]\n```'
+    const fence = '```itzterm-plan\n[{"content":"ship","status":"completed"}]\n```'
     const reply = { ...msg('agent', 'final reply'), seq: 1478 }
     setCachedSessionPayload(
       's-fence',
@@ -985,7 +985,7 @@ describe('bounded full-payload cache', () => {
   })
 
   it('a desktop reload replaces the cached copy in place, keeping its pin and plan fences', async () => {
-    const fence = '```termul-plan\n[{"content":"ship","status":"completed"}]\n```'
+    const fence = '```itzterm-plan\n[{"content":"ship","status":"completed"}]\n```'
     const reply = { ...msg('agent', 'final reply'), seq: 1478 }
     const later = { ...msg('agent', 'more work'), seq: 1600 }
     markSessionPayloadPinned('s-reload')

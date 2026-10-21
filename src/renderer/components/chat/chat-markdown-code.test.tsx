@@ -109,12 +109,12 @@ describe('ChatMarkdownCode', () => {
     }
   })
 
-  it('renders a termul-plan fence as a PlanPanel, not a code block', () => {
+  it('renders a itzterm-plan fence as a PlanPanel, not a code block', () => {
     const plan = [{ content: 'Read the spec', status: 'pending' }]
     const json = JSON.stringify(plan)
     const { getByText, queryByTestId } = render(
       withTooltip(
-        <ChatMarkdownCode className="language-termul-plan" data-block node={{ value: json }}>
+        <ChatMarkdownCode className="language-itzterm-plan" data-block node={{ value: json }}>
           {json}
         </ChatMarkdownCode>
       )
@@ -124,9 +124,9 @@ describe('ChatMarkdownCode', () => {
     expect(queryByTestId('code-block')).toBeNull()
   })
 
-  it('shows a fallback card for a malformed termul-plan fence and logs it once', () => {
+  it('shows a fallback card for a malformed itzterm-plan fence and logs it once', () => {
     const malformed = (
-      <ChatMarkdownCode className="language-termul-plan" data-block node={{ value: '{bad' }}>
+      <ChatMarkdownCode className="language-itzterm-plan" data-block node={{ value: '{bad' }}>
         {'{bad'}
       </ChatMarkdownCode>
     )
@@ -141,7 +141,7 @@ describe('ChatMarkdownCode', () => {
   it('renders nothing for an empty plan fence', () => {
     const { container } = render(
       withTooltip(
-        <ChatMarkdownCode className="language-termul-plan" data-block node={{ value: '[]' }}>
+        <ChatMarkdownCode className="language-itzterm-plan" data-block node={{ value: '[]' }}>
           {'[]'}
         </ChatMarkdownCode>
       )
@@ -155,7 +155,7 @@ describe('ChatMarkdownCode', () => {
     useIsCodeFenceIncompleteMock.mockReturnValue(true)
     const { getByText, queryByTestId } = render(
       withTooltip(
-        <ChatMarkdownCode className="language-termul-plan" data-block node={{ value: 'partial' }}>
+        <ChatMarkdownCode className="language-itzterm-plan" data-block node={{ value: 'partial' }}>
           {'partial'}
         </ChatMarkdownCode>
       )

@@ -105,7 +105,7 @@ fn resolve_stdio_command_rewrites_windows_cmd_shim() {
     // with the script prepended ahead of the user args.
     // Unique per-process dir so parallel `cargo test` invocations cannot
     // delete/overwrite each other's fixtures.
-    let dir = std::env::temp_dir().join(format!("termul-test-mcp-cmd-shim-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("itzterm-test-mcp-cmd-shim-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("node.exe"), b"MZ").unwrap();

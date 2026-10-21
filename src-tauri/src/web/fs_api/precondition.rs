@@ -168,7 +168,7 @@ fn write_atomic(path: &Path, content: &[u8], keep_permissions: bool) -> io::Resu
         .map_or(0, |elapsed| elapsed.as_nanos());
     let mut temp_name = std::ffi::OsString::from(".");
     temp_name.push(name);
-    temp_name.push(format!(".termul-{}-{nanos}.tmp", std::process::id()));
+    temp_name.push(format!(".itzterm-{}-{nanos}.tmp", std::process::id()));
     let temp = match parent {
         Some(dir) => dir.join(&temp_name),
         None => PathBuf::from(&temp_name),

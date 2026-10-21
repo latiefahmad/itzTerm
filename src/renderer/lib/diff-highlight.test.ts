@@ -57,7 +57,7 @@ describe('highlightDiffText', () => {
     expect(colored.length).toBeGreaterThan(0)
   })
 
-  it('paints termul keywords and strings in the bright palette', async () => {
+  it('paints itzterm keywords and strings in the bright palette', async () => {
     const lines = await highlightDiffText('const name = "ada"', 'typescript')
     const tokens = lines?.[0] ?? []
     const keyword = tokens.find((token) => token.content === 'const')

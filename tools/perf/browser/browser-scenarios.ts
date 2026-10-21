@@ -1,7 +1,7 @@
 /**
  * CAP-7 browser-lane scenario drivers: the same stream-storm and
  * project-switch scripts as the desktop lane, executed against the
- * termul-server web client.
+ * itzterm-server web client.
  *
  * Load in the browser lane uses the same fake agents through the server's
  * agent path (the server spawns `bun tools/perf/fake-agent/fake-agent.ts`

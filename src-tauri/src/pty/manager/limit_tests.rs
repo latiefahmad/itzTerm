@@ -101,7 +101,7 @@ async fn killing_a_terminal_frees_its_slot() {
 async fn a_failed_spawn_frees_its_slot() {
     let manager = crate::web::test_pty_manager();
     manager.set_max_terminals_per_project(1);
-    let missing = std::env::temp_dir().join(format!("termul-no-such-dir-{}", std::process::id()));
+    let missing = std::env::temp_dir().join(format!("itzterm-no-such-dir-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&missing);
 
     let failed = manager

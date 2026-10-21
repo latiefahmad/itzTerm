@@ -3,7 +3,7 @@ use std::path::Path;
 use super::*;
 
 impl WorktreeManager {
-    /// Archive a worktree by moving it to `.termul/archives/<name>-<timestamp>/`.
+    /// Archive a worktree by moving it to `.itzterm/archives/<name>-<timestamp>/`.
     /// Creates an archive manifest entry for later recovery.
     pub fn archive(project_path: &str, worktree_path: &str) -> Result<(), WorktreeError> {
         let project_root = Path::new(project_path);
@@ -26,7 +26,7 @@ impl WorktreeManager {
             .ok_or(WorktreeError::ArchiveFailed)?;
 
         // Create archive directory
-        let archive_dir = project_root.join(".termul").join("archives");
+        let archive_dir = project_root.join(".itzterm").join("archives");
         let timestamp = chrono_timestamp();
         let archive_path = archive_dir.join(format!("{}-{}", wt_name, timestamp));
 
@@ -80,7 +80,7 @@ impl WorktreeManager {
     /// Restore an archived worktree back to its original location.
     pub fn restore(project_path: &str, archive_path: &str) -> Result<(), WorktreeError> {
         let project_root = Path::new(project_path);
-        let archive_dir = project_root.join(".termul").join("archives");
+        let archive_dir = project_root.join(".itzterm").join("archives");
         let manifest_path = archive_dir.join("archive-manifest.json");
 
         if !manifest_path.exists() {

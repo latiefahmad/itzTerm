@@ -1,7 +1,7 @@
 //! The host's single project registry.
 //!
 //! One durable [`ProjectRegistry`] exists per host: the standalone
-//! `termul-server` opens it from `--projects-file`, the desktop builds it once
+//! `itzterm-server` opens it from `--projects-file`, the desktop builds it once
 //! at setup from `<app_data_dir>/projects.json` and hands the same instance to
 //! the shared-live host, so stopping shared-live never touches it. The browser
 //! reads it through `GET /projects` and the `projects` watch;

@@ -13,7 +13,7 @@ fn temp_log(label: &str, contents: &[u8]) -> PathBuf {
         .map(|d| d.as_nanos())
         .unwrap_or(0);
     let path = std::env::temp_dir().join(format!(
-        "termul-diagnostics-{label}-{}-{nanos}.log",
+        "itzterm-diagnostics-{label}-{}-{nanos}.log",
         std::process::id()
     ));
     std::fs::write(&path, contents).expect("write temp log");
@@ -130,7 +130,7 @@ fn home_scrub_handles_windows_separators() {
 
 #[test]
 fn missing_log_file_reports_unavailable() {
-    let ctx = collect_bug_report_context(Some(Path::new("/definitely/not/a/termul/log/file.log")));
+    let ctx = collect_bug_report_context(Some(Path::new("/definitely/not/a/itzterm/log/file.log")));
     assert!(!ctx.log_available);
     assert!(ctx.log_tail.is_empty());
     assert!(!ctx.log_truncated);
@@ -384,7 +384,7 @@ fn gh_success_returns_issue_url_and_cleans_up_body_file() {
             *staged_body.borrow_mut() =
                 std::fs::read_to_string(&file).expect("body file readable during create");
             *staged.borrow_mut() = file;
-            return output(0, "https://github.com/gnoviawan/termul/issues/42\n", "");
+            return output(0, "https://github.com/latiefahmad/itzTerm/issues/42\n", "");
         }
         output(0, "ok", "")
     });
@@ -392,7 +392,7 @@ fn gh_success_returns_issue_url_and_cleans_up_body_file() {
     assert_eq!(
         result,
         BugReportSubmitResult::Submitted {
-            issue_url: "https://github.com/gnoviawan/termul/issues/42".to_string()
+            issue_url: "https://github.com/latiefahmad/itzTerm/issues/42".to_string()
         }
     );
 
@@ -403,7 +403,7 @@ fn gh_success_returns_issue_url_and_cleans_up_body_file() {
         vec!["auth", "status", "--hostname", "github.com"]
     );
     let create = calls.nth(2);
-    assert_eq!(create[..4], ["issue", "create", "-R", "gnoviawan/termul"]);
+    assert_eq!(create[..4], ["issue", "create", "-R", "latiefahmad/itzTerm"]);
     assert!(
         create
             .windows(2)
@@ -518,9 +518,9 @@ fn parse_issue_url_anchors_to_the_issue_repo_shape() {
     // A warning URL printed before the issue URL must not be captured.
     assert_eq!(
         parse_issue_url(
-            "warning: see https://github.com/settings/tokens first\nhttps://github.com/gnoviawan/termul/issues/42\n"
+            "warning: see https://github.com/settings/tokens first\nhttps://github.com/latiefahmad/itzTerm/issues/42\n"
         ),
-        Some("https://github.com/gnoviawan/termul/issues/42".to_string())
+        Some("https://github.com/latiefahmad/itzTerm/issues/42".to_string())
     );
     // Non-issue URLs, other repos and non-numeric ids never match.
     assert_eq!(parse_issue_url("https://example.com/x"), None);
@@ -529,11 +529,11 @@ fn parse_issue_url_anchors_to_the_issue_repo_shape() {
         None
     );
     assert_eq!(
-        parse_issue_url("https://github.com/gnoviawan/termul/issues/abc"),
+        parse_issue_url("https://github.com/latiefahmad/itzTerm/issues/abc"),
         None
     );
     assert_eq!(
-        parse_issue_url("http://github.com/gnoviawan/termul/issues/4"),
+        parse_issue_url("http://github.com/latiefahmad/itzTerm/issues/4"),
         None
     );
     assert_eq!(parse_issue_url("Created issue draft"), None);

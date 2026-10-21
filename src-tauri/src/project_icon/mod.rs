@@ -80,13 +80,13 @@ pub async fn resolve(cwd: PathBuf) -> Option<ProjectIcon> {
 }
 
 /// Durable boundary log emitted on BOTH logger facades the crate uses: the
-/// desktop installs a `log` backend (tauri-plugin-log) while `termul-server`
+/// desktop installs a `log` backend (tauri-plugin-log) while `itzterm-server`
 /// installs a `tracing` subscriber — each call lands once on whichever
 /// runtime is live and no-ops on the other. Callers must pass messages that
 /// contain no secrets, credentials, or full remote URLs.
 fn boundary_warn(message: &str) {
     log::warn!("[project_icon] {message}");
-    tracing::warn!(target: "termul::project_icon", "{message}");
+    tracing::warn!(target: "itzterm::project_icon", "{message}");
 }
 
 #[cfg(test)]

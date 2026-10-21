@@ -65,7 +65,7 @@ export async function projectRegistryImport(
 
 /**
  * Mirror the desktop app-store MCP registry to the named project's
- * `.termul/mcp-servers.json` (CAP-7 — registry sync gap). The Rust
+ * `.itzterm/mcp-servers.json` (CAP-7 — registry sync gap). The Rust
  * `remote_sync_mcp_registry` command resolves `projectId` through the shared
  * `ProjectRegistry` (an unknown, archived or pathless project is refused
  * `NOT_FOUND`) and writes the registry via `atomic_file::replace`, so the web

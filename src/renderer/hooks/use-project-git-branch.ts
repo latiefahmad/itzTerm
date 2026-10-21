@@ -14,7 +14,7 @@ import type { Project } from '@/types/project'
  * no path. Goes through the git status store (`fetchCommitContext`, the single
  * git cache), which is transport-neutral (desktop invoke / same-origin server
  * HTTP), so the status bar reflects the real branch on both desktop and the
- * termul-server web/remote client.
+ * itzterm-server web/remote client.
  *
  * A successful probe (a resolvable HEAD commit) also stamps `isGitRepo: true`.
  * On desktop the worktree reconciler already flips that flag, but on web it

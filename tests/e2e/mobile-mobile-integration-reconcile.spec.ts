@@ -110,7 +110,7 @@ async function registerProject(options: { git?: boolean } = {}): Promise<Project
   await mkdir(path, { recursive: true })
   if (options.git) {
     execSync('git init -q -b main', { cwd: path })
-    execSync('git -c user.email=e2e@termul -c user.name=e2e commit -q --allow-empty -m init', {
+    execSync('git -c user.email=e2e@itzterm -c user.name=e2e commit -q --allow-empty -m init', {
       cwd: path
     })
   }
@@ -169,7 +169,7 @@ async function openApp(page: Page, project: Project): Promise<void> {
   })
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN,
     { timeout: 60_000 }
   )
@@ -251,7 +251,7 @@ async function openDrawer(page: Page): Promise<Locator> {
 }
 
 async function settledDrawer(page: Page): Promise<Locator> {
-  const drawer = page.getByRole('dialog', { name: 'Termul', exact: true })
+  const drawer = page.getByRole('dialog', { name: 'itzTerm', exact: true })
   await expect(drawer).toBeVisible()
   // The sheet slides in from the left: act only once it has landed.
   await expect
@@ -415,7 +415,7 @@ test.describe('drawer navigation focus', () => {
     // Opening the drawer from ☰ and dismissing it instead goes back to ☰.
     await openDrawer(page)
     await page.keyboard.press('Escape')
-    await expect(page.getByRole('dialog', { name: 'Termul', exact: true })).toBeHidden()
+    await expect(page.getByRole('dialog', { name: 'itzTerm', exact: true })).toBeHidden()
     await expect(menuButton(page)).toBeFocused()
   })
 
@@ -555,7 +555,7 @@ test.describe('drawer opener', () => {
     await pill.tap()
     await settledDrawer(page)
     await page.goBack()
-    await expect(page.getByRole('dialog', { name: 'Termul', exact: true })).toBeHidden()
+    await expect(page.getByRole('dialog', { name: 'itzTerm', exact: true })).toBeHidden()
     await expect(pill).toBeFocused()
 
     // ☰ records itself the same way after the pill: the record is per open.
@@ -631,7 +631,7 @@ test.describe('shell sheets focus return', () => {
     await more.tap()
     await sheet.getByRole('button', { name: 'Close chat', exact: true }).tap()
     await expect(sheet).toBeHidden()
-    await expect(title(page)).toHaveText('Termul')
+    await expect(title(page)).toHaveText('itzTerm')
     await expect(title(page)).toHaveId(SHELL_TITLE_ID)
     await expect(title(page)).toBeFocused()
   })

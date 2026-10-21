@@ -76,7 +76,7 @@ export function menuMotion(reduced: boolean): {
  * the visible surface. It stays mounted
  * while it closes, so a close that is stopped halfway reverses smoothly, and
  * it grows from the trigger (Radix transform origin). The global Radix
- * keyframes are turned off for it (`termul-popover-transition`).
+ * keyframes are turned off for it (`itzterm-popover-transition`).
  */
 export function AnimatedMenuContent({
   open,
@@ -104,7 +104,7 @@ export function AnimatedMenuContent({
       // (border, fill, shadow) is the animated layer, so it scales and fades
       // as one piece instead of the frame appearing before its content.
       className={cn(
-        'termul-popover-transition w-auto border-0 bg-transparent p-0 shadow-none data-[state=closed]:animate-none data-[state=open]:animate-none',
+        'itzterm-popover-transition w-auto border-0 bg-transparent p-0 shadow-none data-[state=closed]:animate-none data-[state=open]:animate-none',
         contentClassName
       )}
       {...props}

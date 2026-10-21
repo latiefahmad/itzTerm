@@ -339,7 +339,9 @@ describe('MobileDrawerSectionList editors', () => {
     expect(icon('types.d.ts')).toHaveAttribute('data-name', 'types.d.ts')
     expect(icon('Main.CS')).toHaveAttribute('data-name', 'Main.CS')
     expect(
-      screen.getByRole('group', { name: 'Editors' }).querySelector('svg[data-termul-icon="Pencil"]')
+      screen
+        .getByRole('group', { name: 'Editors' })
+        .querySelector('svg[data-itzterm-icon="Pencil"]')
     ).not.toBeInTheDocument()
   })
 
@@ -348,7 +350,7 @@ describe('MobileDrawerSectionList editors', () => {
     renderList({ section: 'editors' })
 
     const row = screen.getByRole('button', { name: 'Plan.figcraft' })
-    expect(row.querySelector('svg[data-termul-icon="Edit2"]')).toBeInTheDocument()
+    expect(row.querySelector('svg[data-itzterm-icon="Edit2"]')).toBeInTheDocument()
   })
 
   it('hides the dirty dot from assistive tech and adds sr-only text', () => {

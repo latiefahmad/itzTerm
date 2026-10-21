@@ -71,7 +71,7 @@ describe('agent prose path links with #L line fragments', () => {
     const container = renderChat(markdown)
 
     const button = await waitFor(() => {
-      const found = container.querySelector<HTMLElement>('button[data-testid="termul-file-path"]')
+      const found = container.querySelector<HTMLElement>('button[data-testid="itzterm-file-path"]')
       expect(found).not.toBeNull()
       return found as HTMLElement
     })
@@ -95,6 +95,6 @@ describe('agent prose path links with #L line fragments', () => {
     const container = renderChat(markdown)
 
     await waitFor(() => expect(container.textContent).not.toBe(''))
-    expect(container.querySelector('[data-testid="termul-file-path"]')).toBeNull()
+    expect(container.querySelector('[data-testid="itzterm-file-path"]')).toBeNull()
   })
 })

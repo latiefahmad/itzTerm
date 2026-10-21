@@ -27,7 +27,7 @@ function renderSheet(overrides: Partial<SheetProps> = {}) {
     open: true,
     onOpenChange: vi.fn(),
     title: 'Fix auth redirect loop',
-    subtitle: 'termul · chat/ab12 · Worktree',
+    subtitle: 'itzterm · chat/ab12 · Worktree',
     onCloseAutoFocus: vi.fn(),
     onItemChosen: vi.fn(),
     ...allCallbacks(),
@@ -51,14 +51,14 @@ describe('MobileHeaderMoreSheet', () => {
     const dialog = await screen.findByRole('dialog')
     expect(dialog.id).toBe('mobile-header-more-sheet')
     expect(dialog).toHaveAccessibleName('Fix auth redirect loop')
-    expect(dialog).toHaveAccessibleDescription('termul · chat/ab12 · Worktree')
+    expect(dialog).toHaveAccessibleDescription('itzterm · chat/ab12 · Worktree')
     const cls = dialog.className
     expect(cls).toContain('rounded-t-xl')
     expect(cls).toContain('max-h-[85dvh]')
     expect(cls).toContain('overflow-y-auto')
     expect(cls).toContain('overscroll-contain')
     expect(cls).toContain('pb-[max(0.5rem,env(safe-area-inset-bottom))]')
-    const description = screen.getByText('termul · chat/ab12 · Worktree')
+    const description = screen.getByText('itzterm · chat/ab12 · Worktree')
     expect(description.className).toContain('text-xs')
     expect(description.className).toContain('text-muted-foreground')
   })
@@ -198,7 +198,7 @@ describe('MobileHeaderMoreSheet', () => {
             open={open}
             onOpenChange={setOpen}
             title="Chat"
-            subtitle="termul"
+            subtitle="itzterm"
             onCloseAutoFocus={closeAutoFocus}
             onItemChosen={() => setSheetFocusDestination('header-more-sheet', titleRef.current)}
             onOpenFiles={onFiles}

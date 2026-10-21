@@ -69,7 +69,7 @@ pub async fn install(
         Ok(req) => req,
         Err(error) => {
             warn!(
-                target: "termul::web::install_api",
+                target: "itzterm::web::install_api",
                 session = crate::logging::run_id(),
                 error = %error,
                 "install: payload validation failed (deny_unknown_fields or malformed JSON)"
@@ -104,7 +104,7 @@ pub async fn install(
             match service.install_by_id(&req.agent_id).await {
                 Ok(outcome) => {
                     info!(
-                        target: "termul::web::install_api",
+                        target: "itzterm::web::install_api",
                         session = crate::logging::run_id(),
                         agent = %req.agent_id,
                         "install: success"
@@ -114,7 +114,7 @@ pub async fn install(
                 Err(error) => {
                     let code = error.code();
                     warn!(
-                        target: "termul::web::install_api",
+                        target: "itzterm::web::install_api",
                         session = crate::logging::run_id(),
                         agent = %req.agent_id,
                         code,

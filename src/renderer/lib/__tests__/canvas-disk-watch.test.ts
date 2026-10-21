@@ -1,5 +1,5 @@
 /**
- * Termul's file watcher events reach the canvas whose document changed,
+ * itzTerm's file watcher events reach the canvas whose document changed,
  * once per burst, and nothing else.
  */
 

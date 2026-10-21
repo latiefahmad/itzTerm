@@ -122,7 +122,7 @@ beforeEach(() => {
     projects: [
       {
         id: 'p1',
-        name: 'termul',
+        name: 'itzterm',
         color: 'blue',
         path: '/work',
         gitBranch: 'main',

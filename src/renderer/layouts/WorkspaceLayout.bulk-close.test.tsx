@@ -261,7 +261,7 @@ vi.mock('@/stores/app-settings-store', () => ({
   useUiZoomLevel: () => 1,
   useDefaultShell: () => 'bash',
   useConfirmTerminalClose: () => confirmTerminalCloseRef.current,
-  useColorTheme: () => 'termul',
+  useColorTheme: () => 'itzterm',
   useAppearanceMode: () => 'dark'
 }))
 

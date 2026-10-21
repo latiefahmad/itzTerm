@@ -111,7 +111,7 @@ async function boot(page: Page, project: Project): Promise<void> {
   })
   await page.goto(`${E2E_BASE_URL}/#token=${E2E_TOKEN}`)
   await page.waitForFunction(
-    (token) => localStorage.getItem('termul.webAuthToken') === token,
+    (token) => localStorage.getItem('itzterm.webAuthToken') === token,
     E2E_TOKEN
   )
   await page.goto(`${E2E_BASE_URL}/#/`)
@@ -217,13 +217,13 @@ async function announceBarrier(
   await page.getByRole('textbox', { name: 'Search chats' }).fill(search.query)
   await expect(liveRegion(page)).toHaveText(search.count)
   await page.keyboard.press('Escape')
-  await expect(page.getByRole('dialog', { name: 'Termul', exact: true })).toBeHidden()
+  await expect(page.getByRole('dialog', { name: 'itzTerm', exact: true })).toBeHidden()
 }
 
 /** Tap the shell's ☰ and wait for the drawer to be on screen. */
 async function openDrawer(page: Page): Promise<Locator> {
   await page.getByRole('button', { name: 'Open menu' }).tap()
-  const drawer = page.getByRole('dialog', { name: 'Termul', exact: true })
+  const drawer = page.getByRole('dialog', { name: 'itzTerm', exact: true })
   await expect(drawer).toBeVisible()
   return drawer
 }

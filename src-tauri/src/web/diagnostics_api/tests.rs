@@ -278,7 +278,7 @@ async fn report_bug_inner_admitted_returns_the_submit_result() {
         assert_eq!(title, "the title");
         assert_eq!(body, "the body");
         BugReportSubmitResult::Submitted {
-            issue_url: "https://github.com/gnoviawan/termul/issues/1".to_string(),
+            issue_url: "https://github.com/latiefahmad/itzTerm/issues/1".to_string(),
         }
     })
     .await;
@@ -286,7 +286,7 @@ async fn report_bug_inner_admitted_returns_the_submit_result() {
     assert!(body.success, "{:?}", body.error);
     match body.data.expect("data") {
         BugReportSubmitResult::Submitted { issue_url } => {
-            assert_eq!(issue_url, "https://github.com/gnoviawan/termul/issues/1")
+            assert_eq!(issue_url, "https://github.com/latiefahmad/itzTerm/issues/1")
         }
         other => panic!("expected submitted, got {other:?}"),
     }
@@ -329,15 +329,15 @@ fn submit_request_deserializes_the_camel_case_body() {
 
 #[test]
 fn log_path_candidates_follow_the_deployment_mode() {
-    // Standalone `termul-server` (shared_live_writes_denied: false): only
-    // the server log — a stale desktop termul.log must not be attached.
+    // Standalone `itzterm-server` (shared_live_writes_denied: false): only
+    // the server log — a stale desktop itzterm.log must not be attached.
     for path in log_path_candidates(false) {
-        assert!(path.ends_with("termul-server.log"), "{path:?}");
+        assert!(path.ends_with("itzterm-server.log"), "{path:?}");
     }
     // Desktop shared-live host (true): only the desktop app_log_dir
-    // termul.log — a stale termul-server.log must not win.
+    // itzterm.log — a stale itzterm-server.log must not win.
     for path in log_path_candidates(true) {
-        assert!(path.ends_with("termul.log"), "{path:?}");
+        assert!(path.ends_with("itzterm.log"), "{path:?}");
     }
     // On supported targets each mode derives its one candidate.
     #[cfg(any(unix, windows))]
@@ -350,7 +350,7 @@ fn log_path_candidates_follow_the_deployment_mode() {
         assert!(
             desktop[0]
                 .to_string_lossy()
-                .contains("com.termul-manager.app"),
+                .contains("com.itzterm.app"),
             "desktop candidate must be the app_log_dir layout: {desktop:?}"
         );
     }

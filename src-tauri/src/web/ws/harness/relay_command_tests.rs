@@ -16,7 +16,7 @@ use crate::web::command_ledger::test_clock::ManualClock;
 use crate::web::command_ledger::{CommandLedger, BARE_HORIZON_FACTOR};
 
 const RETENTION: Duration = Duration::from_secs(600);
-const SKIP_ENV: &str = "TERMUL_SKIP_REAL_LOOP_TESTS";
+const SKIP_ENV: &str = "ITZTERM_SKIP_REAL_LOOP_TESTS";
 
 /// Numbers sessions `mock-1`, `mock-2`, ... Every `session/new` writes the
 /// `MOCK_READY` marker, then waits while the `MOCK_GATE` file exists.
@@ -194,7 +194,7 @@ impl Drop for RealHost {
 }
 
 fn temp_root(tag: &str) -> PathBuf {
-    let root = std::env::temp_dir().join(format!("termul-ws-commands-{tag}-{}", uuid::Uuid::new_v4()));
+    let root = std::env::temp_dir().join(format!("itzterm-ws-commands-{tag}-{}", uuid::Uuid::new_v4()));
     std::fs::create_dir_all(&root).unwrap();
     root
 }

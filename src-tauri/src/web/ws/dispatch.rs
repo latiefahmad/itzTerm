@@ -16,7 +16,7 @@ pub(super) async fn cleanup_connection_subscriptions(
         relay.unsubscribe(&session_id, client_id);
     }
     info!(
-        target: "termul::web::ws",
+        target: "itzterm::web::ws",
         session_count,
         "connection subscriptions cleaned up"
     );
@@ -154,7 +154,7 @@ pub(super) async fn route_request(req: WsRequest, env: &HandlerEnv) -> WsReply {
         "remove_project" => handle_remove_project(id, &req.payload, env).await,
         "spawn_agent" => handle_spawn_agent(id, &req.payload, acp, req.command_id.clone()).await,
         // Claude Accounts: view and choose only. Add, sign-in, rename and
-        // remove stay on the host (desktop UI / `termul-server claude account`).
+        // remove stay on the host (desktop UI / `itzterm-server claude account`).
         "list_claude_accounts" => handle_list_claude_accounts(id, acp).await,
         "list_claude_usage" => handle_list_claude_usage(id, &req.payload, acp).await,
         "set_default_claude_account" => handle_set_default_claude_account(id, &req.payload, acp).await,

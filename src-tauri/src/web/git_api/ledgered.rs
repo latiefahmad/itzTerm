@@ -34,7 +34,7 @@ pub(crate) fn expected_head_malformed(head: Option<&str>) -> bool {
     head.is_some_and(|head| !git_tracker::is_valid_expected_head(head))
 }
 
-/// The commit a resend made: found through its `Termul-Command-Id` trailer
+/// The commit a resend made: found through its `itzTerm-Command-Id` trailer
 /// between `expected_head` and `HEAD`.
 pub(crate) async fn commit_entity(
     cwd: String,

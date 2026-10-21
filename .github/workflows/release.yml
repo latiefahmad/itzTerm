@@ -92,7 +92,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const tagName = context.ref.replace('refs/tags/', '')
-            const releaseName = `Termul Manager ${tagName}`
+            const releaseName = `itzTerm ${tagName}`
             const releaseBody = process.env.RELEASE_BODY || ''
             const prerelease = process.env.IS_PRERELEASE === 'true'
 
@@ -495,7 +495,7 @@ jobs:
   # web_embed_missing compile_error in assets.rs; the ordering here keeps the
   # embed non-empty).
   standalone-server:
-    name: Build termul-server (linux-${{ matrix.arch }})
+    name: Build itzterm-server (linux-${{ matrix.arch }})
     needs: changelog
     if: github.event_name == 'push'
     runs-on: ${{ matrix.runner }}
@@ -506,13 +506,13 @@ jobs:
           - arch: x64
             runner: ubuntu-22.04
             rust_target: x86_64-unknown-linux-gnu
-            asset_name: termul-server
+            asset_name: itzterm-server
             platform_key: linux-x86_64-server
             elf_machine: 'x86-64'
           - arch: arm64
             runner: ubuntu-22.04-arm
             rust_target: aarch64-unknown-linux-gnu
-            asset_name: termul-server-linux-aarch64
+            asset_name: itzterm-server-linux-aarch64
             platform_key: linux-aarch64-server
             elf_machine: 'ARM aarch64'
     steps:
@@ -560,7 +560,7 @@ jobs:
           TAG_VERSION: ${{ needs.changelog.outputs.normalized_version }}
         run: bun scripts/align-version.ts
 
-      # ORDER MATTERS: web bundle before termul-server release build (rust-embed).
+      # ORDER MATTERS: web bundle before itzterm-server release build (rust-embed).
       - name: Build web client (dist-web/)
         run: bun run build:web
 
@@ -576,40 +576,40 @@ jobs:
       - name: Assert canvas/bundle/index.html exists
         run: test -f canvas/bundle/index.html && test -s canvas/bundle/index.html
 
-      - name: Build termul-server (linux-${{ matrix.arch }} release)
+      - name: Build itzterm-server (linux-${{ matrix.arch }} release)
         working-directory: src-tauri
         # Bake the signing pubkey into the binary at compile time so the opt-in
         # self-update subsystem can verify downloaded binaries (option_env!).
         env:
           TAURI_SIGNING_PUBLIC_KEY: ${{ secrets.TAURI_SIGNING_PUBLIC_KEY }}
         run: >
-          cargo build --release --bin termul-server
+          cargo build --release --bin itzterm-server
           --features standalone-server
 
-      - name: Locate termul-server binary
+      - name: Locate itzterm-server binary
         working-directory: src-tauri
         shell: bash
         run: |
-          echo "Searching for termul-server binary in target/..."
-          find target -name 'termul-server' -type f -print || true
-          ls -la target/release/termul-server 2>/dev/null || echo "target/release/termul-server NOT FOUND"
+          echo "Searching for itzterm-server binary in target/..."
+          find target -name 'itzterm-server' -type f -print || true
+          ls -la target/release/itzterm-server 2>/dev/null || echo "target/release/itzterm-server NOT FOUND"
 
-      - name: Verify termul-server binary architecture
+      - name: Verify itzterm-server binary architecture
         working-directory: src-tauri
         env:
           ELF_MACHINE: ${{ matrix.elf_machine }}
         run: |
-          file target/release/termul-server
-          file target/release/termul-server | grep -F "$ELF_MACHINE"
+          file target/release/itzterm-server
+          file target/release/itzterm-server | grep -F "$ELF_MACHINE"
 
-      - name: Sign termul-server binary
+      - name: Sign itzterm-server binary
         working-directory: src-tauri
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
-          bun run tauri signer sign "$(pwd)/target/release/termul-server"
-          test -f "$(pwd)/target/release/termul-server.sig"
+          bun run tauri signer sign "$(pwd)/target/release/itzterm-server"
+          test -f "$(pwd)/target/release/itzterm-server.sig"
 
       - name: Prepare server manifest fragment
         shell: bash
@@ -620,23 +620,23 @@ jobs:
           PLATFORM_KEY: ${{ matrix.platform_key }}
         run: |
           node scripts/release/prepare-server-artifacts.mjs \
-            --signature src-tauri/target/release/termul-server.sig \
+            --signature src-tauri/target/release/itzterm-server.sig \
             --binary-name "$ASSET_NAME" \
             --platform-key "$PLATFORM_KEY" \
             --tag "$TAG" \
             --version "$VERSION" \
             --output server-collected/server-manifest.json
 
-      - name: Stage termul-server binary + signature
+      - name: Stage itzterm-server binary + signature
         shell: bash
         env:
           ASSET_NAME: ${{ matrix.asset_name }}
         run: |
           mkdir -p server-collected
-          cp src-tauri/target/release/termul-server "server-collected/$ASSET_NAME"
-          cp src-tauri/target/release/termul-server.sig "server-collected/$ASSET_NAME.sig"
+          cp src-tauri/target/release/itzterm-server "server-collected/$ASSET_NAME"
+          cp src-tauri/target/release/itzterm-server.sig "server-collected/$ASSET_NAME.sig"
 
-      - name: Upload termul-server workflow artifact
+      - name: Upload itzterm-server workflow artifact
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
         with:
           name: release-standalone-server-${{ matrix.arch }}
@@ -703,7 +703,7 @@ jobs:
 
           # Standalone server binaries: one workflow artifact per arch (<arch>:<asset>:<key>).
           # Both are required so a release never ships without an arm64 server.
-          for entry in x64:termul-server:linux-x86_64-server arm64:termul-server-linux-aarch64:linux-aarch64-server; do
+          for entry in x64:itzterm-server:linux-x86_64-server arm64:itzterm-server-linux-aarch64:linux-aarch64-server; do
             IFS=: read -r server_arch server_asset server_key <<< "$entry"
             server_root="release-inputs/release-standalone-server-$server_arch"
             if [[ ! -s "$server_root/server-manifest.json" || ! -s "$server_root/$server_asset" || ! -s "$server_root/$server_asset.sig" ]]; then
@@ -785,7 +785,7 @@ jobs:
               gh release edit insider --target "$SHA" --prerelease
             else
               gh release create insider --target "$SHA" \
-                --title "Termul Insider" \
+                --title "itzTerm Insider" \
                 --notes "Latest Insider (release candidate) channel. See the versioned RC release for asset details." \
                 --prerelease
             fi
@@ -807,7 +807,7 @@ jobs:
               repo: context.repo.repo,
               release_id: Number(process.env.RELEASE_ID),
               tag_name: tagName,
-              name: `Termul Manager ${tagName}`,
+              name: `itzTerm ${tagName}`,
               body: process.env.RELEASE_BODY || '',
               draft: false,
               prerelease: process.env.IS_PRERELEASE === 'true',
@@ -825,7 +825,7 @@ jobs:
     secrets:
       HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
-  # The image downloads and verifies the published termul-server assets, so it
+  # The image downloads and verifies the published itzterm-server assets, so it
   # runs after publish_release and only on tag pushes.
   container_image:
     name: Publish container image
@@ -966,5 +966,5 @@ jobs:
           STABLE_VERSION: ${{ inputs.stable_version }}
           OWNER: ${{ github.repository_owner }}
         run: |
-          image="ghcr.io/${OWNER,,}/termul-server"
+          image="ghcr.io/${OWNER,,}/itzterm-server"
           docker buildx imagetools create --tag "$image:latest" "$image:${STABLE_VERSION//+/-}"

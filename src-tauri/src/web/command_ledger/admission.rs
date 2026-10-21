@@ -119,7 +119,7 @@ where
                 if class.creates_entity() {
                     if let Some(found) = lookup().await {
                         info!(
-                            target: "termul::web::command_ledger",
+                            target: "itzterm::web::command_ledger",
                             kind,
                             "create resend answered from the stamped entity"
                         );
@@ -170,7 +170,7 @@ where
                 if class.creates_entity() {
                     if let Some(found) = lookup().await {
                         info!(
-                            target: "termul::web::command_ledger",
+                            target: "itzterm::web::command_ledger",
                             kind,
                             "create resend after eviction answered from the stamped entity"
                         );
@@ -178,7 +178,7 @@ where
                     }
                 }
                 warn!(
-                    target: "termul::web::command_ledger",
+                    target: "itzterm::web::command_ledger",
                     kind,
                     "resend of a command with no stored outcome; not re-executed"
                 );
@@ -186,7 +186,7 @@ where
             }
             Begin::Conflict => {
                 warn!(
-                    target: "termul::web::command_ledger",
+                    target: "itzterm::web::command_ledger",
                     kind,
                     "commandId reused for a different request"
                 );
