@@ -22,7 +22,7 @@ describe('ProjectIcon', () => {
     expect(container.querySelector('img')).toBeNull()
     const tile = container.querySelector('span')
     expect(tile).not.toBeNull()
-    expect(tile?.textContent).toBe('T')
+    expect(tile?.textContent).toBe('I')
     expect(tile?.className).toContain('bg-project-purple')
     expect(tile?.className).toContain('uppercase')
     // Decorative glyph inside rows that already carry the name.

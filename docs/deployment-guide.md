@@ -122,9 +122,9 @@ The macOS collection gate requires exactly one `.app` and one DMG, resolves the 
 codesign --verify --deep --strict --verbose=2 "itzTerm.app"
 spctl --assess --type execute --verbose=4 "itzTerm.app"
 xcrun stapler validate "itzTerm.app"
-codesign --verify --strict --verbose=2 itzTerm.Manager_*.dmg
-spctl --assess --type open --context context:primary-signature --verbose=4 itzTerm.Manager_*.dmg
-xcrun stapler validate itzTerm.Manager_*.dmg
+codesign --verify --strict --verbose=2 itzTerm_*.dmg
+spctl --assess --type open --context context:primary-signature --verbose=4 itzTerm_*.dmg
+xcrun stapler validate itzTerm_*.dmg
 ```
 
 After maintainers provision the Apple secrets, repeat these checks against both architectures on a real release. Existing v0.4.8 GitHub assets cannot be retroactively notarized.
