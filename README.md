@@ -387,6 +387,20 @@ bun run lint             # Linting
 bun run tauri <command>  # Direct Tauri CLI access
 ```
 
+## 🚀 Releases
+
+Pushing a tag `v*` builds all three platforms and publishes the GitHub release, changelog and updater manifest automatically:
+
+```bash
+git tag v1.2.0           # version must match package.json / tauri.conf.json / Cargo.toml
+git push origin v1.2.0
+```
+
+- CI runs the Windows (MSI + NSIS), Linux (AppImage/deb/rpm) and macOS (dmg) builds, then creates the Release with all bundles, signatures and `latest.json` for the auto-updater.
+- Release notes come from `git cliff` over conventional commits since the previous tag (fallback: full git log).
+- `CHANGELOG.md` is pinned to the released version by the workflow.
+- The updater signing key lives in the `TAURI_SIGNING_PRIVATE_KEY` repository secret; locally set the same variable (key content) to build updater artifacts.
+
 ## SSH Development Notes
 
 Design and decisions: [`docs/ssh-native.md`](docs/ssh-native.md).
