@@ -1,0 +1,828 @@
+import type { DirectoryEntry } from '@shared/types/filesystem.types'
+import { act, renderHook } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+const mockEntries: DirectoryEntry[] = [
+  {
+    name: 'src',
+    path: '/project/src',
+    type: 'directory',
+    extension: null,
+    size: 0,
+    modifiedAt: 1000
+  },
+  {
+    name: 'index.ts',
+    path: '/project/index.ts',
+    type: 'file',
+    extension: '.ts',
+    size: 100,
+    modifiedAt: 1000
+  }
+]
+
+const { mockApi, fileNameBatchCbs } = vi.hoisted(() => ({
+  // The store subscribes once per module load, so captured callbacks persist
+  // across tests (never cleared).
+  fileNameBatchCbs: [] as Array<(e: { searchId: string; files: unknown[] }) => void>,
+  mockApi: {
+    filesystem: {
+      readDirectory: vi.fn(),
+      watchDirectory: vi.fn(),
+      unwatchDirectory: vi.fn(),
+      searchContentStreamCancel: vi.fn(),
+      searchFileNamesStreamCancel: vi.fn(),
+      searchContentStreamStart: vi.fn(),
+      searchFileNamesStreamStart: vi.fn(),
+      onSearchContentBatch: vi.fn(() => () => {}),
+      onSearchContentDone: vi.fn(() => () => {}),
+      onSearchFileNamesBatch: vi.fn((cb: (e: { searchId: string; files: unknown[] }) => void) => {
+        fileNameBatchCbs.push(cb)
+        return () => {}
+      }),
+      onSearchFileNamesDone: vi.fn(() => () => {})
+    }
+  }
+}))
+
+vi.mock('@/lib/api', () => ({
+  filesystemApi: mockApi.filesystem,
+  persistenceApi: {
+    read: vi.fn(),
+    write: vi.fn(),
+    delete: vi.fn(),
+    writeDebounced: vi.fn().mockResolvedValue({ success: true, data: undefined })
+  }
+}))
+const mockLogFrontendError = vi.hoisted(() => vi.fn())
+vi.mock('@/lib/log-api', () => ({ logFrontendError: mockLogFrontendError }))
+
+import { useFileExplorerStore, useFileExplorerVisible } from './file-explorer-store'
+import { resetShellLayoutStoreForTests, useShellLayoutStore } from './shell-layout-store'
+
+beforeEach(() => {
+  mockApi.filesystem.readDirectory
+    .mockReset()
+    .mockResolvedValue({ success: true, data: mockEntries })
+  mockApi.filesystem.watchDirectory.mockReset().mockResolvedValue({ success: true })
+  mockApi.filesystem.unwatchDirectory.mockReset().mockResolvedValue({ success: true })
+
+  useFileExplorerStore.setState({
+    rootPath: null,
+    expandedDirs: new Set<string>(),
+    directoryContents: new Map<string, DirectoryEntry[]>(),
+    selectedPaths: new Set<string>(),
+    lastClickedPath: null,
+    clipboard: null,
+    loadingDirs: new Set<string>(),
+    rootLoadError: null
+  })
+  resetShellLayoutStoreForTests()
+  useShellLayoutStore.setState({ status: 'ready' })
+})
+
+describe('file-explorer-store', () => {
+  describe('setRootPath', () => {
+    it('should set root path and reset state', () => {
+      const store = useFileExplorerStore.getState()
+      store.setRootPath('/project')
+
+      const state = useFileExplorerStore.getState()
+      expect(state.rootPath).toBe('/project')
+      expect(state.expandedDirs.size).toBe(0)
+      expect(state.directoryContents.size).toBe(0)
+      expect(state.selectedPaths.size).toBe(0)
+      expect(state.rootLoadError).toBeNull()
+    })
+
+    it('should normalize backslashes in rootPath', () => {
+      const store = useFileExplorerStore.getState()
+      store.setRootPath('C:\\Users\\test\\project')
+
+      expect(useFileExplorerStore.getState().rootPath).toBe('C:/Users/test/project')
+    })
+
+    it('should set rootPath to null', () => {
+      const store = useFileExplorerStore.getState()
+      store.setRootPath('/something')
+      store.setRootPath(null)
+
+      expect(useFileExplorerStore.getState().rootPath).toBeNull()
+    })
+
+    it('should unwatch previously expanded directories', () => {
+      useFileExplorerStore.setState({
+        expandedDirs: new Set(['/project', '/project/src'])
+      })
+
+      useFileExplorerStore.getState().setRootPath('/other')
+
+      expect(mockApi.filesystem.unwatchDirectory).toHaveBeenCalledWith('/project')
+      expect(mockApi.filesystem.unwatchDirectory).toHaveBeenCalledWith('/project/src')
+    })
+  })
+
+  describe('toggleDirectory - expand', () => {
+    it('should expand a directory and store its contents', async () => {
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      const state = useFileExplorerStore.getState()
+      expect(state.expandedDirs.has('/project')).toBe(true)
+      expect(state.directoryContents.get('/project')).toEqual(mockEntries)
+    })
+
+    it('should call readDirectory and watchDirectory on expand', async () => {
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+      expect(mockApi.filesystem.watchDirectory).toHaveBeenCalledWith('/project')
+    })
+
+    it('should normalize backslash paths on expand', async () => {
+      await useFileExplorerStore.getState().toggleDirectory('C:\\Users\\project')
+
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('C:/Users/project')
+      expect(useFileExplorerStore.getState().expandedDirs.has('C:/Users/project')).toBe(true)
+    })
+
+    it('should clear loadingDirs after expand completes', async () => {
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      expect(useFileExplorerStore.getState().loadingDirs.size).toBe(0)
+    })
+
+    it('should clear loadingDirs even when readDirectory fails', async () => {
+      mockApi.filesystem.readDirectory.mockRejectedValueOnce(new Error('fail'))
+
+      try {
+        await useFileExplorerStore.getState().toggleDirectory('/project')
+      } catch {
+        // Expected to throw
+      }
+
+      expect(useFileExplorerStore.getState().loadingDirs.size).toBe(0)
+    })
+
+    it('should not expand if already loading', async () => {
+      useFileExplorerStore.setState({
+        loadingDirs: new Set(['/project'])
+      })
+
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      expect(mockApi.filesystem.readDirectory).not.toHaveBeenCalled()
+    })
+
+    it('should not watch when readDirectory returns success: false', async () => {
+      mockApi.filesystem.readDirectory.mockResolvedValueOnce({
+        success: false,
+        error: 'denied',
+        code: 'PATH_INVALID'
+      })
+
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      expect(mockApi.filesystem.watchDirectory).not.toHaveBeenCalled()
+      expect(useFileExplorerStore.getState().expandedDirs.size).toBe(0)
+    })
+
+    it('should set rootLoadError for root failure when readDirectory returns success: false', async () => {
+      useFileExplorerStore.getState().setRootPath('/project')
+      mockApi.filesystem.readDirectory.mockResolvedValueOnce({
+        success: false,
+        error: 'denied',
+        code: 'PATH_INVALID'
+      })
+
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      expect(useFileExplorerStore.getState().rootLoadError).toEqual({
+        message: 'denied',
+        code: 'PATH_INVALID'
+      })
+    })
+
+    it('should set rootLoadError for root failure when readDirectory throws', async () => {
+      useFileExplorerStore.getState().setRootPath('/project')
+      mockApi.filesystem.readDirectory.mockRejectedValueOnce(new Error('boom'))
+
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      expect(useFileExplorerStore.getState().rootLoadError).toEqual({
+        message: 'boom',
+        code: 'UNKNOWN_ERROR'
+      })
+    })
+
+    it('should clear rootLoadError after successful root reload', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        rootLoadError: { message: 'failed', code: 'UNKNOWN_ERROR' }
+      })
+
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      expect(useFileExplorerStore.getState().rootLoadError).toBeNull()
+      expect(useFileExplorerStore.getState().directoryContents.get('/project')).toEqual(mockEntries)
+    })
+  })
+
+  describe('toggleDirectory - collapse', () => {
+    beforeEach(async () => {
+      // Expand root and a child so we have nested state
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+      vi.clearAllMocks()
+
+      // Manually add a child expanded dir
+      const state = useFileExplorerStore.getState()
+      const newExpanded = new Set(state.expandedDirs)
+      newExpanded.add('/project/src')
+      const newContents = new Map(state.directoryContents)
+      newContents.set('/project/src', [])
+      useFileExplorerStore.setState({
+        expandedDirs: newExpanded,
+        directoryContents: newContents
+      })
+    })
+
+    it('should collapse a directory and defer content removal until finalize', async () => {
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      let state = useFileExplorerStore.getState()
+      expect(state.expandedDirs.has('/project')).toBe(false)
+      expect(state.directoryContents.has('/project')).toBe(true)
+      expect(state.pendingCollapses.has('/project')).toBe(true)
+
+      useFileExplorerStore.getState().finalizeDirectoryCollapse('/project')
+
+      state = useFileExplorerStore.getState()
+      expect(state.directoryContents.has('/project')).toBe(false)
+      expect(state.pendingCollapses.has('/project')).toBe(false)
+    })
+
+    it('should also collapse child directories', async () => {
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+
+      const state = useFileExplorerStore.getState()
+      expect(state.expandedDirs.has('/project/src')).toBe(false)
+
+      useFileExplorerStore.getState().finalizeDirectoryCollapse('/project')
+      expect(useFileExplorerStore.getState().directoryContents.has('/project/src')).toBe(false)
+    })
+
+    it('should unwatch collapsed directory and its children after finalize', async () => {
+      await useFileExplorerStore.getState().toggleDirectory('/project')
+      vi.clearAllMocks()
+
+      useFileExplorerStore.getState().finalizeDirectoryCollapse('/project')
+
+      expect(mockApi.filesystem.unwatchDirectory).toHaveBeenCalledWith('/project')
+      expect(mockApi.filesystem.unwatchDirectory).toHaveBeenCalledWith('/project/src')
+    })
+
+    it('should match child directories with normalized paths on Windows', async () => {
+      // Set up state with Windows-style paths (already normalized by store)
+      useFileExplorerStore.setState({
+        expandedDirs: new Set(['C:/Users/project', 'C:/Users/project/src']),
+        directoryContents: new Map([
+          ['C:/Users/project', mockEntries],
+          ['C:/Users/project/src', []]
+        ])
+      })
+
+      // Collapse using backslash path — should normalize and match children
+      await useFileExplorerStore.getState().toggleDirectory('C:\\Users\\project')
+
+      const state = useFileExplorerStore.getState()
+      expect(state.expandedDirs.has('C:/Users/project')).toBe(false)
+      expect(state.expandedDirs.has('C:/Users/project/src')).toBe(false)
+    })
+  })
+
+  describe('refreshDirectory', () => {
+    it('should update contents for a directory', async () => {
+      const newEntries: DirectoryEntry[] = [
+        {
+          name: 'new.ts',
+          path: '/project/new.ts',
+          type: 'file',
+          extension: '.ts',
+          size: 50,
+          modifiedAt: 2000
+        }
+      ]
+      mockApi.filesystem.readDirectory.mockResolvedValueOnce({ success: true, data: newEntries })
+
+      useFileExplorerStore.setState({
+        directoryContents: new Map([['/project', mockEntries]])
+      })
+
+      await useFileExplorerStore.getState().refreshDirectory('/project')
+
+      expect(useFileExplorerStore.getState().directoryContents.get('/project')).toEqual(newEntries)
+    })
+
+    it('should normalize path before refresh', async () => {
+      await useFileExplorerStore.getState().refreshDirectory('C:\\Users\\project')
+
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('C:/Users/project')
+    })
+
+    it('should not throw when refresh fails', async () => {
+      mockApi.filesystem.readDirectory.mockRejectedValueOnce(new Error('fail'))
+
+      await expect(
+        useFileExplorerStore.getState().refreshDirectory('/project')
+      ).resolves.not.toThrow()
+    })
+  })
+
+  describe('refreshTree (GH-540)', () => {
+    it('re-reads the root and every expanded directory', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        directoryContents: new Map<string, DirectoryEntry[]>([
+          ['/project', mockEntries],
+          ['/project/src', mockEntries],
+          ['/project/docs', mockEntries]
+        ]),
+        expandedDirs: new Set(['/project/src', '/project/docs'])
+      })
+
+      await useFileExplorerStore.getState().refreshTree()
+
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project/src')
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project/docs')
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledTimes(3)
+    })
+
+    it('preserves expanded state and selection', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        directoryContents: new Map<string, DirectoryEntry[]>([['/project', mockEntries]]),
+        expandedDirs: new Set(['/project/src']),
+        selectedPaths: new Set(['/project/index.ts']),
+        lastClickedPath: '/project/index.ts'
+      })
+
+      await useFileExplorerStore.getState().refreshTree()
+
+      const state = useFileExplorerStore.getState()
+      expect(state.expandedDirs).toEqual(new Set(['/project/src']))
+      expect(state.selectedPaths).toEqual(new Set(['/project/index.ts']))
+      expect(state.lastClickedPath).toBe('/project/index.ts')
+    })
+
+    it('refreshes only the root when nothing else is expanded (no duplicates)', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        directoryContents: new Map<string, DirectoryEntry[]>([['/project', mockEntries]]),
+        expandedDirs: new Set(['/project'])
+      })
+
+      await useFileExplorerStore.getState().refreshTree()
+
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledTimes(1)
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+    })
+
+    it('is a no-op when no project root is set', async () => {
+      await useFileExplorerStore.getState().refreshTree()
+
+      expect(mockApi.filesystem.readDirectory).not.toHaveBeenCalled()
+    })
+
+    it('skips directories that were collapsed while the refresh is running', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        directoryContents: new Map<string, DirectoryEntry[]>([
+          ['/project', mockEntries],
+          ['/project/src', mockEntries],
+          ['/project/docs', mockEntries]
+        ]),
+        expandedDirs: new Set(['/project/src', '/project/docs'])
+      })
+
+      mockApi.filesystem.readDirectory.mockImplementation(async (path: string) => {
+        if (path === '/project') {
+          // User collapses /project/src while the refresh is in flight.
+          useFileExplorerStore.setState({ expandedDirs: new Set(['/project/docs']) })
+        }
+        return { success: true, data: mockEntries }
+      })
+
+      await useFileExplorerStore.getState().refreshTree()
+
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project/docs')
+      expect(mockApi.filesystem.readDirectory).not.toHaveBeenCalledWith('/project/src')
+    })
+
+    it('stops refreshing when the project root changes mid-refresh', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        directoryContents: new Map<string, DirectoryEntry[]>([['/project', mockEntries]]),
+        expandedDirs: new Set(['/project/src', '/project/docs'])
+      })
+
+      mockApi.filesystem.readDirectory.mockImplementation(async (path: string) => {
+        if (path === '/project') {
+          useFileExplorerStore.setState({ rootPath: '/other-project' })
+        }
+        return { success: true, data: mockEntries }
+      })
+
+      await useFileExplorerStore.getState().refreshTree()
+
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledTimes(1)
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+    })
+
+    it('ignores concurrent refreshTree calls while one is in flight', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        directoryContents: new Map<string, DirectoryEntry[]>([['/project', mockEntries]]),
+        expandedDirs: new Set<string>()
+      })
+
+      let releaseRead: ((value: { success: boolean; data: DirectoryEntry[] }) => void) | undefined
+      const firstRead = new Promise<{ success: boolean; data: DirectoryEntry[] }>((resolve) => {
+        releaseRead = resolve
+      })
+      mockApi.filesystem.readDirectory.mockReturnValueOnce(firstRead)
+
+      const first = useFileExplorerStore.getState().refreshTree()
+      expect(useFileExplorerStore.getState().refreshingTree).toBe(true)
+
+      // Second call while the first is still awaiting must be a no-op.
+      await useFileExplorerStore.getState().refreshTree()
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledTimes(1)
+
+      releaseRead?.({ success: true, data: mockEntries })
+      await first
+      expect(useFileExplorerStore.getState().refreshingTree).toBe(false)
+    })
+  })
+
+  describe('restoreExpandedDirs', () => {
+    it('should restore only directories within root and skip missing paths', async () => {
+      useFileExplorerStore.getState().setRootPath('/project')
+
+      mockApi.filesystem.readDirectory.mockImplementation(async (path: string) => {
+        if (path === '/project/src') {
+          return { success: true, data: [] }
+        }
+
+        if (path === '/project/missing') {
+          throw new Error('missing')
+        }
+
+        return { success: true, data: mockEntries }
+      })
+
+      await useFileExplorerStore
+        .getState()
+        .restoreExpandedDirs(['/project', '/project/src', '/project/missing', '/other/src'])
+
+      const state = useFileExplorerStore.getState()
+      expect(state.expandedDirs.has('/project/src')).toBe(true)
+      expect(state.expandedDirs.has('/other/src')).toBe(false)
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project/src')
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project/missing')
+    })
+  })
+
+  describe('collapseAll', () => {
+    it('should collapse everything except root', async () => {
+      // Set up expanded tree
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        expandedDirs: new Set(['/project', '/project/src', '/project/src/lib']),
+        directoryContents: new Map([
+          ['/project', mockEntries],
+          ['/project/src', []],
+          ['/project/src/lib', []]
+        ])
+      })
+
+      useFileExplorerStore.getState().collapseAll()
+
+      const state = useFileExplorerStore.getState()
+      expect(state.expandedDirs.size).toBe(1)
+      expect(state.expandedDirs.has('/project')).toBe(true)
+      expect(state.directoryContents.size).toBe(1)
+      expect(state.directoryContents.has('/project')).toBe(true)
+    })
+
+    it('should unwatch non-root directories', () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        expandedDirs: new Set(['/project', '/project/src'])
+      })
+
+      useFileExplorerStore.getState().collapseAll()
+
+      expect(mockApi.filesystem.unwatchDirectory).toHaveBeenCalledWith('/project/src')
+      expect(mockApi.filesystem.unwatchDirectory).not.toHaveBeenCalledWith('/project')
+    })
+  })
+
+  describe('selectPath', () => {
+    it('should set selected path', () => {
+      useFileExplorerStore.getState().selectPath('/project/file.ts')
+      expect(useFileExplorerStore.getState().selectedPaths.has('/project/file.ts')).toBe(true)
+    })
+
+    it('should clear selected path with null', () => {
+      useFileExplorerStore.getState().selectPath('/project/file.ts')
+      useFileExplorerStore.getState().selectPath(null)
+      expect(useFileExplorerStore.getState().selectedPaths.size).toBe(0)
+    })
+  })
+
+  describe('useFileExplorerVisible', () => {
+    it('reads through to the shell-layout side panel flag', () => {
+      const { result } = renderHook(() => useFileExplorerVisible())
+      expect(result.current).toBe(true)
+
+      act(() => {
+        useShellLayoutStore.getState().setSidePanelVisible(false)
+      })
+      expect(result.current).toBe(false)
+    })
+
+    it('no longer keeps visibility state of its own', () => {
+      const state = useFileExplorerStore.getState() as unknown as Record<string, unknown>
+      expect(state).not.toHaveProperty('isVisible')
+      expect(state).not.toHaveProperty('toggleVisibility')
+      expect(state).not.toHaveProperty('setVisible')
+    })
+  })
+
+  describe('setDirectoryContents / removeDirectoryContents', () => {
+    it('should set and remove directory contents', () => {
+      useFileExplorerStore.getState().setDirectoryContents('/dir', mockEntries)
+      expect(useFileExplorerStore.getState().directoryContents.get('/dir')).toEqual(mockEntries)
+
+      useFileExplorerStore.getState().removeDirectoryContents('/dir')
+      expect(useFileExplorerStore.getState().directoryContents.has('/dir')).toBe(false)
+    })
+  })
+  describe('searchInRoot - error code reset', () => {
+    it('clears stale searchErrorCode when called with an empty query (trimmed.length < 2)', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        searchError: 'prior error',
+        searchErrorCode: 'QUERY_TOO_LONG'
+      })
+
+      await useFileExplorerStore.getState().searchInRoot('', 0)
+
+      const state = useFileExplorerStore.getState()
+      expect(state.searchError).toBeNull()
+      expect(state.searchErrorCode).toBeNull()
+    })
+
+    it('clears stale searchErrorCode when called with a single-char query', async () => {
+      useFileExplorerStore.setState({
+        rootPath: '/project',
+        searchError: 'prior error',
+        searchErrorCode: 'QUERY_TOO_LONG'
+      })
+
+      await useFileExplorerStore.getState().searchInRoot('a', 0)
+
+      const state = useFileExplorerStore.getState()
+      expect(state.searchError).toBeNull()
+      expect(state.searchErrorCode).toBeNull()
+    })
+
+    it('clears stale searchErrorCode when no project is selected', async () => {
+      useFileExplorerStore.setState({
+        rootPath: null,
+        scopeRoot: null,
+        searchError: 'prior error',
+        searchErrorCode: 'RG_STREAM_FAILED'
+      })
+
+      await useFileExplorerStore.getState().searchInRoot('term', 0)
+
+      const state = useFileExplorerStore.getState()
+      expect(state.searchError).toBe('No project selected')
+      expect(state.searchErrorCode).toBeNull()
+    })
+  })
+  describe('searchInRoot - filename batches (gh-896)', () => {
+    afterEach(() => {
+      // Leave no active search id behind (setRootPath cancels active searches).
+      useFileExplorerStore.setState({ searchRequestId: 0, searchFileNameMatches: null })
+    })
+
+    it('drops kind:dir hits so the explorer lists files only', async () => {
+      mockApi.filesystem.searchContentStreamStart.mockReset().mockResolvedValue({ success: true })
+      mockApi.filesystem.searchFileNamesStreamStart.mockReset().mockResolvedValue({ success: true })
+      useFileExplorerStore.setState({ rootPath: '/project', scopeRoot: '/project' })
+
+      await useFileExplorerStore.getState().searchInRoot('components', 7)
+      expect(fileNameBatchCbs.length).toBeGreaterThan(0)
+
+      for (const cb of fileNameBatchCbs) {
+        cb({
+          searchId: 'search-7',
+          files: [
+            { path: 'src/components.ts', ignored: false },
+            { path: 'src/renderer/components', ignored: false, kind: 'dir' }
+          ]
+        })
+      }
+
+      expect(useFileExplorerStore.getState().searchFileNameMatches).toEqual([
+        '/project/src/components.ts'
+      ])
+    })
+
+    it('resolves root-relative hits against the explorer root so a picked hit opens', async () => {
+      mockApi.filesystem.searchContentStreamStart.mockReset().mockResolvedValue({ success: true })
+      mockApi.filesystem.searchFileNamesStreamStart.mockReset().mockResolvedValue({ success: true })
+      useFileExplorerStore.setState({ rootPath: 'C:/work/proj', scopeRoot: 'C:/work/proj' })
+
+      await useFileExplorerStore.getState().searchInRoot('a.ts', 8)
+      for (const cb of fileNameBatchCbs) {
+        cb({
+          searchId: 'search-8',
+          files: [
+            { path: 'a.ts', ignored: false },
+            { path: 'src/deep/a.ts', ignored: false }
+          ]
+        })
+      }
+
+      expect(useFileExplorerStore.getState().searchFileNameMatches).toEqual([
+        'C:/work/proj/a.ts',
+        'C:/work/proj/src/deep/a.ts'
+      ])
+    })
+  })
+
+  // Story 10 (F11): `retryRootLoad` force-reloads the root, bypassing the
+  // guards that strand the Explorer on "Loading…" after an outage — a hung
+  // read leaves a stale loadingDirs entry (toggleDirectory no-ops), and an
+  // expanded root would be COLLAPSED by toggle semantics.
+  describe('retryRootLoad (Story 10, F11)', () => {
+    it('force-reloads the root despite a stale loadingDirs entry (hung fetch)', async () => {
+      useFileExplorerStore.getState().setRootPath('/project')
+      useFileExplorerStore.setState({ loadingDirs: new Set(['/project']) })
+
+      await useFileExplorerStore.getState().retryRootLoad()
+
+      const state = useFileExplorerStore.getState()
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+      expect(state.directoryContents.get('/project')).toEqual(mockEntries)
+      expect(state.expandedDirs.has('/project')).toBe(true)
+      expect(state.loadingDirs.has('/project')).toBe(false)
+      expect(state.rootLoadError).toBeNull()
+    })
+
+    it('keeps an already-expanded root expanded (no toggle-collapse semantics)', async () => {
+      useFileExplorerStore.getState().setRootPath('/project')
+      useFileExplorerStore.setState({ expandedDirs: new Set(['/project']) })
+
+      await useFileExplorerStore.getState().retryRootLoad()
+
+      const state = useFileExplorerStore.getState()
+      expect(state.expandedDirs.has('/project')).toBe(true)
+      expect(state.directoryContents.get('/project')).toEqual(mockEntries)
+    })
+
+    it('sets rootLoadError and clears the loading marker when the read fails', async () => {
+      mockApi.filesystem.readDirectory.mockResolvedValueOnce({
+        success: false,
+        error: 'connection refused',
+        code: 'NETWORK_ERROR'
+      })
+      useFileExplorerStore.getState().setRootPath('/project')
+
+      await useFileExplorerStore.getState().retryRootLoad()
+
+      const state = useFileExplorerStore.getState()
+      expect(state.rootLoadError).toEqual({
+        message: 'connection refused',
+        code: 'NETWORK_ERROR'
+      })
+      expect(state.loadingDirs.has('/project')).toBe(false)
+      expect(state.directoryContents.has('/project')).toBe(false)
+    })
+
+    it('clears a prior rootLoadError before retrying', async () => {
+      useFileExplorerStore.getState().setRootPath('/project')
+      useFileExplorerStore.setState({
+        rootLoadError: { message: 'Failed to load', code: 'NETWORK_ERROR' }
+      })
+
+      await useFileExplorerStore.getState().retryRootLoad()
+
+      expect(useFileExplorerStore.getState().rootLoadError).toBeNull()
+    })
+
+    it('is a no-op without a root path', async () => {
+      await useFileExplorerStore.getState().retryRootLoad()
+      expect(mockApi.filesystem.readDirectory).not.toHaveBeenCalled()
+    })
+
+    it('discards stale results and preserves a newer request’s marker when the root switched away and back mid-flight', async () => {
+      useFileExplorerStore.getState().setRootPath('/project')
+
+      const deferred = Promise.withResolvers<{ success: true; data: DirectoryEntry[] }>()
+      mockApi.filesystem.readDirectory.mockReturnValueOnce(deferred.promise)
+      const retry = useFileExplorerStore.getState().retryRootLoad()
+      expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+
+      // Root switches away and BACK to the same path — rootPath compares
+      // equal at the end, but both setRootPath calls reset the state and
+      // bumped the generation token, so the in-flight read is stale.
+      useFileExplorerStore.getState().setRootPath('/other')
+      useFileExplorerStore.getState().setRootPath('/project')
+      // A newer request (auto-expand) now owns the loading marker.
+      useFileExplorerStore.setState({ loadingDirs: new Set(['/project']) })
+
+      deferred.resolve({ success: true, data: mockEntries })
+      await retry
+
+      const state = useFileExplorerStore.getState()
+      // Stale contents must NOT be applied under the reset root…
+      expect(state.directoryContents.has('/project')).toBe(false)
+      // …and the newer request's loading marker must NOT be removed.
+      expect(state.loadingDirs.has('/project')).toBe(true)
+    })
+
+    it('logs unsuccessful retry results with the error code (never the path)', async () => {
+      mockApi.filesystem.readDirectory.mockResolvedValueOnce({
+        success: false,
+        error: 'connection refused to /project',
+        code: 'NETWORK_ERROR'
+      })
+      useFileExplorerStore.getState().setRootPath('/project')
+      mockLogFrontendError.mockClear()
+
+      await useFileExplorerStore.getState().retryRootLoad()
+
+      expect(mockLogFrontendError).toHaveBeenCalledTimes(1)
+      const payload = mockLogFrontendError.mock.calls[0][0]
+      expect(payload.level).toBe('warn')
+      expect(payload.message).toContain('NETWORK_ERROR')
+      expect(payload.message).toContain('30s')
+      expect(payload.message).not.toContain('/project')
+    })
+
+    it('does not log successful retries', async () => {
+      useFileExplorerStore.getState().setRootPath('/project')
+      mockLogFrontendError.mockClear()
+
+      await useFileExplorerStore.getState().retryRootLoad()
+
+      expect(mockLogFrontendError).not.toHaveBeenCalled()
+    })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// #856: an fs_changed event (delivered through the facade's
+// onFileChanged chain — see tauri-filesystem-api.web.test.ts for the WS
+// bridge) refreshes the explorer tree. This pins the store side: a change
+// event on a watched directory re-reads it (debounced by the consumer —
+// useFileWatcher — which coalesces bursts before calling refreshDirectory).
+// ---------------------------------------------------------------------------
+
+describe('fs_changed → explorer refresh (#856)', () => {
+  it('re-reads a watched directory when a change event lands on it', async () => {
+    useFileExplorerStore.setState({
+      rootPath: '/project',
+      directoryContents: new Map<string, DirectoryEntry[]>([['/project', mockEntries]]),
+      expandedDirs: new Set(['/project'])
+    })
+    // A terminal-created file lands (change event → refreshDirectory, as
+    // the debounced useFileWatcher consumer does).
+    await useFileExplorerStore.getState().refreshDirectory('/project')
+
+    expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+    expect(mockApi.filesystem.readDirectory).toHaveBeenCalledTimes(1)
+  })
+
+  it('refreshTree re-reads root + expanded dirs after a change burst', async () => {
+    useFileExplorerStore.setState({
+      rootPath: '/project',
+      directoryContents: new Map<string, DirectoryEntry[]>([
+        ['/project', mockEntries],
+        ['/project/src', mockEntries]
+      ]),
+      expandedDirs: new Set(['/project/src'])
+    })
+
+    await useFileExplorerStore.getState().refreshTree()
+
+    expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project')
+    expect(mockApi.filesystem.readDirectory).toHaveBeenCalledWith('/project/src')
+    expect(mockApi.filesystem.readDirectory).toHaveBeenCalledTimes(2)
+  })
+})

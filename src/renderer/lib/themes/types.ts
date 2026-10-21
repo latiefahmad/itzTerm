@@ -1,0 +1,112 @@
+/** OpenCode-compatible desktop theme schema (subset used by Termul). */
+
+export interface ThemePalette {
+  neutral: string
+  ink: string
+  primary: string
+  accent: string
+  success: string
+  warning: string
+  error: string
+  info: string
+  diffAdd?: string
+  diffDelete?: string
+  interactive?: string
+}
+
+export type ThemeSyntaxOverrides = Partial<{
+  'syntax-comment': string
+  'syntax-keyword': string
+  'syntax-function': string
+  'syntax-string': string
+  'syntax-primitive': string
+  'syntax-variable': string
+  /** Name at a declaration. Defaults to the variable color. */
+  'syntax-definition': string
+  'syntax-property': string
+  'syntax-type': string
+  'syntax-constant': string
+  'syntax-operator': string
+  'syntax-punctuation': string
+  /** JSX and HTML tag names. Defaults to the keyword color. */
+  'syntax-tag': string
+  /** Attribute names. Defaults to the property color, then the info hue. */
+  'syntax-attribute': string
+}>
+
+/**
+ * Explicit neutral ramp for one theme. When set, the emitter skips the
+ * brand tint and the shared lighten ladder.
+ */
+export interface ThemeChrome {
+  /** Page canvas and terminal grid. */
+  background: string
+  /** Raised panels. */
+  card: string
+  /** Menus. One step above the card. */
+  elevated: string
+  /** Hover wash. Defaults to `elevated`. */
+  secondary?: string
+  /** Sidebar canvas. Defaults to `elevated`. */
+  sidebar?: string
+  /** Recessed well. */
+  muted: string
+  /** Hairline borders and inputs. */
+  border: string
+  /** Primary copy. */
+  foreground: string
+  /** Secondary labels. */
+  secondaryForeground: string
+  /** Muted copy. The AA solver may lift this. */
+  mutedForeground: string
+  /** Hairline borders carry elevation. Termul light only. */
+  flatElevation?: boolean
+}
+
+export interface ThemeVariant {
+  palette: ThemePalette
+  overrides?: ThemeSyntaxOverrides
+  /** Termul dark and Termul light. Other themes keep derived surfaces. */
+  chrome?: ThemeChrome
+}
+
+export type ThemeAppearance = 'light' | 'dark'
+
+export interface ColorThemeDefinition {
+  id: string
+  name: string
+  /** UI + syntax variant (light or dark chrome). */
+  appearance: ThemeAppearance
+  /** Family base id (without `-light` suffix). */
+  familyId: string
+  /** Active palette + syntax overrides for this entry. */
+  dark: ThemeVariant
+}
+
+export interface ResolvedSyntaxColors {
+  keyword: string
+  comment: string
+  string: string
+  number: string
+  bool: string
+  variable: string
+  /** Binding being declared. Equals `variable` when a theme does not split them. */
+  definition: string
+  function: string
+  type: string
+  property: string
+  operator: string
+  punctuation: string
+  tag: string
+  attributeName: string
+  attributeValue: string
+  heading: string
+  link: string
+}
+
+export const COLOR_THEME_CHANGED_EVENT = 'termul:color-theme-changed'
+
+export interface ColorThemeChangedDetail {
+  themeId: string
+  syntax: ResolvedSyntaxColors
+}

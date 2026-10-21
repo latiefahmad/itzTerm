@@ -1,0 +1,729 @@
+import type { DetectedShells } from '@shared/types/ipc.types'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { ChevronDown, Info, Link2, Plus, RefreshCw, Save, Upload, X } from '@/components/icons'
+import { NewProjectModal } from '@/components/NewProjectModal'
+import { ColorSwatchGroup } from '@/components/settings/ColorSwatchGroup'
+import { toastAccountChoiceError } from '@/components/settings/provider/account-choice-error'
+import { ProjectProviderSettings } from '@/components/settings/provider/ProjectProviderSettings'
+import { SettingsLayout, SettingsSection } from '@/components/settings/SettingsLayout'
+import { SettingsModal } from '@/components/settings/SettingsModal'
+import { SettingsNotice } from '@/components/settings/SettingsNotice'
+import { Button } from '@/components/ui/button'
+import { FOCUS_RING_CLASS, PANEL_FIELD_CLASS } from '@/components/ui/panel-styles'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
+import { Switch } from '@/components/ui/switch'
+import { useProjectClaudeAccountDraft } from '@/hooks/use-project-claude-account-draft'
+import { dialogApi, filesystemApi, shellApi, worktreeApi } from '@/lib/api'
+import { mergeEnvVars, parseEnvFile, resolveProjectEnvPath } from '@/lib/env-parser'
+import { cn } from '@/lib/utils'
+import { renewAgentCredentials } from '@/stores/acp-store'
+import { applyProjectClaudeAccount, CLAUDE_AGENT_CONFIG_ID } from '@/stores/claude-account-switch'
+import {
+  useActiveProject,
+  useActiveProjectId,
+  useProjectActions,
+  useProjectStore
+} from '@/stores/project-store'
+import { useSettingsModalStore } from '@/stores/settings-modal-store'
+import type { EnvVariable, ProjectColor } from '@/types/project'
+import {
+  PROJECT_SETTINGS_CATEGORIES,
+  PROJECT_SETTINGS_SEARCH_INDEX
+} from './project-settings/categories'
+
+export function ProjectSettingsModal() {
+  const isOpen = useSettingsModalStore((state) => state.view === 'project')
+  const close = useSettingsModalStore((state) => state.close)
+  const openAppSettings = useSettingsModalStore((state) => state.openApp)
+  const projectPage = useSettingsModalStore((state) => state.projectPage)
+  const setProjectPage = useSettingsModalStore((state) => state.setProjectPage)
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false)
+  const [isCloseConfirmOpen, setIsCloseConfirmOpen] = useState(false)
+  const activeProject = useActiveProject()
+  const claudeAccountDraft = useProjectClaudeAccountDraft(activeProject?.id, { enabled: isOpen })
+  const activeProjectId = useActiveProjectId()
+  const { addProject, updateProject } = useProjectActions()
+
+  const [projectName, setProjectName] = useState(activeProject?.name || '')
+  const [selectedColor, setSelectedColor] = useState<ProjectColor>(activeProject?.color || 'blue')
+  const [rootPath, setRootPath] = useState(activeProject?.path || '')
+  const rootPathRef = useRef(rootPath)
+  rootPathRef.current = rootPath
+  const [envVars, setEnvVars] = useState<EnvVariable[]>(activeProject?.envVars || [])
+  const [shell, setShell] = useState(activeProject?.defaultShell || '')
+  const [hasChanges, setHasChanges] = useState(false)
+  const [symlinkDirs, setSymlinkDirs] = useState<string[]>(activeProject?.symlinkDirs ?? [])
+  const [symlinkLoading, setSymlinkLoading] = useState(false)
+  const [availableShells, setAvailableShells] = useState<DetectedShells | null>(null)
+  const [shellsLoading, setShellsLoading] = useState(true)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [importWarnings, setImportWarnings] = useState<string | null>(null)
+  // TODO: Persist these to app-settings-store (localStorage) for across-session retention
+  const [skipConfirmations, setSkipConfirmations] = useState(false)
+  const [skipGitignoreSelection, setSkipGitignoreSelection] = useState(false)
+  const [defaultBranchPrefix, setDefaultBranchPrefix] = useState('feature/')
+
+  // Platform-specific fallback shell
+  const fallbackShell = navigator.platform.startsWith('Win') ? 'powershell' : 'bash'
+
+  // Fetch available shells on mount
+  useEffect(() => {
+    const fetchShells = async () => {
+      try {
+        const result = await shellApi.getAvailableShells()
+        if (result.success && result.data) {
+          setAvailableShells(result.data)
+        }
+      } catch (err) {
+        console.error('Failed to detect shells:', err)
+        setAvailableShells(null)
+      } finally {
+        setShellsLoading(false)
+      }
+    }
+    fetchShells()
+  }, [])
+
+  // Tracks which project's form fields have been initialized, so a late async
+  // availableShells load (which re-runs the sync effect) cannot wipe fields the
+  // user — or the D5 auto-fill — has since changed.
+  const symlinkInitProjectRef = useRef<string | null>(null)
+  const autoFilledSymlinkRef = useRef<string | null>(null)
+  const envImportRequestRef = useRef(0)
+
+  // Sync state when activeProject changes
+  useEffect(() => {
+    if (activeProject) {
+      // setShell is intentionally outside the per-project guard: availableShells
+      // resolves asynchronously after mount, and the resolved default must be
+      // applied when it arrives.
+      setShell(activeProject.defaultShell || availableShells?.default?.name || fallbackShell)
+      // Everything else initializes once per project. The effect also re-runs when
+      // availableShells resolves; without this guard that late run would wipe user
+      // edits (and the D5 .gitignore auto-fill) made before shells loaded.
+      if (symlinkInitProjectRef.current !== activeProject.id) {
+        symlinkInitProjectRef.current = activeProject.id
+        setProjectName(activeProject.name)
+        setSelectedColor(activeProject.color)
+        setRootPath(activeProject.path || '')
+        envImportRequestRef.current += 1
+        setEnvVars(activeProject.envVars || [])
+        setSymlinkDirs(activeProject.symlinkDirs ?? [])
+        setImportError(null)
+        setImportWarnings(null)
+        setHasChanges(false)
+      }
+    }
+  }, [activeProject, availableShells?.default?.name, fallbackShell])
+
+  // D5: default worktree symlinks ON. For a git project that has never configured
+  // symlink dirs, pre-fill them from .gitignore so fresh worktrees inherit shared
+  // deps (e.g. node_modules) and don't break with "module not found". Runs once per
+  // project and never overwrites a list the user has already configured (non-empty).
+  useEffect(() => {
+    const proj = activeProject
+    if (!proj?.path || !proj.isGitRepo) return
+    if ((proj.symlinkDirs ?? []).length > 0) return
+    if (autoFilledSymlinkRef.current === proj.id) return
+
+    let cancelled = false
+    const projId = proj.id
+    const projPath = proj.path
+    void (async () => {
+      try {
+        const result = await worktreeApi.parseGitignore(projPath)
+        // Bail if the effect was cleaned up (project switched / unmounted). Cleanup
+        // sets `cancelled`, so this is sufficient on its own.
+        if (cancelled) return
+        if (result.success && result.data) {
+          const dirs = result.data.filter((d) => d.exists).map((d) => d.dirName)
+          if (dirs.length > 0) {
+            // Mark done only after a successful fill so a cancelled StrictMode
+            // double-invoke doesn't suppress the real run.
+            autoFilledSymlinkRef.current = projId
+            setSymlinkDirs(dirs)
+            setHasChanges(true)
+          }
+        }
+      } catch {
+        // Best-effort: leave the list empty if .gitignore can't be parsed.
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+    // Keyed on project identity only: this must run once per project selection and
+    // not re-fire when other activeProject fields change (which would re-parse and
+    // fight user edits).
+  }, [activeProject?.id, activeProject?.path, activeProject?.isGitRepo, activeProject])
+
+  const handleSave = () => {
+    if (activeProject) {
+      const normalizedEnvVars = envVars
+        .map((envVar) => ({
+          ...envVar,
+          key: envVar.key.trim()
+        }))
+        .filter((envVar) => envVar.key !== '')
+
+      // Normalize symlinkDirs: trim whitespace and remove empty/whitespace-only entries
+      const normalizedSymlinkDirs = symlinkDirs.map((d) => d.trim()).filter((d) => d.length > 0)
+
+      updateProject(activeProject.id, {
+        name: projectName,
+        color: selectedColor,
+        path: rootPath,
+        envVars: normalizedEnvVars,
+        defaultShell: shell,
+        symlinkDirs: normalizedSymlinkDirs
+      })
+      const projectId = activeProject.id
+      // Before the host write, as the launcher chip does: a chat started while
+      // the save runs must not land on an agent of the old Account.
+      if (claudeAccountDraft.dirty) renewAgentCredentials(CLAUDE_AGENT_CONFIG_ID, projectId)
+      void claudeAccountDraft
+        .save()
+        .then((changed) => {
+          if (changed) void applyProjectClaudeAccount(projectId, { credentialsRenewed: true })
+        })
+        .catch((err) => {
+          toastAccountChoiceError(err, 'Could not save the Claude account')
+        })
+      setEnvVars(normalizedEnvVars)
+      setSymlinkDirs(normalizedSymlinkDirs)
+      setHasChanges(false)
+    }
+  }
+
+  const addEnvVar = () => {
+    setEnvVars([...envVars, { key: '', value: '' }])
+    setHasChanges(true)
+  }
+
+  const removeEnvVar = (index: number) => {
+    setEnvVars(envVars.filter((_, i) => i !== index))
+    setHasChanges(true)
+  }
+
+  const addSymlinkDir = () => {
+    setSymlinkDirs([...symlinkDirs, ''])
+    setHasChanges(true)
+  }
+
+  const removeSymlinkDir = (index: number) => {
+    setSymlinkDirs(symlinkDirs.filter((_, i) => i !== index))
+    setHasChanges(true)
+  }
+
+  const updateSymlinkDir = (index: number, value: string) => {
+    const newDirs = [...symlinkDirs]
+    newDirs[index] = value
+    setSymlinkDirs(newDirs)
+    setHasChanges(true)
+  }
+
+  const syncFromGitignore = async () => {
+    if (!activeProject?.path) return
+    setSymlinkLoading(true)
+    try {
+      const result = await worktreeApi.parseGitignore(activeProject.path)
+      if (result.success && result.data) {
+        const existing = new Set(symlinkDirs.filter((d) => d !== ''))
+        const newDirs = result.data
+          .filter((d) => d.exists && !existing.has(d.dirName))
+          .map((d) => d.dirName)
+        if (newDirs.length > 0) {
+          // Merge: add new dirs that aren't already in the list
+          setSymlinkDirs([...symlinkDirs.filter((d) => d !== ''), ...newDirs])
+          setHasChanges(true)
+        }
+      }
+    } catch {
+      // Best-effort
+    } finally {
+      setSymlinkLoading(false)
+    }
+  }
+
+  const handleImportEnvFile = async () => {
+    // Capture enough form identity to reject stale and out-of-order reads.
+    const projectIdAtStart = activeProjectId
+    const normalizedRoot = rootPath.trim()
+    const requestId = envImportRequestRef.current + 1
+    envImportRequestRef.current = requestId
+
+    setImportError(null)
+    setImportWarnings(null)
+
+    if (normalizedRoot === '') {
+      setImportError('Project root is required to import .env.')
+      return
+    }
+
+    const envPath = resolveProjectEnvPath(normalizedRoot)
+
+    try {
+      const readResult = await filesystemApi.readFile(envPath)
+
+      // Read the store directly because this async callback retains values from
+      // the render in which it started. The request/root checks also reject
+      // overlapping reads and edits made while the adapter call is pending.
+      if (
+        requestId !== envImportRequestRef.current ||
+        projectIdAtStart !== useProjectStore.getState().activeProjectId ||
+        normalizedRoot !== rootPathRef.current.trim()
+      ) {
+        return
+      }
+
+      if (!readResult.success) {
+        setImportError(`Failed to read .env: ${readResult.error}`)
+        return
+      }
+
+      const parseResult = parseEnvFile(readResult.data.content)
+
+      if (parseResult.vars.length === 0 && parseResult.invalidLines.length === 0) {
+        setImportError('The .env file is empty.')
+        return
+      }
+
+      // Merge only when at least one variable parsed successfully. An invalid-only
+      // file should report its skipped lines without claiming unsaved changes.
+      if (parseResult.vars.length > 0) {
+        setEnvVars((prevEnvVars) => mergeEnvVars(prevEnvVars, parseResult.vars))
+        setHasChanges(true)
+      }
+
+      // Show warnings for invalid lines if any.
+      if (parseResult.invalidLines.length > 0) {
+        const warningDetails = parseResult.invalidLines
+          .slice(0, 3)
+          .map((l) => `Line ${l.line}: ${l.content}`)
+          .join('\n')
+        const moreCount =
+          parseResult.invalidLines.length > 3
+            ? ` (+${parseResult.invalidLines.length - 3} more)`
+            : ''
+        setImportWarnings(
+          `Imported ${parseResult.vars.length} variables.\nSkipped ${parseResult.invalidLines.length} invalid line(s):\n${warningDetails}${moreCount}`
+        )
+      }
+    } catch (error) {
+      if (
+        requestId !== envImportRequestRef.current ||
+        projectIdAtStart !== useProjectStore.getState().activeProjectId ||
+        normalizedRoot !== rootPathRef.current.trim()
+      ) {
+        return
+      }
+
+      const message = error instanceof Error ? error.message : String(error)
+      setImportError(`Failed to read .env: ${message}`)
+    }
+  }
+
+  const handleClose = () => {
+    if (hasChanges) {
+      setIsCloseConfirmOpen(true)
+    } else {
+      close()
+    }
+  }
+
+  return (
+    <>
+      <SettingsModal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title="Project settings"
+        footer={
+          hasChanges ? (
+            <div className="p-4 flex justify-end items-center gap-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+              <span className="text-sm text-muted-foreground mr-auto flex items-center">
+                <Info size={14} className="mr-2 text-warning" />
+                <span className="opacity-80">You have unsaved changes</span>
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  claudeAccountDraft.reset()
+                  setHasChanges(false)
+                }}
+              >
+                Discard
+              </Button>
+              <Button type="button" size="sm" onClick={handleSave}>
+                <Save />
+                Save Changes
+              </Button>
+            </div>
+          ) : undefined
+        }
+      >
+        {/* Content */}
+        <SettingsLayout
+          title="Project settings"
+          subtitle={activeProject?.name}
+          categories={PROJECT_SETTINGS_CATEGORIES}
+          searchIndex={PROJECT_SETTINGS_SEARCH_INDEX}
+          onClose={handleClose}
+          page={projectPage ?? PROJECT_SETTINGS_CATEGORIES[0]?.id}
+          onPageChange={setProjectPage}
+        >
+          {/* General Section */}
+          <SettingsSection id="general">
+            <div className="flex flex-col gap-4">
+              <div>
+                <label
+                  htmlFor="project-name"
+                  className="block text-sm font-medium text-secondary-foreground mb-2"
+                >
+                  Project name
+                </label>
+                <input
+                  id="project-name"
+                  type="text"
+                  value={projectName}
+                  onChange={(e) => {
+                    setProjectName(e.target.value)
+                    setHasChanges(true)
+                  }}
+                  className={cn(PANEL_FIELD_CLASS, 'w-full rounded-md px-3 py-2 text-sm')}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="project-root-directory"
+                  className="block text-sm font-medium text-secondary-foreground mb-2"
+                >
+                  Root directory
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="project-root-directory"
+                    type="text"
+                    value={rootPath}
+                    onChange={(e) => {
+                      setRootPath(e.target.value)
+                      setHasChanges(true)
+                    }}
+                    className={cn(
+                      PANEL_FIELD_CLASS,
+                      'flex-1 rounded-md px-3 py-2 font-mono text-sm'
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const result = await dialogApi.selectDirectory()
+                      if (result.success) {
+                        setRootPath(result.data)
+                        setHasChanges(true)
+                      }
+                    }}
+                    className="px-4 py-2 bg-card hover:bg-secondary border border-border rounded-md text-sm text-foreground transition-colors shadow-sm"
+                  >
+                    Browse
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Changing the root directory only affects new terminals.
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-3 text-sm font-medium text-secondary-foreground">Color</p>
+                <ColorSwatchGroup
+                  aria-label="Project color"
+                  value={selectedColor}
+                  onValueChange={(color) => {
+                    setSelectedColor(color)
+                    setHasChanges(true)
+                  }}
+                />
+              </div>
+            </div>
+          </SettingsSection>
+
+          {/* Environment Variables Section */}
+          <SettingsSection id="env-vars">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button type="button" size="xs" variant="outline" onClick={handleImportEnvFile}>
+                  <Upload size={13} /> Import from .env
+                </Button>
+                <Button type="button" size="xs" variant="outline" onClick={addEnvVar}>
+                  <Plus size={13} /> Add variable
+                </Button>
+              </div>
+              {importError && <SettingsNotice tone="danger">{importError}</SettingsNotice>}
+              {importWarnings && (
+                <SettingsNotice tone="warning">
+                  <span className="whitespace-pre-line">{importWarnings}</span>
+                </SettingsNotice>
+              )}
+              <div className="bg-secondary/30 rounded-lg border border-border overflow-hidden">
+                <div className="grid grid-cols-[1fr_1.5fr_auto] gap-px bg-border">
+                  <div className="label-section bg-secondary/80 px-4 py-2 text-muted-foreground">
+                    Key
+                  </div>
+                  <div className="label-section bg-secondary/80 px-4 py-2 text-muted-foreground">
+                    Value
+                  </div>
+                  <div className="bg-secondary/80 w-10"></div>
+
+                  {envVars.map((envVar, index) => (
+                    <Fragment key={index}>
+                      <div className="bg-card p-2">
+                        <input
+                          type="text"
+                          value={envVar.key}
+                          onChange={(e) => {
+                            const newVars = [...envVars]
+                            newVars[index].key = e.target.value
+                            setEnvVars(newVars)
+                            setHasChanges(true)
+                          }}
+                          placeholder="KEY"
+                          className={`w-full bg-transparent border-none text-sm pointer-coarse:text-base font-mono text-primary rounded px-2 py-1 ${FOCUS_RING_CLASS}`}
+                        />
+                      </div>
+                      <div className="bg-card p-2 relative group">
+                        <input
+                          type={envVar.isSecret ? 'password' : 'text'}
+                          value={envVar.value}
+                          onChange={(e) => {
+                            const newVars = [...envVars]
+                            newVars[index].value = e.target.value
+                            setEnvVars(newVars)
+                            setHasChanges(true)
+                          }}
+                          placeholder="Value"
+                          className={cn(
+                            `w-full bg-transparent border-none text-sm pointer-coarse:text-base font-mono rounded px-2 py-1 ${FOCUS_RING_CLASS}`,
+                            envVar.isSecret ? 'text-muted-foreground' : 'text-success'
+                          )}
+                        />
+                      </div>
+                      <div className="bg-card flex items-center justify-center">
+                        <button
+                          type="button"
+                          aria-label={`Remove ${envVar.key || 'variable'}`}
+                          onClick={() => removeEnvVar(index)}
+                          className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </SettingsSection>
+
+          {/* Shell Settings Section */}
+          <SettingsSection id="shell">
+            <div className="flex flex-col gap-4">
+              <div>
+                <label
+                  htmlFor="project-default-shell"
+                  className="block text-sm font-medium text-secondary-foreground mb-2"
+                >
+                  Default shell
+                </label>
+                {shellsLoading ? (
+                  <Skeleton className="w-full h-10" />
+                ) : (
+                  <div className="relative">
+                    <select
+                      id="project-default-shell"
+                      value={shell}
+                      onChange={(e) => {
+                        setShell(e.target.value)
+                        setHasChanges(true)
+                      }}
+                      className={cn(
+                        PANEL_FIELD_CLASS,
+                        'w-full cursor-pointer appearance-none rounded-md py-2 pl-3 pr-10 text-sm'
+                      )}
+                    >
+                      {availableShells?.available && availableShells.available.length > 0 ? (
+                        availableShells.available.map((s) => (
+                          <option key={s.name} value={s.name}>
+                            {s.displayName}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No shells detected</option>
+                      )}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
+                      <ChevronDown size={14} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </SettingsSection>
+
+          {/* Worktree Symlink Directories Section */}
+          <SettingsSection id="symlinks">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  size="xs"
+                  variant="outline"
+                  onClick={() => void syncFromGitignore()}
+                  disabled={symlinkLoading || !activeProject?.isGitRepo}
+                >
+                  {symlinkLoading ? <Spinner size={13} decorative /> : <RefreshCw size={13} />}
+                  Sync from .gitignore
+                </Button>
+                <Button type="button" size="xs" variant="outline" onClick={addSymlinkDir}>
+                  <Plus size={13} /> Add directory
+                </Button>
+              </div>
+              <div className="bg-secondary/30 rounded-lg border border-border p-3 space-y-2">
+                {symlinkDirs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">
+                    No symlink directories configured. Click "Sync from .gitignore" to auto-detect.
+                  </p>
+                ) : (
+                  symlinkDirs.map((dir, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Link2 size={12} className="text-muted-foreground flex-shrink-0" />
+                      <input
+                        type="text"
+                        value={dir}
+                        onChange={(e) => updateSymlinkDir(index, e.target.value)}
+                        placeholder="e.g. node_modules"
+                        className={cn(
+                          PANEL_FIELD_CLASS,
+                          'flex-1 rounded px-2 py-1 font-mono text-sm'
+                        )}
+                      />
+                      <button
+                        type="button"
+                        aria-label={`Remove ${dir || 'directory'}`}
+                        onClick={() => removeSymlinkDir(index)}
+                        className="text-muted-foreground hover:text-destructive p-1 rounded transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </SettingsSection>
+
+          {/* Provider Section */}
+          <SettingsSection id="provider">
+            <div className="flex flex-col gap-4">
+              <ProjectProviderSettings
+                claude={claudeAccountDraft}
+                onChange={() => setHasChanges(true)}
+                onManageAccounts={() => {
+                  if (hasChanges) {
+                    toast.warning('Save or discard your changes first.')
+                    return
+                  }
+                  openAppSettings('provider')
+                }}
+              />
+            </div>
+          </SettingsSection>
+
+          {/* Emergency Mode & Expert Workflows Section */}
+          <SettingsSection id="emergency">
+            <div className="flex flex-col gap-4">
+              <div className="bg-secondary/30 rounded-lg border border-border p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Skip Confirmation Dialogs</p>
+                    <p className="text-xs text-muted-foreground">
+                      Bypass non-essential prompts during worktree operations.
+                    </p>
+                  </div>
+                  <Switch
+                    aria-label="Skip Confirmation Dialogs"
+                    checked={skipConfirmations}
+                    onCheckedChange={setSkipConfirmations}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Skip .gitignore Selection</p>
+                    <p className="text-xs text-muted-foreground">
+                      Use default symlink settings when creating worktrees.
+                    </p>
+                  </div>
+                  <Switch
+                    aria-label="Skip .gitignore Selection"
+                    checked={skipGitignoreSelection}
+                    onCheckedChange={setSkipGitignoreSelection}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="project-branch-prefix"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
+                    Default branch prefix
+                  </label>
+                  <input
+                    id="project-branch-prefix"
+                    type="text"
+                    value={defaultBranchPrefix}
+                    onChange={(e) => {
+                      setDefaultBranchPrefix(e.target.value)
+                    }}
+                    placeholder="feature/"
+                    className={cn(
+                      PANEL_FIELD_CLASS,
+                      'w-full rounded-md px-3 py-2 font-mono text-sm'
+                    )}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Prefix for new branch naming (e.g. "feature/", "hotfix/").
+                  </p>
+                </div>
+              </div>
+            </div>
+          </SettingsSection>
+        </SettingsLayout>
+
+        {/* Save bar is rendered in the modal footer above */}
+      </SettingsModal>
+
+      <NewProjectModal
+        isOpen={isNewProjectModalOpen}
+        onClose={() => setIsNewProjectModalOpen(false)}
+        onCreateProject={addProject}
+      />
+
+      <ConfirmDialog
+        isOpen={isCloseConfirmOpen}
+        title="Unsaved Changes"
+        message={`You have unsaved changes in ${activeProject?.name ?? 'this project'}. Leaving will discard them.`}
+        confirmLabel="Leave"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={() => {
+          setIsCloseConfirmOpen(false)
+          close()
+        }}
+        onCancel={() => setIsCloseConfirmOpen(false)}
+      />
+    </>
+  )
+}

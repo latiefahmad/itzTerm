@@ -1,0 +1,159 @@
+// Import GitStatus from shared types to ensure consistency
+// between IPC contract and renderer domain models
+import type { GitStatus, ProjectIcon, TerminalModes } from '@shared/types/ipc.types'
+
+// Re-export for convenience
+export type { GitStatus, TerminalModes }
+
+export type ProjectColor =
+  | 'blue'
+  | 'purple'
+  | 'green'
+  | 'yellow'
+  | 'red'
+  | 'cyan'
+  | 'pink'
+  | 'orange'
+  | 'gray'
+
+export interface Worktree {
+  id: string
+  name: string
+  branch: string
+  path: string
+  createdAt: string // ISO timestamp
+  /**
+   * Web-only, derived by the worktree reconciler: the worktree path lies outside
+   * the project folder. Never persisted (`toPersistedWorktree` drops it).
+   */
+  outsideProjectRoot?: boolean
+}
+
+export interface ProjectGroup {
+  id: string
+  name: string
+  projectIds: string[]
+  isCollapsed?: boolean
+  color?: ProjectColor
+}
+
+export interface Project {
+  id: string
+  name: string
+  color: ProjectColor
+  path?: string
+  isActive?: boolean
+  /**
+   * `true` when this is the host's default project (set by the host's
+   * `default_project_id`). Mirrors `ProjectSummary.isDefault` on the wire.
+   * Distinct from `isActive` (per-client, set locally by `selectProject`).
+   * Set by the `projects` watch feed (`summary.isDefault` → `Project.isDefault`).
+   */
+  isDefault?: boolean
+  isArchived?: boolean
+  gitBranch?: string
+  lastOpened?: Date
+  defaultShell?: string
+  envVars?: EnvVariable[]
+  worktrees?: Worktree[]
+  isGitRepo?: boolean
+  symlinkDirs?: string[] // Directories to symlink from project root into worktrees
+  /**
+   * Resolved project icon (spec-project-icon): the `data:` URI payload from
+   * `project_icon_resolve` / `POST /project/icon` plus a renderer-stamped
+   * `fetchedAt` staleness clock. `undefined` renders the colored monogram.
+   * Persisted via `PersistedProject.icon` so it shows immediately on restart
+   * before re-resolution finishes.
+   */
+  icon?: ProjectIcon
+}
+
+export function isWorktreeTermulManaged(worktree: Worktree): boolean {
+  // Normalize path separators for cross-platform detection
+  const normalizedPath = worktree.path.replace(/\\/g, '/')
+  return normalizedPath.includes('.termul/worktrees/')
+}
+
+export type TerminalHealthStatus = 'running' | 'crashed' | 'hibernated' | 'disconnected'
+
+export interface Terminal {
+  id: string
+  ptyId?: string
+  name: string
+  projectId: string
+  shell: string
+  cwd?: string
+  worktreeId?: string
+  gitBranch?: string | null
+  gitStatus?: GitStatus | null
+  lastExitCode?: number | null
+  isActive?: boolean
+  output?: TerminalLine[]
+  pendingScrollback?: string[] // Legacy text snapshot to restore on terminal mount
+  transcript?: string // Raw PTY transcript used for ANSI/styling-preserving restoration
+  /**
+   * True once `transcript` lost its head to a size or hidden-buffer trim since
+   * the last consume, so it no longer continues the screen a cached xterm
+   * holds. Cleared by `consumeTranscript`.
+   */
+  transcriptTrimmed?: boolean
+  /**
+   * Captured DEC private-mode snapshot (R3) to replay before `pendingScrollback`
+   * on terminal mount, so an alt-screen TUI (vim/tmux/less) restores its
+   * screen/modes. Optional — absence degrades to content-only restore.
+   */
+  pendingModes?: TerminalModes
+  detachedOutput?: string // Raw PTY output captured while no renderer is mounted
+  rendererAttachmentCount?: number // Number of mounted renderers bound to this PTY
+  healthStatus?: TerminalHealthStatus // Terminal health status
+  isHidden?: boolean // Whether terminal is currently hidden within the workspace/pane model
+  hiddenSince?: number // Timestamp when terminal became hidden within the workspace/pane model
+  isAppHidden?: boolean // Whether the entire app/window is currently hidden or minimized
+  appHiddenSince?: number // Timestamp when the app-hidden retention window started
+  hasActivity?: boolean // Whether terminal has recent output activity
+  lastActivityTimestamp?: number // Timestamp when last activity occurred
+  needsAttention?: boolean // Whether this terminal's process finished while it was not the focused/visible terminal; drives the in-app highlight border
+  // ADR-004.4: terminal-native agent launch metadata. Descriptive-only — no
+  // behavior keys off these except tab labeling and restore-prompt suppression.
+  // Git/cwd trackers, resize, and persistence ignore them.
+  agentId?: string // Agent Registry id, e.g. 'claude-code'
+  agentName?: string // Display name, e.g. 'Claude Code' — used for the tab label
+  agentProgram?: string // Resolved/declared program for restore re-spawn (no prompt)
+  agentArgs?: string[] // baseArgs only (seed prompt intentionally excluded for restore)
+  kind?: 'shell' | 'agent' // Session type marker; defaults to 'shell' when unset
+  /**
+   * CAP-3: the reclaimable-terminal lease credential issued at spawn.
+   * IN-MEMORY ONLY — never written to auto-save/snapshot persistence,
+   * localStorage, or any browser storage. Set on spawn/rotate, cleared on
+   * kill/close/restart/clearTerminalPtyId.
+   */
+  claim?: string
+}
+
+export interface TerminalLine {
+  type: 'command' | 'output' | 'error' | 'warning' | 'info' | 'success'
+  content: string
+}
+
+export interface Snapshot {
+  id: string
+  projectId: string
+  name: string
+  description?: string
+  createdAt: Date
+  paneCount: number
+  processCount: number
+  tag?: 'stable' | 'base'
+  thumbnail?: SnapshotThumbnail
+}
+
+export interface SnapshotThumbnail {
+  layout: 'single' | 'split-v' | 'split-h' | 'grid'
+  lines: { color: string; width: number }[]
+}
+
+export interface EnvVariable {
+  key: string
+  value: string
+  isSecret?: boolean
+}

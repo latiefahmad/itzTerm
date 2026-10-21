@@ -1,0 +1,80 @@
+﻿import { create } from 'zustand'
+import type { AppSettings, AppSettingsUpdate } from '@/types/settings'
+import { DEFAULT_APP_SETTINGS } from '@/types/settings'
+
+interface AppSettingsState {
+  settings: AppSettings
+  isLoaded: boolean
+  setSettings: (settings: AppSettings) => void
+  updateSetting: <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => void
+  updateSettings: (updates: AppSettingsUpdate) => void
+  resetToDefaults: () => void
+}
+
+export const useAppSettingsStore = create<AppSettingsState>((set) => ({
+  settings: DEFAULT_APP_SETTINGS,
+  isLoaded: false,
+
+  setSettings: (settings) => set({ settings, isLoaded: true }),
+
+  updateSetting: (key, value) =>
+    set((state) => ({
+      settings: { ...state.settings, [key]: value }
+    })),
+
+  updateSettings: (updates) =>
+    set((state) => ({
+      settings: { ...state.settings, ...updates }
+    })),
+
+  // Terminal profiles are the user's own launch entries, not preferences: a
+  // reset keeps them, as it keeps MCP servers and custom agents.
+  resetToDefaults: () =>
+    set((state) => ({
+      settings: { ...DEFAULT_APP_SETTINGS, terminalProfiles: state.settings.terminalProfiles }
+    }))
+}))
+
+// Selectors
+export const useAppSettings = () => useAppSettingsStore((state) => state.settings)
+export const useAppSettingsLoaded = () => useAppSettingsStore((state) => state.isLoaded)
+export const useTerminalFontFamily = () =>
+  useAppSettingsStore((state) => state.settings.terminalFontFamily)
+export const useTerminalFontSize = () =>
+  useAppSettingsStore((state) => state.settings.terminalFontSize)
+export const useDefaultShell = () => useAppSettingsStore((state) => state.settings.defaultShell)
+export const useDefaultProjectColor = () =>
+  useAppSettingsStore((state) => state.settings.defaultProjectColor)
+export const useTerminalBufferSize = () =>
+  useAppSettingsStore((state) => state.settings.terminalBufferSize)
+export const useTerminalRenderer = () =>
+  useAppSettingsStore((state) => state.settings.terminalRenderer)
+// Strict `=== true` guards a corrupt or missing persisted value.
+export const useTerminalScreenReaderMode = () =>
+  useAppSettingsStore((state) => state.settings.terminalScreenReaderMode === true)
+export const useConfirmTerminalClose = () =>
+  useAppSettingsStore((state) => state.settings.confirmTerminalClose)
+export const useTerminalUrlOpenMode = () =>
+  useAppSettingsStore((state) => state.settings.terminalUrlOpenMode)
+export const useColorTheme = () => useAppSettingsStore((state) => state.settings.colorTheme)
+export const useAppearanceMode = () => useAppSettingsStore((state) => state.settings.appearanceMode)
+export const useUiZoomLevel = () => useAppSettingsStore((state) => state.settings.uiZoomLevel)
+export const useAcpTurnTimeout = () =>
+  useAppSettingsStore((state) => state.settings.acpTurnTimeoutSecs)
+export const useEditorAutoSave = () => useAppSettingsStore((state) => state.settings.editorAutoSave)
+export const useEditorAutoSaveDelayMs = () =>
+  useAppSettingsStore((state) => state.settings.editorAutoSaveDelayMs)
+export const useAcpTurnIdleTimeout = () =>
+  useAppSettingsStore((state) => state.settings.acpTurnIdleTimeoutSecs)
+export const useAcpSessionNewTimeout = () =>
+  useAppSettingsStore((state) => state.settings.acpSessionNewTimeoutSecs)
+export const useAcpSessionReopenTimeout = () =>
+  useAppSettingsStore((state) => state.settings.acpSessionReopenTimeoutSecs)
+export const useAgentIdleWindow = () =>
+  useAppSettingsStore((state) => state.settings.agentIdleWindowSecs)
+export const useNotifyOnTerminalIdle = () =>
+  useAppSettingsStore((state) => state.settings.notifyOnTerminalIdle)
+export const useNotifyOnAgentChatTurnFinished = () =>
+  useAppSettingsStore((state) => state.settings.notifyOnAgentChatTurnFinished)
+export const useNotifyOnAgentChatNeedsYou = () =>
+  useAppSettingsStore((state) => state.settings.notifyOnAgentChatNeedsYou)

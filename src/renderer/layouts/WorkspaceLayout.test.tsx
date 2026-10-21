@@ -1,0 +1,1365 @@
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { mockTerminal } from '@/lib/test-utils/terminal'
+import { useCanvasStore } from '@/stores/canvas-store'
+import { useSettingsModalStore } from '@/stores/settings-modal-store'
+import { resetShellLayoutStoreForTests, useShellLayoutStore } from '@/stores/shell-layout-store'
+import { useThemePickerStore } from '@/stores/theme-picker-store'
+import { useWorkspaceStore } from '@/stores/workspace-store'
+import { framerMotionTestState, resetFramerMotionTestState } from '@/test-utils/mock-framer-motion'
+import type { Project, ProjectColor, Terminal } from '@/types/project'
+import WorkspaceLayout from './WorkspaceLayout'
+
+const { platformState, tauriRef, webAuthGateRef, appSettingsRef } = vi.hoisted(() => ({
+  platformState: { isMac: false },
+  // A stored legacy `shellLayout` value must be ignored by the desktop shell.
+  appSettingsRef: { current: { shellLayout: undefined as string | undefined } },
+  tauriRef: { current: true as boolean },
+  // #907: switchable gate state for the mid-session token-screen tests.
+  webAuthGateRef: { current: { status: 'ok' as string, submitting: false } }
+}))
+
+vi.mock('@/lib/web-auth-gate', () => ({
+  useWebAuthGate: () => webAuthGateRef.current,
+  checkWebAuthGate: vi.fn(),
+  useWebAuthGateOk: () => webAuthGateRef.current.status === 'ok',
+  // WebTokenGateScreen (rendered by the #907 tests) imports these:
+  submitWebAuthToken: vi.fn(async () => 'ok'),
+  flagWebAuthUnauthorized: vi.fn(),
+  isUnauthorizedResult: vi.fn(() => false),
+  getWebAuthGateState: () => webAuthGateRef.current,
+  _resetWebAuthGateForTesting: vi.fn()
+}))
+
+vi.mock('@/lib/tauri-runtime', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/tauri-runtime')>('@/lib/tauri-runtime')
+  return { ...actual, isTauriContext: () => tauriRef.current }
+})
+
+vi.mock('@/lib/platform', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/platform')>('@/lib/platform')
+  return {
+    ...actual,
+    get isMac() {
+      return platformState.isMac
+    }
+  }
+})
+
+function createProject(id: string, path: string, color: ProjectColor): Project {
+  return {
+    id,
+    name: id.toUpperCase(),
+    color,
+    path,
+    gitBranch: 'main',
+    isActive: true
+  }
+}
+
+// Mock the store hooks
+const mockUseProjectsLoaded = vi.fn(() => true)
+const mockUseProjects = vi.fn((): Project[] => [])
+const mockUseActiveProject = vi.fn((): Project | null => null)
+const mockUseActiveProjectId = vi.fn((): string => '')
+const mockUseProjectActions = vi.fn(() => ({
+  selectProject: vi.fn(),
+  addProject: vi.fn(),
+  updateProject: vi.fn(),
+  deleteProject: vi.fn(),
+  archiveProject: vi.fn(),
+  restoreProject: vi.fn(),
+  reorderProjects: vi.fn()
+}))
+
+const mockUseTerminals = vi.fn((): Terminal[] => [])
+const mockUseAllTerminals = vi.fn((): Terminal[] => [])
+const mockUseActiveTerminal = vi.fn((): Terminal | null => null)
+const mockUseActiveTerminalId = vi.fn((): string => '')
+const mockUseTerminalActions = vi.fn(() => ({
+  selectTerminal: vi.fn(),
+  addTerminal: vi.fn(),
+  closeTerminal: vi.fn(),
+  renameTerminal: vi.fn(),
+  reorderTerminals: vi.fn(),
+  setTerminalPtyId: vi.fn(),
+  clearTerminalPtyId: vi.fn()
+}))
+
+const { projectStoreStateRef } = vi.hoisted(() => ({
+  // Story 6: `getDefaultCwdForProject` reads `useProjectStore.getState()`
+  // to resolve the repo root for git-history tabs. Mutable so the git-reuse
+  // tests can seed the project the hooks already report.
+  projectStoreStateRef: {
+    current: {
+      projects: [] as Array<Record<string, unknown>>,
+      activeProjectId: ''
+    }
+  }
+}))
+
+vi.mock('@/stores/project-store', () => ({
+  useProjectStore: Object.assign(
+    vi.fn((selector) => {
+      const state = {
+        projects: projectStoreStateRef.current.projects,
+        activeProjectId: projectStoreStateRef.current.activeProjectId,
+        isLoaded: true,
+        isWorktreeOperationLocked: false
+      }
+      return selector ? selector(state) : state
+    }),
+    {
+      getState: vi.fn(() => ({
+        projects: projectStoreStateRef.current.projects,
+        activeProjectId: projectStoreStateRef.current.activeProjectId,
+        isLoaded: true,
+        isWorktreeOperationLocked: false,
+        removeWorktree: vi.fn(),
+        updateProject: vi.fn()
+      }))
+    }
+  ),
+  useProjectsLoaded: () => mockUseProjectsLoaded(),
+  useProjects: () => mockUseProjects(),
+  useActiveProject: () => mockUseActiveProject(),
+  useActiveProjectId: () => mockUseActiveProjectId(),
+  useProjectActions: () => mockUseProjectActions()
+}))
+
+vi.mock('@/stores/terminal-store', () => ({
+  useTerminalStore: vi.fn((selector) => selector({ terminals: [] })),
+  useTerminals: () => mockUseTerminals(),
+  useAllTerminals: () => mockUseAllTerminals(),
+  useActiveTerminal: () => mockUseActiveTerminal(),
+  useActiveTerminalId: () => mockUseActiveTerminalId(),
+  useTerminalActions: () => mockUseTerminalActions(),
+  useProjectsWithActivity: () => [],
+  useProjectsWithErrors: () => new Set<string>(),
+  cleanupProjectTerminals: vi.fn()
+}))
+
+vi.mock('@/stores/app-settings-store', () => ({
+  useAppSettingsStore: vi.fn((selector?: (state: Record<string, unknown>) => unknown) => {
+    const state = {
+      settings: {
+        remoteBindMode: 'localhost' as const,
+        shellLayout: appSettingsRef.current.shellLayout
+      },
+      isLoaded: true
+    }
+    return selector ? selector(state) : state
+  }),
+  useTerminalFontSize: vi.fn(() => 14),
+  useUiZoomLevel: vi.fn(() => 1),
+  useTerminalFontFamily: vi.fn(() => 'monospace'),
+  useTerminalBufferSize: vi.fn(() => 10000),
+  useDefaultShell: vi.fn(() => 'bash'),
+  useConfirmTerminalClose: vi.fn(() => true),
+  useUpdateAppSetting: vi.fn(() => vi.fn()),
+  useDefaultProjectColor: vi.fn(() => 'blue'),
+  useColorTheme: vi.fn(() => 'termul'),
+  useAppearanceMode: vi.fn(() => 'dark')
+}))
+
+vi.mock('@/stores/remote-status-store', () => ({
+  useRemoteStatus: vi.fn(() => null),
+  useRemoteStatusStore: Object.assign(vi.fn(), {
+    getState: vi.fn(() => ({ setStatus: vi.fn() }))
+  })
+}))
+
+vi.mock('@/lib/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api')>()
+  return {
+    ...actual,
+    remoteServerApi: {
+      start: vi.fn(),
+      stop: vi.fn(),
+      status: vi.fn()
+    },
+    openerApi: {
+      openUrlWithSystemBrowser: vi.fn(() => Promise.resolve({ success: true, data: undefined }))
+    }
+  }
+})
+
+vi.mock('@/stores/keyboard-shortcuts-store', async () => {
+  const actual = await vi.importActual<typeof import('@/stores/keyboard-shortcuts-store')>(
+    '@/stores/keyboard-shortcuts-store'
+  )
+
+  const shortcuts = {
+    commandPalette: { customKey: 'ctrl+k', defaultKey: 'ctrl+k' },
+    commandPaletteAlt: { customKey: 'ctrl+shift+p', defaultKey: 'ctrl+shift+p' },
+    terminalSearch: { customKey: 'ctrl+f', defaultKey: 'ctrl+f' },
+    commandHistory: { customKey: 'ctrl+r', defaultKey: 'ctrl+r' },
+    newProject: { customKey: 'ctrl+n', defaultKey: 'ctrl+n' },
+    newTerminal: { customKey: 'ctrl+t', defaultKey: 'ctrl+t' },
+    nextTerminal: { customKey: 'ctrl+pagedown', defaultKey: 'ctrl+pagedown' },
+    prevTerminal: { customKey: 'ctrl+pageup', defaultKey: 'ctrl+pageup' },
+    zoomIn: { customKey: 'ctrl+=', defaultKey: 'ctrl+=' },
+    zoomOut: { customKey: 'ctrl+-', defaultKey: 'ctrl+-' },
+    zoomReset: { customKey: 'ctrl+0', defaultKey: 'ctrl+0' },
+    sidebarToggle: { customKey: 'ctrl+shift+b', defaultKey: 'ctrl+shift+b' },
+    closeTab: { customKey: 'ctrl+w', defaultKey: 'ctrl+w' },
+    saveFile: { customKey: 'ctrl+s', defaultKey: 'ctrl+s' },
+    toggleFileExplorer: { customKey: 'ctrl+b', defaultKey: 'ctrl+b' },
+    newBrowserTab: { customKey: 'ctrl+shift+n', defaultKey: 'ctrl+shift+n' },
+    colorThemePicker: { customKey: 'ctrl+alt+t', defaultKey: 'ctrl+alt+t' },
+    settings: { customKey: 'ctrl+,', defaultKey: 'ctrl+,' }
+  }
+
+  // `getState` backs non-React readers such as `isSaveFileShortcut`, which the
+  // global keydown handler calls first.
+  const useKeyboardShortcutsStore = Object.assign(
+    vi.fn((selector?: (state: { shortcuts: typeof shortcuts }) => unknown) => {
+      const state = { shortcuts }
+      return selector ? selector(state) : state
+    }),
+    { getState: () => ({ shortcuts }) }
+  )
+
+  return {
+    ...actual,
+    useKeyboardShortcutsStore,
+    matchesShortcut: actual.matchesShortcut
+  }
+})
+
+// Mock hooks
+vi.mock('@/hooks/use-snapshots', () => ({
+  useCreateSnapshot: vi.fn(() => vi.fn().mockResolvedValue(undefined)),
+  useSnapshotLoader: vi.fn()
+}))
+
+vi.mock('@/hooks/use-recent-commands', () => ({
+  useRecentCommandsLoader: vi.fn(),
+  useRecentCommandIds: vi.fn(() => []),
+  useSaveRecentCommand: vi.fn()
+}))
+
+vi.mock('@/hooks/use-pinned-commands', () => ({
+  usePinnedCommandsLoader: vi.fn(),
+  usePinnedCommandIds: vi.fn(() => []),
+  useTogglePinnedCommand: vi.fn()
+}))
+
+vi.mock('@/hooks/use-command-history', () => ({
+  useCommandHistoryLoader: vi.fn(),
+  useAddCommand: vi.fn(() => vi.fn()),
+  useCommandHistory: vi.fn(() => []),
+  useAllCommandHistory: vi.fn(() => [])
+}))
+
+const { mockUpdatePanelVisibility } = vi.hoisted(() => ({
+  mockUpdatePanelVisibility: vi.fn(() => Promise.resolve())
+}))
+
+vi.mock('@/hooks/use-app-settings', () => ({
+  useUpdateAppSetting: vi.fn(() => vi.fn()),
+  useUpdateAppSettings: vi.fn(() => vi.fn()),
+  useUpdatePanelVisibility: vi.fn(() => mockUpdatePanelVisibility)
+}))
+
+vi.mock('@/hooks/use-file-watcher', () => ({
+  useFileWatcher: vi.fn()
+}))
+
+vi.mock('@/hooks/use-editor-persistence', () => ({
+  useEditorPersistence: vi.fn(),
+  persistState: vi.fn()
+}))
+
+// P17: shared canonical mock shape for the Story 6 sync hook + banner —
+// identical inline factories across the three WorkspaceLayout suites so a
+// future export-surface refactor breaks all three with the same error.
+
+const { mockSaveTerminalLayout } = vi.hoisted(() => ({
+  mockSaveTerminalLayout: vi.fn(() => Promise.resolve())
+}))
+vi.mock('@/hooks/useTerminalAutoSave', () => ({
+  saveTerminalLayout: mockSaveTerminalLayout,
+  useTerminalAutoSave: vi.fn(),
+  loadPersistedTerminals: vi.fn(),
+  setTerminalRestoreInProgress: vi.fn(),
+  syncScrollbackToStore: vi.fn(),
+  serializeTerminalsForProject: vi.fn()
+}))
+
+vi.mock('@/components/file-explorer/FileExplorer', () => ({
+  FileExplorer: () => <div data-testid="file-explorer" />
+}))
+// The flagged shell's Side panel (Column tabs) takes the explorer's place.
+vi.mock('@/components/shell/SidePanelColumn', () => ({
+  SidePanelColumn: () => <div data-testid="side-panel-column" />
+}))
+
+// Mock the active Tauri API seam used by WorkspaceLayout and nested components.
+const { mockApi } = vi.hoisted(() => ({
+  mockApi: {
+    keyboard: {
+      onShortcut: vi.fn((_callback: (shortcut: string) => void) => vi.fn())
+    },
+    shell: {
+      getAvailableShells: vi
+        .fn()
+        .mockResolvedValue({ success: true, data: { default: null, available: [] } })
+    },
+    terminal: {
+      getGitBranch: vi.fn().mockResolvedValue({ success: true, data: 'main' }),
+      getGitStatus: vi.fn().mockResolvedValue({ success: true, data: { hasChanges: false } }),
+      onData: vi.fn(() => vi.fn()),
+      onTitleChange: vi.fn(() => vi.fn()),
+      onExit: vi.fn(() => vi.fn()),
+      spawn: vi.fn().mockResolvedValue({ success: true, data: 'mock-pty-id' }),
+      resize: vi.fn().mockResolvedValue({ success: true }),
+      kill: vi.fn().mockResolvedValue({ success: true }),
+      write: vi.fn().mockResolvedValue({ success: true })
+    },
+    filesystem: {
+      onFileChanged: vi.fn(() => vi.fn()),
+      onFileCreated: vi.fn(() => vi.fn()),
+      onFileDeleted: vi.fn(() => vi.fn()),
+      onSearchFileNamesBatch: vi.fn(() => vi.fn()),
+      onSearchFileNamesDone: vi.fn(() => vi.fn()),
+      watchDirectory: vi.fn().mockResolvedValue({ success: true }),
+      unwatchDirectory: vi.fn().mockResolvedValue({ success: true }),
+      readDirectory: vi.fn().mockResolvedValue({ success: true, data: [] })
+    },
+    system: {
+      getHomeDirectory: vi.fn().mockResolvedValue({ success: true, data: '/home/user' }),
+      getAvailableShells: vi.fn().mockResolvedValue({ success: true, data: [] })
+    },
+    persistence: {
+      writeDebounced: vi.fn(() => Promise.resolve({ success: true, data: undefined })),
+      read: vi.fn(() => Promise.resolve({ success: true, data: null })),
+      write: vi.fn(() => Promise.resolve({ success: true, data: undefined })),
+      delete: vi.fn(() => Promise.resolve({ success: true, data: undefined })),
+      flushPendingWrites: vi.fn(() => Promise.resolve({ success: true, data: undefined }))
+    },
+    window: {
+      minimize: vi.fn(),
+      toggleMaximize: vi.fn().mockResolvedValue({ success: true, data: false }),
+      close: vi.fn(),
+      onMaximizeChange: vi.fn(() => vi.fn()),
+      onCloseRequested: vi.fn<(callback: () => Promise<boolean>) => () => void>((_callback) =>
+        vi.fn()
+      ),
+      respondToClose: vi.fn()
+    },
+    clipboard: {
+      readText: vi.fn().mockResolvedValue({ success: true, data: '' }),
+      writeText: vi.fn().mockResolvedValue({ success: true })
+    },
+    dialog: {
+      selectDirectory: vi.fn(),
+      selectFile: vi.fn(),
+      saveFile: vi.fn(),
+      showConfirm: vi.fn(),
+      showMessage: vi.fn()
+    },
+    visibility: {
+      setVisibilityState: vi.fn()
+    },
+    session: {
+      save: vi.fn(),
+      restore: vi.fn(),
+      clear: vi.fn(),
+      flush: vi.fn(),
+      hasSession: vi.fn()
+    },
+    dataMigration: {
+      getVersion: vi.fn(),
+      getSchemaInfo: vi.fn(),
+      getHistory: vi.fn(),
+      getRegistered: vi.fn(),
+      runMigration: vi.fn(),
+      rollback: vi.fn()
+    },
+    hasActiveTerminalSessions: vi.fn()
+  }
+}))
+
+vi.mock('@/lib/api', () => ({
+  keyboardApi: mockApi.keyboard,
+  shellApi: mockApi.shell,
+  terminalApi: mockApi.terminal,
+  filesystemApi: mockApi.filesystem,
+  systemApi: mockApi.system,
+  persistenceApi: mockApi.persistence,
+  windowApi: mockApi.window,
+  clipboardApi: mockApi.clipboard,
+  dialogApi: mockApi.dialog,
+  visibilityApi: mockApi.visibility,
+  sessionApi: mockApi.session,
+  dataMigrationApi: mockApi.dataMigration,
+  hasActiveTerminalSessions: mockApi.hasActiveTerminalSessions,
+  sshApi: { onConnectionStatusChanged: vi.fn(() => vi.fn()) },
+  gitApi: { getCommitContext: vi.fn().mockResolvedValue({ branch: null }) },
+  // Story 6: post-test async fire (overlay/subscription teardown paths)
+  // reaches worktreeApi — without the export the mock factory throws an
+  // unhandled rejection after the suite completes. Method names mirror the
+  // real worktree-api surface; every method resolves to an inert success.
+  worktreeApi: {
+    list: vi.fn().mockResolvedValue({ success: true, data: [] }),
+    create: vi.fn().mockResolvedValue({ success: true, data: null }),
+    remove: vi.fn().mockResolvedValue({ success: true, data: null }),
+    branches: vi.fn().mockResolvedValue({ success: true, data: [] }),
+    checkDirty: vi.fn().mockResolvedValue({ success: true, data: { dirty: false } }),
+    removeAllManaged: vi.fn().mockResolvedValue({ success: true, data: null }),
+    parseGitignore: vi.fn().mockResolvedValue({ success: true, data: [] }),
+    createSymlinks: vi.fn().mockResolvedValue({ success: true, data: null }),
+    ensureSymlinks: vi.fn().mockResolvedValue({ success: true, data: null }),
+    archive: vi.fn().mockResolvedValue({ success: true, data: null }),
+    restore: vi.fn().mockResolvedValue({ success: true, data: null })
+  },
+  tauriUpdaterApi: {},
+  tauriVersionSkipService: {}
+}))
+
+// Matrix audit (sidebar/explorer toggle rows): the shared framer-motion
+// mock records every motion.div's props so the panelRevealMotion wrapper's
+// shape — and its reduced-motion "instant" variant — is assertable
+// structurally without pixels/timing. The rest of the tree (ShellFrame,
+// ProjectSidebar internals, etc.) is unaffected.
+vi.mock('framer-motion', async (importOriginal) => {
+  const { installFramerMotionMock } = await import('@/test-utils/mock-framer-motion')
+  return installFramerMotionMock(importOriginal)
+})
+
+// AgentLauncher warms the lazy AgentChatPanel chunk on mount with a
+// fire-and-forget import. When the suite finishes before that chunk
+// finishes loading, vitest tears the jsdom environment down mid-import
+// and reports an EnvironmentTeardownError from this file (seen on CI).
+// Load the chunk before the tests so the on-mount import resolves from
+// the module cache instead of racing teardown.
+beforeAll(async () => {
+  await Promise.all([
+    import('@/components/chat/AgentChatPanel'),
+    import('@/components/ThemePicker'),
+    import('@/components/file-explorer/FileExplorer')
+  ])
+}, 60000)
+
+beforeEach(() => {
+  platformState.isMac = false
+  vi.stubGlobal('api', mockApi)
+  if (!HTMLElement.prototype.scrollIntoView) {
+    HTMLElement.prototype.scrollIntoView = vi.fn()
+  }
+  // Reset mocks
+  mockUseProjectsLoaded.mockReturnValue(true)
+  mockUseProjects.mockReturnValue([])
+  mockUseActiveProject.mockReturnValue(null)
+  mockUseActiveProjectId.mockReturnValue('')
+  mockUseTerminals.mockReturnValue([])
+  mockUseAllTerminals.mockReturnValue([])
+  mockUseActiveTerminal.mockReturnValue(null)
+  mockUseActiveTerminalId.mockReturnValue('')
+  mockUpdatePanelVisibility.mockReset()
+  appSettingsRef.current = { shellLayout: undefined }
+  resetShellLayoutStoreForTests()
+  useShellLayoutStore.setState({ status: 'ready', sidePanelVisible: true, railExpanded: true })
+  useThemePickerStore.getState().close()
+  mockApi.filesystem.watchDirectory.mockReset()
+  mockApi.filesystem.unwatchDirectory.mockReset()
+  mockApi.filesystem.watchDirectory.mockResolvedValue({ success: true })
+  mockApi.keyboard.onShortcut.mockReset()
+  mockApi.keyboard.onShortcut.mockImplementation((_callback: (shortcut: string) => void) => vi.fn())
+  mockApi.persistence.flushPendingWrites.mockReset()
+  mockApi.persistence.flushPendingWrites.mockResolvedValue({ success: true, data: undefined })
+  mockApi.window.onCloseRequested.mockReset()
+  mockApi.window.onCloseRequested.mockImplementation(() => vi.fn())
+  mockApi.window.respondToClose.mockReset()
+  resetFramerMotionTestState()
+})
+
+afterEach(() => {
+  vi.clearAllTimers()
+})
+
+// Helper to render with router
+const renderWithRouter = (initialEntries = ['/']) => {
+  return render(
+    <TooltipProvider>
+      <MemoryRouter initialEntries={initialEntries}>
+        <WorkspaceLayout />
+      </MemoryRouter>
+    </TooltipProvider>
+  )
+}
+
+describe('WorkspaceLayout - Empty States', () => {
+  it('does not persist a project whose switch has not committed yet before unload', async () => {
+    mockUseActiveProjectId.mockReturnValue('project-1')
+    mockUseActiveProject.mockReturnValue(createProject('project-1', '/workspace/project-1', 'blue'))
+    useWorkspaceStore.setState({ activeProjectId: 'project-0' })
+
+    renderWithRouter()
+    window.dispatchEvent(new Event('beforeunload'))
+
+    expect(mockSaveTerminalLayout).not.toHaveBeenCalled()
+    useWorkspaceStore.setState({ activeProjectId: '' })
+  })
+
+  it('persists terminal layout before unload when a project is active', async () => {
+    mockUseActiveProjectId.mockReturnValue('project-1')
+    mockUseActiveProject.mockReturnValue(createProject('project-1', '/workspace/project-1', 'blue'))
+    // The committed project (the layout's persistence hook is mocked here).
+    useWorkspaceStore.setState({ activeProjectId: 'project-1' })
+
+    renderWithRouter()
+
+    window.dispatchEvent(new Event('beforeunload'))
+
+    await waitFor(() => {
+      expect(mockSaveTerminalLayout).toHaveBeenCalledWith('project-1')
+    })
+    useWorkspaceStore.setState({ activeProjectId: '' })
+  })
+
+  it('re-surfaces the token-entry screen mid-session when the web auth gate flags unauthorized (#907)', async () => {
+    // Web context, projects already loaded — the gate flips to
+    // `unauthorized` only when the WS transport detects a rotated/revoked
+    // token (flagWebAuthUnauthorized). The workspace must swap for the
+    // token screen, then return once the gate is ok again.
+    const prevTauri = tauriRef.current
+    tauriRef.current = false
+    mockUseProjectsLoaded.mockReturnValue(true)
+    webAuthGateRef.current = { status: 'ok', submitting: false }
+    try {
+      const { rerender } = renderWithRouter()
+
+      // Loaded workspace renders (not the boot gate).
+      expect(screen.queryByRole('heading', { name: 'Server access token required' })).toBeNull()
+
+      // The WS transport flags the gate mid-session (token rotated).
+      webAuthGateRef.current = { status: 'unauthorized', submitting: false }
+      rerender(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/']}>
+            <WorkspaceLayout />
+          </MemoryRouter>
+        </TooltipProvider>
+      )
+
+      expect(
+        await screen.findByRole('heading', { name: 'Server access token required' })
+      ).toBeInTheDocument()
+
+      // A valid token submission flips the gate back — the workspace returns.
+      webAuthGateRef.current = { status: 'ok', submitting: false }
+      rerender(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/']}>
+            <WorkspaceLayout />
+          </MemoryRouter>
+        </TooltipProvider>
+      )
+
+      expect(screen.queryByRole('heading', { name: 'Server access token required' })).toBeNull()
+    } finally {
+      tauriRef.current = prevTauri
+      webAuthGateRef.current = { status: 'ok', submitting: false }
+      mockUseProjectsLoaded.mockReturnValue(true)
+    }
+  })
+
+  it('keeps a mounted canvas iframe through the mid-session token screen', async () => {
+    // The iframe holds the editor's document; unmounting it while the store
+    // still says ready would leave an empty editor that autosave can write.
+    const prevTauri = tauriRef.current
+    tauriRef.current = false
+    webAuthGateRef.current = { status: 'ok', submitting: false }
+    const info = {
+      canvasId: 'cv0123456789abcdef',
+      baseUrl: '',
+      canvasToken: 'cafe',
+      pinTag: 'termul-v1',
+      docKey: '/workspace/p/design.figcraft',
+      mountSeq: 3,
+      evicted: [],
+      fallbackFonts: []
+    }
+    useCanvasStore.setState({
+      sessions: {
+        p: {
+          projectId: 'p',
+          docPath: info.docKey,
+          phase: { kind: 'ready', mount: { mountSeq: 3, info } },
+          dirty: false,
+          contentVersion: '1',
+          savedVersion: '1',
+          saving: false,
+          saveError: null,
+          closing: false,
+          conflict: null,
+          resolving: false,
+          crash: null
+        }
+      }
+    })
+    const layout = (
+      <TooltipProvider>
+        <MemoryRouter initialEntries={['/']}>
+          <WorkspaceLayout />
+        </MemoryRouter>
+      </TooltipProvider>
+    )
+    try {
+      const { rerender, container } = renderWithRouter()
+      const frame = (): Element | null =>
+        container.ownerDocument.querySelector('iframe[data-canvas-project="p"]')
+      const before = frame()
+      expect(before).not.toBeNull()
+
+      webAuthGateRef.current = { status: 'unauthorized', submitting: false }
+      rerender(layout)
+      expect(
+        await screen.findByRole('heading', { name: 'Server access token required' })
+      ).toBeInTheDocument()
+      expect(frame()).toBe(before)
+
+      webAuthGateRef.current = { status: 'ok', submitting: false }
+      rerender(layout)
+      expect(frame()).toBe(before)
+    } finally {
+      tauriRef.current = prevTauri
+      webAuthGateRef.current = { status: 'ok', submitting: false }
+      useCanvasStore.setState({ sessions: {} })
+    }
+  })
+
+  describe('No Projects Empty State', () => {
+    beforeEach(() => {
+      // Ensure no projects
+      mockUseProjects.mockReturnValue([])
+      mockUseActiveProject.mockReturnValue(null)
+      mockUseActiveProjectId.mockReturnValue('')
+    })
+
+    it('should render no projects empty state when projects array is empty', () => {
+      renderWithRouter()
+
+      expect(screen.getByText('No Projects Yet')).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          'Create your first project to organize your terminals, snapshots, and commands'
+        )
+      ).toBeInTheDocument()
+    })
+
+    it('should show descriptive message about creating first project', () => {
+      renderWithRouter()
+
+      const description = screen.getByText(
+        'Create your first project to organize your terminals, snapshots, and commands'
+      )
+      expect(description).toBeInTheDocument()
+      expect(description.tagName).toBe('P')
+    })
+
+    it('should have a button to create first project', () => {
+      renderWithRouter()
+
+      const button = screen.getByText('Create Your First Project')
+      expect(button).toBeInTheDocument()
+      expect(button.tagName).toBe('BUTTON')
+    })
+
+    it('shows the create-first-project CTA on web (isTauriContext false)', () => {
+      const prev = tauriRef.current
+      tauriRef.current = false
+      try {
+        renderWithRouter()
+        const button = screen.getByText('Create Your First Project')
+        expect(button).toBeInTheDocument()
+        expect(button.tagName).toBe('BUTTON')
+      } finally {
+        tauriRef.current = prev
+      }
+    })
+
+    it('should not show terminal-related elements when no projects', () => {
+      renderWithRouter()
+
+      expect(screen.queryByText('No Terminals Yet')).not.toBeInTheDocument()
+      expect(screen.queryByText('Create Your First Terminal')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Empty Workspace Pane State', () => {
+    beforeEach(() => {
+      // Set up a project but no terminals/tabs
+      mockUseProjects.mockReturnValue([
+        {
+          id: '1',
+          name: 'Test Project',
+          color: 'blue',
+          path: '/test/project',
+          gitBranch: 'main',
+          isActive: true
+        }
+      ])
+      mockUseActiveProject.mockReturnValue({
+        id: '1',
+        name: 'Test Project',
+        color: 'blue',
+        path: '/test/project',
+        gitBranch: 'main',
+        isActive: true
+      })
+      mockUseActiveProjectId.mockReturnValue('1')
+      mockUseTerminals.mockReturnValue([])
+      mockUseAllTerminals.mockReturnValue([])
+      mockUseActiveTerminal.mockReturnValue(null)
+      mockUseActiveTerminalId.mockReturnValue('')
+    })
+
+    it.skip('should render empty pane hint when project exists but has no tabs', () => {
+      renderWithRouter()
+
+      expect(screen.getByText('Drag a tab or file here')).toBeInTheDocument()
+    })
+
+    it.skip('should show pane-level new terminal action', () => {
+      renderWithRouter()
+
+      expect(screen.getByTitle('New tab')).toBeInTheDocument()
+    })
+
+    it('should not show legacy terminal empty-state CTA', () => {
+      renderWithRouter()
+
+      expect(screen.queryByText('No Terminals Yet')).not.toBeInTheDocument()
+      expect(screen.queryByText('Create Your First Terminal')).not.toBeInTheDocument()
+    })
+
+    it('should not show no projects empty state when project exists', () => {
+      renderWithRouter()
+
+      expect(screen.queryByText('No Projects Yet')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Empty State Styling', () => {
+    it('should center no projects empty state', () => {
+      mockUseProjects.mockReturnValue([])
+      mockUseActiveProject.mockReturnValue(null)
+      mockUseActiveProjectId.mockReturnValue('')
+
+      renderWithRouter()
+
+      const emptyStateContainer = screen.getByText('No Projects Yet').closest('div')?.parentElement
+      expect(emptyStateContainer?.className).toContain('items-center')
+      expect(emptyStateContainer?.className).toContain('justify-center')
+    })
+
+    it.skip('should center empty pane hint in workspace area', () => {
+      mockUseProjects.mockReturnValue([
+        {
+          id: '1',
+          name: 'Test Project',
+          color: 'blue',
+          path: '/test/project',
+          gitBranch: 'main',
+          isActive: true
+        }
+      ])
+      mockUseActiveProject.mockReturnValue({
+        id: '1',
+        name: 'Test Project',
+        color: 'blue',
+        path: '/test/project',
+        gitBranch: 'main',
+        isActive: true
+      })
+      mockUseActiveProjectId.mockReturnValue('1')
+      mockUseTerminals.mockReturnValue([])
+      mockUseAllTerminals.mockReturnValue([])
+      mockUseActiveTerminal.mockReturnValue(null)
+      mockUseActiveTerminalId.mockReturnValue('')
+
+      renderWithRouter()
+
+      const emptyHint = screen.getByText('Drag a tab or file here')
+      const emptyStateContainer = emptyHint.closest('div')
+      expect(emptyStateContainer?.className).toContain('items-center')
+      expect(emptyStateContainer?.className).toContain('justify-center')
+    })
+
+    it('should apply correct text styling to titles', () => {
+      mockUseProjects.mockReturnValue([])
+      mockUseActiveProject.mockReturnValue(null)
+      mockUseActiveProjectId.mockReturnValue('')
+
+      renderWithRouter()
+
+      const title = screen.getByText('No Projects Yet')
+      expect(title.className).toContain('text-xl')
+      expect(title.className).toContain('font-semibold')
+    })
+
+    it('should apply muted styling to descriptions', () => {
+      mockUseProjects.mockReturnValue([])
+      mockUseActiveProject.mockReturnValue(null)
+      mockUseActiveProjectId.mockReturnValue('')
+
+      renderWithRouter()
+
+      const description = screen.getByText(/Create your first project to organize your terminals/)
+      expect(description.className).toContain('text-muted-foreground')
+    })
+  })
+
+  describe('Transitions Between States', () => {
+    it('should show no projects state when no projects exist', () => {
+      mockUseProjects.mockReturnValue([])
+      mockUseActiveProject.mockReturnValue(null)
+      mockUseActiveProjectId.mockReturnValue('')
+
+      renderWithRouter()
+
+      expect(screen.getByText('No Projects Yet')).toBeInTheDocument()
+      expect(screen.queryByText('No Terminals Yet')).not.toBeInTheDocument()
+    })
+
+    it.skip('should show empty pane hint when project exists but has no tabs', () => {
+      mockUseProjects.mockReturnValue([
+        {
+          id: '1',
+          name: 'Test Project',
+          color: 'blue',
+          path: '/test/project',
+          gitBranch: 'main',
+          isActive: true
+        }
+      ])
+      mockUseActiveProject.mockReturnValue({
+        id: '1',
+        name: 'Test Project',
+        color: 'blue',
+        path: '/test/project',
+        gitBranch: 'main',
+        isActive: true
+      })
+      mockUseActiveProjectId.mockReturnValue('1')
+      mockUseTerminals.mockReturnValue([])
+      mockUseAllTerminals.mockReturnValue([])
+      mockUseActiveTerminal.mockReturnValue(null)
+      mockUseActiveTerminalId.mockReturnValue('')
+
+      renderWithRouter()
+
+      expect(screen.queryByText('No Projects Yet')).not.toBeInTheDocument()
+      expect(screen.getByText('Drag a tab or file here')).toBeInTheDocument()
+    })
+
+    it.skip('should not show empty states when terminals exist', () => {
+      mockUseProjects.mockReturnValue([
+        {
+          id: '1',
+          name: 'Test Project',
+          color: 'blue',
+          path: '/test/project',
+          gitBranch: 'main',
+          isActive: true
+        }
+      ])
+      mockUseActiveProject.mockReturnValue({
+        id: '1',
+        name: 'Test Project',
+        color: 'blue',
+        path: '/test/project',
+        gitBranch: 'main',
+        isActive: true
+      })
+      mockUseActiveProjectId.mockReturnValue('1')
+      const terminal = mockTerminal({
+        id: 'terminal-1',
+        projectId: '1',
+        cwd: '/test/project'
+      })
+      mockUseTerminals.mockReturnValue([terminal])
+      mockUseAllTerminals.mockReturnValue([terminal])
+      mockUseActiveTerminal.mockReturnValue(terminal)
+      mockUseActiveTerminalId.mockReturnValue('terminal-1')
+
+      renderWithRouter()
+
+      expect(screen.queryByText('No Projects Yet')).not.toBeInTheDocument()
+      expect(screen.queryByText('No Terminals Yet')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('Keyboard panel visibility shortcuts', () => {
+    beforeEach(() => {
+      const project = createProject('a', '/workspace/a', 'blue')
+      mockUseProjects.mockReturnValue([project])
+      mockUseActiveProject.mockReturnValue(project)
+      mockUseActiveProjectId.mockReturnValue('a')
+      mockUseTerminals.mockReturnValue([])
+      mockUseAllTerminals.mockReturnValue([])
+      mockUseActiveTerminal.mockReturnValue(null)
+      mockUseActiveTerminalId.mockReturnValue('')
+    })
+
+    it.skip('keeps Ctrl+B toggling file explorer and persists globally', () => {
+      renderWithRouter()
+
+      fireEvent.keyDown(window, { key: 'b', ctrlKey: true })
+
+      expect(mockUpdatePanelVisibility).toHaveBeenCalledWith('fileExplorerVisible', false)
+    })
+
+    it.skip('toggles sidebar with configured sidebar shortcut and persists globally', () => {
+      renderWithRouter()
+
+      fireEvent.keyDown(window, { key: 'B', ctrlKey: true, shiftKey: true })
+
+      expect(mockUpdatePanelVisibility).toHaveBeenCalledWith('sidebarVisible', false)
+    })
+
+    it.skip('does not toggle panel shortcuts when focus is in input', () => {
+      renderWithRouter()
+
+      const input = document.createElement('input')
+      document.body.appendChild(input)
+      input.focus()
+
+      fireEvent.keyDown(input, { key: 'b', ctrlKey: true })
+      fireEvent.keyDown(input, { key: 'B', ctrlKey: true, shiftKey: true })
+
+      expect(useShellLayoutStore.getState().sidePanelVisible).toBe(true)
+      expect(useShellLayoutStore.getState().railExpanded).toBe(true)
+      expect(mockUpdatePanelVisibility).not.toHaveBeenCalled()
+
+      document.body.removeChild(input)
+    })
+
+    it.skip('treats xterm textarea focus as terminal focus for sidebar shortcuts', () => {
+      renderWithRouter()
+
+      const terminalRoot = document.createElement('div')
+      terminalRoot.className = 'xterm'
+      const textarea = document.createElement('textarea')
+      terminalRoot.appendChild(textarea)
+      document.body.appendChild(terminalRoot)
+      textarea.focus()
+
+      fireEvent.keyDown(textarea, { key: 'B', ctrlKey: true, shiftKey: true })
+
+      expect(mockUpdatePanelVisibility).toHaveBeenCalledTimes(1)
+      expect(mockUpdatePanelVisibility).toHaveBeenCalledWith('sidebarVisible', false)
+
+      document.body.removeChild(terminalRoot)
+    })
+
+    it.skip('does not suppress global non-sidebar shortcuts when focus is in xterm', () => {
+      // Verify that a global shortcut whose active element is xterm's textarea
+      // fires the appropriate handler rather than being suppressed.
+      // Ctrl+N opens the new project modal — it is global and must work from terminal focus.
+      renderWithRouter()
+
+      const terminalRoot = document.createElement('div')
+      terminalRoot.className = 'xterm'
+      const textarea = document.createElement('textarea')
+      terminalRoot.appendChild(textarea)
+      document.body.appendChild(terminalRoot)
+      textarea.focus()
+
+      // File explorer toggle (Ctrl+B) is intentionally blocked in terminal — use
+      // sidebar toggle (Ctrl+Shift+B) which IS global from terminal focus.
+      // The sidebar was already tested above; here we confirm the panel
+      // visibility mock is called exactly once (not zero, as a plain
+      // textarea would produce).
+      mockUpdatePanelVisibility.mockClear()
+      fireEvent.keyDown(textarea, { key: 'B', ctrlKey: true, shiftKey: true })
+
+      expect(mockUpdatePanelVisibility).toHaveBeenCalledTimes(1)
+      expect(mockUpdatePanelVisibility).toHaveBeenCalledWith('sidebarVisible', false)
+
+      document.body.removeChild(terminalRoot)
+    })
+
+    it.skip('opens the command palette when Ctrl+K is pressed from terminal focus', () => {
+      renderWithRouter()
+
+      const terminalRoot = document.createElement('div')
+      terminalRoot.className = 'xterm'
+      const textarea = document.createElement('textarea')
+      terminalRoot.appendChild(textarea)
+      document.body.appendChild(terminalRoot)
+      textarea.focus()
+
+      fireEvent.keyDown(textarea, { key: 'k', ctrlKey: true })
+
+      expect(screen.getByPlaceholderText('Type a command or search...')).toBeInTheDocument()
+
+      document.body.removeChild(terminalRoot)
+    })
+
+    it.skip('opens command history when Ctrl+R is pressed from terminal focus', () => {
+      renderWithRouter()
+
+      const terminalRoot = document.createElement('div')
+      terminalRoot.className = 'xterm'
+      const textarea = document.createElement('textarea')
+      terminalRoot.appendChild(textarea)
+      document.body.appendChild(terminalRoot)
+      textarea.focus()
+
+      fireEvent.keyDown(textarea, { key: 'r', ctrlKey: true })
+
+      expect(screen.getByText('Command History')).toBeInTheDocument()
+
+      document.body.removeChild(terminalRoot)
+    })
+
+    // Skipped: flaky under full-suite load (waits time out); passes alone.
+    it.skip('opens the color theme picker from backend shortcut callbacks', async () => {
+      let backendShortcut: ((shortcut: string) => void) | undefined
+      // Prefer mockImplementation over Once: Strict Mode remounts / sibling
+      // subscribers can consume a one-shot mock before the layout effect runs.
+      mockApi.keyboard.onShortcut.mockImplementation((callback: (shortcut: string) => void) => {
+        backendShortcut = callback
+        return vi.fn()
+      })
+
+      renderWithRouter()
+
+      // The onShortcut subscription registers in a layout effect; under
+      // full-suite contention (2-vCPU CI runners run the whole suite with
+      // two workers) the effect can take tens of seconds to flush — the
+      // timeout has been raised twice already (1s → 10s → 30s) for this.
+      await waitFor(() => expect(backendShortcut).toBeDefined(), { timeout: 30000 })
+      act(() => backendShortcut?.('colorThemePicker'))
+      // ThemePicker is React.lazy — allow extra time for the chunk to resolve
+      // under full-suite resource contention (passes instantly in isolation).
+      expect(
+        await screen.findByRole('dialog', { name: 'Color theme picker' }, { timeout: 20000 })
+      ).toBeInTheDocument()
+      // The two sequential waits above can exceed the 15s global
+      // testTimeout, which would kill the test before the second one resolves.
+    }, 90000)
+  })
+
+  describe('Settings shortcut', () => {
+    beforeEach(() => {
+      const project = createProject('a', '/workspace/a', 'blue')
+      mockUseProjects.mockReturnValue([project])
+      mockUseActiveProject.mockReturnValue(project)
+      mockUseActiveProjectId.mockReturnValue('a')
+      mockUseTerminals.mockReturnValue([])
+      mockUseAllTerminals.mockReturnValue([])
+      mockUseActiveTerminal.mockReturnValue(null)
+      mockUseActiveTerminalId.mockReturnValue('')
+      useSettingsModalStore.setState({ view: null })
+    })
+
+    afterEach(() => {
+      useSettingsModalStore.setState({ view: null })
+      webAuthGateRef.current = { status: 'ok', submitting: false }
+    })
+
+    it('opens the app Settings modal on Ctrl+,', () => {
+      renderWithRouter()
+
+      fireEvent.keyDown(window, { key: ',', ctrlKey: true })
+
+      expect(useSettingsModalStore.getState().view).toBe('app')
+    })
+
+    it('opens the app Settings modal while an input has focus', () => {
+      renderWithRouter()
+
+      const input = document.createElement('input')
+      document.body.appendChild(input)
+      input.focus()
+
+      fireEvent.keyDown(input, { key: ',', ctrlKey: true })
+
+      expect(useSettingsModalStore.getState().view).toBe('app')
+      document.body.removeChild(input)
+    })
+
+    it('does not open Settings for Alt+, when the binding is Ctrl+,', () => {
+      renderWithRouter()
+
+      fireEvent.keyDown(window, { key: ',', altKey: true })
+
+      expect(useSettingsModalStore.getState().view).toBeNull()
+    })
+
+    it('stays inert while the web auth gate is unauthorized', () => {
+      webAuthGateRef.current = { status: 'unauthorized', submitting: false }
+      renderWithRouter()
+
+      fireEvent.keyDown(window, { key: ',', ctrlKey: true })
+
+      expect(useSettingsModalStore.getState().view).toBeNull()
+    })
+  })
+
+  describe('Project switch watcher orchestration', () => {
+    it.skip('watches unrelated roots across project switches and unwatches old root', async () => {
+      const projects = [
+        createProject('a', '/workspace/a', 'blue'),
+        createProject('b', '/outside/b', 'green')
+      ]
+
+      mockUseProjects.mockReturnValue(projects)
+      mockUseTerminals.mockReturnValue([])
+      mockUseAllTerminals.mockReturnValue([])
+      mockUseActiveTerminal.mockReturnValue(null)
+      mockUseActiveTerminalId.mockReturnValue('')
+
+      mockUseActiveProject.mockReturnValue(projects[0])
+      mockUseActiveProjectId.mockReturnValue('a')
+
+      const view = renderWithRouter()
+
+      await waitFor(() => {
+        expect(mockApi.filesystem.watchDirectory).toHaveBeenCalledWith('/workspace/a')
+      })
+
+      mockUseActiveProject.mockReturnValue(projects[1])
+      mockUseActiveProjectId.mockReturnValue('b')
+      view.rerender(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/']}>
+            <WorkspaceLayout />
+          </MemoryRouter>
+        </TooltipProvider>
+      )
+
+      await waitFor(() => {
+        expect(mockApi.filesystem.watchDirectory).toHaveBeenCalledWith('/outside/b')
+      })
+
+      expect(mockApi.filesystem.unwatchDirectory).toHaveBeenCalledWith('/workspace/a')
+    })
+
+    it.skip('ignores stale async watch completion from older project switch', async () => {
+      let resolveFirstWatch: (value: { success: boolean }) => void = () => undefined
+      mockApi.filesystem.watchDirectory
+        .mockImplementationOnce(
+          () =>
+            new Promise<{ success: boolean }>((resolve) => {
+              resolveFirstWatch = resolve
+            })
+        )
+        .mockResolvedValueOnce({ success: true })
+
+      const projects = [
+        createProject('a', '/workspace/a', 'blue'),
+        createProject('c', '/workspace/c', 'purple')
+      ]
+
+      mockUseProjects.mockReturnValue(projects)
+      mockUseTerminals.mockReturnValue([])
+      mockUseAllTerminals.mockReturnValue([])
+      mockUseActiveTerminal.mockReturnValue(null)
+      mockUseActiveTerminalId.mockReturnValue('')
+
+      mockUseActiveProject.mockReturnValue(projects[0])
+      mockUseActiveProjectId.mockReturnValue('a')
+      const view = renderWithRouter()
+
+      mockUseActiveProject.mockReturnValue(projects[1])
+      mockUseActiveProjectId.mockReturnValue('c')
+      view.rerender(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/']}>
+            <WorkspaceLayout />
+          </MemoryRouter>
+        </TooltipProvider>
+      )
+
+      await waitFor(() => {
+        expect(mockApi.filesystem.watchDirectory).toHaveBeenCalledWith('/workspace/c')
+      })
+
+      resolveFirstWatch({ success: true })
+
+      await waitFor(() => {
+        expect(mockApi.filesystem.unwatchDirectory).toHaveBeenCalledWith('/workspace/a')
+      })
+    })
+
+    it.skip('does not re-run terminal sync when terminal ids stay unchanged across rerenders', async () => {
+      const projects = [createProject('a', '/workspace/a', 'blue')]
+      const terminal = {
+        id: 'terminal-a',
+        projectId: 'a',
+        name: 'Terminal A',
+        shell: 'bash',
+        ptyId: 'pty-a'
+      } as Terminal
+
+      mockUseProjects.mockReturnValue(projects)
+      mockUseTerminals.mockReturnValue([terminal])
+      mockUseAllTerminals.mockReturnValue([terminal])
+      mockUseActiveTerminal.mockReturnValue(terminal)
+      mockUseActiveTerminalId.mockReturnValue('terminal-a')
+      mockUseActiveProject.mockReturnValue(projects[0])
+      mockUseActiveProjectId.mockReturnValue('a')
+
+      const view = renderWithRouter()
+
+      await waitFor(() => {
+        expect(mockApi.terminal.onData).toHaveBeenCalledTimes(1)
+      })
+
+      const consoleLogSpy = vi.spyOn(console, 'log')
+      const initialSyncCalls = consoleLogSpy.mock.calls.filter((call) =>
+        String(call[0]).includes('[WorkspaceLayout] syncTerminalTabs CALL')
+      ).length
+
+      view.rerender(
+        <TooltipProvider>
+          <MemoryRouter initialEntries={['/']}>
+            <WorkspaceLayout />
+          </MemoryRouter>
+        </TooltipProvider>
+      )
+
+      await new Promise((resolve) => setTimeout(resolve, 0))
+
+      const syncCallsAfter = consoleLogSpy.mock.calls.filter((call) =>
+        String(call[0]).includes('[WorkspaceLayout] syncTerminalTabs CALL')
+      ).length
+
+      expect(syncCallsAfter).toBe(initialSyncCalls)
+      consoleLogSpy.mockRestore()
+    })
+
+    // #856 (replacement for the removed WEB_UNSUPPORTED soft no-op test):
+    // on web, `watchDirectory` now reports success — the server-side
+    // watcher + control-WS `fs_changed` bridge own change events — so the
+    // project switch completes the same way and never sets rootLoadError.
+    // Skipped: flaky under full-suite load (waits time out); passes alone.
+    it.skip('completes the project switch with no rootLoadError when web watchDirectory succeeds', async () => {
+      const prev = tauriRef.current
+      tauriRef.current = false
+      useFileExplorerStore.setState({ rootLoadError: null })
+      mockApi.filesystem.watchDirectory.mockResolvedValue({ success: true })
+      try {
+        const projects = [createProject('a', '/workspace/a', 'blue')]
+        mockUseProjects.mockReturnValue(projects)
+        mockUseTerminals.mockReturnValue([])
+        mockUseAllTerminals.mockReturnValue([])
+        mockUseActiveTerminal.mockReturnValue(null)
+        mockUseActiveTerminalId.mockReturnValue('')
+        mockUseActiveProject.mockReturnValue(projects[0])
+        mockUseActiveProjectId.mockReturnValue('a')
+
+        renderWithRouter()
+
+        await waitFor(
+          () => {
+            expect(mockApi.filesystem.watchDirectory).toHaveBeenCalledWith('/workspace/a')
+          },
+          { timeout: 20000 }
+        )
+
+        await new Promise((resolve) => setTimeout(resolve, 10))
+
+        expect(useFileExplorerStore.getState().rootLoadError).toBeNull()
+      } finally {
+        tauriRef.current = prev
+        mockApi.filesystem.watchDirectory.mockResolvedValue({ success: true })
+      }
+    }, 30000)
+  })
+})
+
+// Desktop always renders the revamped shell (ShellFrame): Rail | Side panel |
+// main. A stored legacy `shellLayout` value is ignored.
+describe('WorkspaceLayout - desktop shell', () => {
+  function precedes(a: Element, b: Element): boolean {
+    return Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+  }
+
+  function expectShellFrame(): void {
+    const rail = screen.getByRole('navigation', { name: 'Projects' })
+    const sidePanel = screen.getByTestId('side-panel-column')
+    const main = document.querySelector('main') as Element
+    expect(precedes(rail, sidePanel)).toBe(true)
+    expect(precedes(sidePanel, main)).toBe(true)
+    expect(screen.queryByRole('navigation', { name: 'Global actions' })).not.toBeInTheDocument()
+    expect(document.querySelector('aside.w-64')).toBeNull()
+  }
+
+  it('renders ShellFrame on desktop: Rail, Side panel and main in order', () => {
+    mockUseActiveProject.mockReturnValue(createProject('p1', '/workspace/p1', 'blue'))
+
+    renderWithRouter()
+
+    expectShellFrame()
+  })
+
+  it.each([
+    'classic',
+    'revamp',
+    'nonsense'
+  ])('renders ShellFrame and ignores a stored shellLayout of %s', (stored) => {
+    appSettingsRef.current = { shellLayout: stored }
+    mockUseActiveProject.mockReturnValue(createProject('p1', '/workspace/p1', 'blue'))
+
+    renderWithRouter()
+
+    expectShellFrame()
+  })
+
+  it('shows only a centered Loading... while projects load, without any shell chrome', () => {
+    mockUseProjectsLoaded.mockReturnValue(false)
+
+    renderWithRouter()
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument()
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+    expect(document.querySelector('main')).toBeNull()
+  })
+
+  it('unmounts the Side panel when it is hidden', () => {
+    mockUseActiveProject.mockReturnValue(createProject('p1', '/workspace/p1', 'blue'))
+    useShellLayoutStore.setState({ sidePanelVisible: false })
+
+    renderWithRouter()
+
+    expect(screen.queryByTestId('side-panel-column')).not.toBeInTheDocument()
+  })
+
+  it('does not remount main when the Side panel or Rail toggles', async () => {
+    framerMotionTestState.reducedMotion.current = true
+    mockUseActiveProject.mockReturnValue(createProject('p1', '/workspace/p1', 'blue'))
+
+    renderWithRouter()
+    const main = document.querySelector('main') as Element
+
+    act(() => useShellLayoutStore.setState({ sidePanelVisible: false }))
+    await waitFor(() => expect(screen.queryByTestId('side-panel-column')).not.toBeInTheDocument())
+    expect(document.querySelector('main')).toBe(main)
+
+    act(() => useShellLayoutStore.setState({ railExpanded: false }))
+    await waitFor(() =>
+      expect(screen.getByRole('navigation', { name: 'Projects' })).toHaveAttribute(
+        'data-expanded',
+        'false'
+      )
+    )
+    expect(document.querySelector('main')).toBe(main)
+
+    act(() => useShellLayoutStore.setState({ sidePanelVisible: true, railExpanded: true }))
+    expect(await screen.findByTestId('side-panel-column')).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: 'Projects' })).toHaveAttribute(
+      'data-expanded',
+      'true'
+    )
+    expect(document.querySelector('main')).toBe(main)
+  })
+})

@@ -1,0 +1,653 @@
+import type { ShellInfo } from '@shared/types/ipc.types'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+// Import useShallow for selective re-rendering
+import { useShallow } from 'zustand/shallow'
+import { AgentIcon } from '@/components/agents/AgentIcon'
+import { AgentLauncher } from '@/components/agents/AgentLauncher'
+import {
+  LAUNCHER_EXIT_REDUCED_MS,
+  LAUNCHER_EXIT_WINDOW_MS
+} from '@/components/agents/launcher/launcher-motion'
+import { ShowSidePanelSlot } from '@/components/shell/SidePanelVisibilityButtons'
+import { usePaneTopRow } from '@/components/shell/top-row-context'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useMobileWebShell } from '@/hooks/use-mobile-web-shell'
+import { usePaneDnd } from '@/hooks/use-pane-dnd'
+import { cn } from '@/lib/utils'
+import { useProjectStore } from '@/stores/project-store'
+import { useTerminalActions, useTerminalStore } from '@/stores/terminal-store'
+import type { WorkspaceTab } from '@/stores/workspace-store'
+import { getAllLeafPanes, useWorkspaceStore } from '@/stores/workspace-store'
+import {
+  useIsPaneProjectActive,
+  usePaneTree,
+  useProjectPaneContext
+} from '@/stores/workspace-store/pane-context'
+import type { LeafNode } from '@/types/workspace.types'
+import { DropZoneOverlay } from './DropZoneOverlay'
+import { WorkspaceTabBar } from './WorkspaceTabBar'
+
+/** Inactive tabs stay mounted but must not intercept clicks on the active tab beneath. */
+const INACTIVE_TAB_PANE_CLASS = 'w-full h-full absolute inset-0 invisible pointer-events-none'
+
+const AgentChatPanel = lazy(() =>
+  import('@/components/chat/AgentChatPanel').then((m) => ({ default: m.AgentChatPanel }))
+)
+const BrowserPanel = lazy(() =>
+  import('@/components/browser/BrowserPanel').then((m) => ({ default: m.BrowserPanel }))
+)
+const CanvasPanel = lazy(() =>
+  import('@/components/canvas/CanvasPanel').then((m) => ({ default: m.CanvasPanel }))
+)
+const ConnectedTerminal = lazy(() =>
+  import('@/components/terminal/ConnectedTerminal').then((m) => ({ default: m.ConnectedTerminal }))
+)
+const EditorPanel = lazy(() =>
+  import('@/components/editor/EditorPanel').then((m) => ({ default: m.EditorPanel }))
+)
+const DiffTab = lazy(() => import('@/components/git/DiffTab').then((m) => ({ default: m.DiffTab })))
+const CommitDiffTab = lazy(() =>
+  import('@/components/git/CommitDiffTab').then((m) => ({ default: m.CommitDiffTab }))
+)
+const GitHistoryPanel = lazy(() =>
+  import('@/components/git/GitHistoryPanel').then((m) => ({ default: m.GitHistoryPanel }))
+)
+const GitPanel = lazy(() =>
+  import('@/components/git/GitPanel').then((m) => ({ default: m.GitPanel }))
+)
+
+/** Lightweight Suspense fallback for lazy-loaded panes (reuses Skeleton). */
+function PaneSkeleton(): React.JSX.Element {
+  return <Skeleton className="h-full w-full" />
+}
+
+interface PaneContentProps {
+  pane: LeafNode
+  onAddTerminal?: (paneId: string, shell?: ShellInfo) => void
+  onAddBrowserTab?: (paneId: string) => void
+  onCloseTerminal?: (id: string, tabId: string) => void
+  onRenameTerminal?: (id: string, name: string) => void
+  onCloseEditorTab?: (filePath: string) => void
+  onCloseTabs?: (tabs: WorkspaceTab[]) => void
+  closingTerminalIds?: string[]
+  defaultShell?: string
+}
+
+/** One pane: tab bar, every mounted tab's content, drop-zone, and the agent launcher surfaces (empty-pane + overlay) with their handoff keep-alive. */
+export function PaneContent({
+  pane,
+  onAddTerminal,
+  onAddBrowserTab,
+  onCloseTerminal,
+  onRenameTerminal,
+  onCloseEditorTab,
+  onCloseTabs,
+  closingTerminalIds = [],
+  defaultShell
+}: PaneContentProps): React.JSX.Element {
+  // CRITICAL FIX: Get terminal IDs from this pane's tabs
+  const terminalIdsInPane = useMemo(
+    () => new Set(pane.tabs.filter((t) => t.type === 'terminal').map((t) => t.terminalId)),
+    [pane.tabs]
+  )
+
+  // CRITICAL FIX: Only subscribe to terminals' essential properties (not output!)
+  // and ENSURE we only show terminals belonging to this tree's project to prevent "leaks".
+  // Inside a ProjectTreeHost that is the host's project (a hidden tree keeps showing
+  // its own terminals); without one it is the active project.
+  const hostProjectId = useProjectPaneContext()?.projectId
+  const isActiveProject = useIsPaneProjectActive()
+  const treeProjectId = useProjectStore((state) => hostProjectId || state.activeProjectId)
+  const terminalsInPane = useTerminalStore(
+    useShallow((state) =>
+      state.terminals.filter((t) => terminalIdsInPane.has(t.id) && t.projectId === treeProjectId)
+    )
+  )
+
+  // This tree's own pane state: the flat fields when its project is active, its
+  // parked tree otherwise — a hidden tree never re-renders for the active one.
+  const { activePaneId, fullscreenPaneId, agentLauncherPaneId } = usePaneTree(
+    useShallow((tree) => ({
+      activePaneId: tree.activePaneId,
+      fullscreenPaneId: tree.fullscreenPaneId,
+      agentLauncherPaneId: tree.agentLauncherPaneId
+    }))
+  )
+  const setActivePane = useWorkspaceStore((state) => state.setActivePane)
+
+  // Flagged shell only: this pane's part of the window top row (null otherwise).
+  const topRow = usePaneTopRow(pane.id)
+
+  const hasMultiplePanes = usePaneTree((tree) => getAllLeafPanes(tree.root).length > 1)
+
+  const { setTerminalPtyId } = useTerminalActions()
+  const { isDragging, previewTarget } = usePaneDnd()
+  const isMobileWebShell = useMobileWebShell()
+  const reducedMotion = useReducedMotion() ?? false
+
+  const isFullscreenPane = fullscreenPaneId === pane.id
+  const isActivePane = activePaneId === pane.id
+  const activeTab = pane.tabs.find((t) => t.id === pane.activeTabId)
+  // Only the visible project has a visible tab: a hidden tree's panels stay
+  // mounted but see `isVisible=false` (no focus, fit, stream renders or webview).
+  const visibleTabId = isActiveProject ? activeTab?.id : undefined
+  const launcherCoversPane = agentLauncherPaneId === pane.id
+  const visibleBrowserTabId = launcherCoversPane ? undefined : visibleTabId
+  const activeTerminalIdInPane = activeTab?.type === 'terminal' ? activeTab.terminalId : null
+  const panePreviewPosition =
+    previewTarget?.paneId === pane.id && !isFullscreenPane ? previewTarget.position : null
+
+  // Launcher→chat handoff keep-alive: hold an unmounting launcher for the
+  // handoff window instead of hard-cutting. The wrapper only supplies the
+  // presence window — all exit visuals (composer morph, in-place dismiss,
+  // backdrop reveal, root fade) are owned inside AgentLauncher so timing
+  // can branch on launch vs dismiss.
+  const launcherExitTransition = reducedMotion
+    ? { duration: LAUNCHER_EXIT_REDUCED_MS / 1000 }
+    : { delay: LAUNCHER_EXIT_WINDOW_MS / 1000, duration: 0.05 }
+
+  // Agent loading: show pulsing icon for a minimum duration after the terminal
+  // is first seen. The xterm renderer attaches almost instantly (same frame),
+  // so rendererAttachmentCount alone isn't enough for a visible loading state.
+  const [agentLoadingIds, setAgentLoadingIds] = useState<Set<string>>(new Set())
+  const agentLoadingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+  const prevAgentTerminalIdsRef = useRef<string[]>([])
+  const AGENT_LOADING_MS = 1500
+
+  // Detect newly appeared agent terminals and start loading timers.
+  // This runs after every render where terminalsInPane changes (useShallow).
+  useEffect(() => {
+    const currentIds = terminalsInPane
+      .filter((t) => t.kind === 'agent' && t.agentId && t.ptyId)
+      .map((t) => t.id)
+    const prevIds = prevAgentTerminalIdsRef.current
+    prevAgentTerminalIdsRef.current = currentIds
+
+    for (const id of currentIds) {
+      if (!prevIds.includes(id) && !agentLoadingTimers.current.has(id)) {
+        // New agent terminal — add to loading set with a minimum duration.
+        setAgentLoadingIds((prev) => new Set(prev).add(id))
+        agentLoadingTimers.current.set(
+          id,
+          setTimeout(() => {
+            setAgentLoadingIds((prev) => {
+              const next = new Set(prev)
+              next.delete(id)
+              return next
+            })
+            agentLoadingTimers.current.delete(id)
+          }, AGENT_LOADING_MS)
+        )
+      }
+    }
+  }, [terminalsInPane])
+
+  const handleFocus = useCallback(() => {
+    // A hidden tree is inert; never let a stray event move the visible tree's focus.
+    if (!isActiveProject) return
+    if (!isActivePane) {
+      setActivePane(pane.id)
+    }
+    // Clicking into the pane is an explicit acknowledgment of its visible terminal:
+    // clear the finished-terminal highlight. This is the ONLY clear path — we do not
+    // auto-clear on tab-switch or remount, so a flagged background tab keeps its border
+    // until the user actually looks at it.
+    if (activeTerminalIdInPane) {
+      const store = useTerminalStore.getState()
+      const term = store.terminals.find((t) => t.id === activeTerminalIdInPane)
+      if (term?.needsAttention) {
+        store.setTerminalNeedsAttention(activeTerminalIdInPane, false)
+      }
+    }
+  }, [isActiveProject, isActivePane, setActivePane, pane.id, activeTerminalIdInPane])
+
+  // Keyboard parity for the mouse acknowledgment above: a keystroke directed at this
+  // pane's visible terminal is an explicit "I'm looking at it" signal, so clear the
+  // highlight. Capture phase + a real key event means this never fires on a passive
+  // tab-switch (which only auto-focuses the terminal, no keypress), avoiding the
+  // flash-and-vanish that auto-clear-on-visibility caused.
+  const handleKeyDownCapture = useCallback(() => {
+    if (!activeTerminalIdInPane) return
+    const store = useTerminalStore.getState()
+    const term = store.terminals.find((t) => t.id === activeTerminalIdInPane)
+    if (term?.needsAttention) {
+      store.setTerminalNeedsAttention(activeTerminalIdInPane, false)
+    }
+  }, [activeTerminalIdInPane])
+
+  const previewSpaceClass =
+    panePreviewPosition === 'left'
+      ? 'pl-6'
+      : panePreviewPosition === 'right'
+        ? 'pr-6'
+        : panePreviewPosition === 'top'
+          ? 'pt-6'
+          : panePreviewPosition === 'bottom'
+            ? 'pb-6'
+            : ''
+
+  const previewTranslateClass =
+    panePreviewPosition === 'left'
+      ? 'translate-x-2'
+      : panePreviewPosition === 'right'
+        ? '-translate-x-2'
+        : panePreviewPosition === 'top'
+          ? 'translate-y-2'
+          : panePreviewPosition === 'bottom'
+            ? '-translate-y-2'
+            : ''
+
+  const handleAddTerminalForPane = useMemo(
+    () => (onAddTerminal ? (shell?: ShellInfo) => onAddTerminal(pane.id, shell) : undefined),
+    [onAddTerminal, pane.id]
+  )
+  const handleAddBrowserTabForPane = useMemo(
+    () => (onAddBrowserTab ? () => onAddBrowserTab(pane.id) : undefined),
+    [onAddBrowserTab, pane.id]
+  )
+
+  return (
+    <div
+      data-pane-content={pane.id}
+      className={cn(
+        'flex flex-col h-full relative',
+        // The mobile shell collapses a split to the active leaf, so the leaf
+        // must read as a single-leaf workspace: no active-pane or fullscreen
+        // ring (desktop rings unchanged).
+        !isMobileWebShell &&
+          isActivePane &&
+          hasMultiplePanes &&
+          !isFullscreenPane &&
+          'ring-1 ring-primary/30',
+        !isMobileWebShell && isFullscreenPane && 'ring-1 ring-primary/30 rounded-xl overflow-hidden'
+      )}
+      onMouseDown={handleFocus}
+      onKeyDownCapture={handleKeyDownCapture}
+    >
+      {!isMobileWebShell && (
+        <WorkspaceTabBar
+          paneId={pane.id}
+          tabs={pane.tabs}
+          activeTabId={pane.activeTabId}
+          closingTerminalIds={closingTerminalIds}
+          onAddTerminal={handleAddTerminalForPane}
+          onAddBrowserTab={handleAddBrowserTabForPane}
+          onCloseTerminal={onCloseTerminal}
+          onRenameTerminal={onRenameTerminal}
+          onCloseEditorTab={onCloseEditorTab}
+          onCloseTabs={onCloseTabs}
+          defaultShell={defaultShell}
+          topRow={topRow ?? undefined}
+          leading={topRow?.leftEdge ? <ShowSidePanelSlot /> : undefined}
+        />
+      )}
+
+      <div className="flex-1 overflow-hidden bg-terminal-bg relative h-full">
+        <div
+          className={cn(
+            'w-full h-full relative transition-all duration-150 ease-out',
+            previewSpaceClass
+          )}
+        >
+          {(panePreviewPosition === 'left' || panePreviewPosition === 'right') && (
+            <div
+              className={cn(
+                'absolute top-0 bottom-0 w-5 rounded-sm border border-primary/40 bg-primary/10 pointer-events-none',
+                panePreviewPosition === 'left' ? 'left-0' : 'right-0'
+              )}
+            />
+          )}
+          {(panePreviewPosition === 'top' || panePreviewPosition === 'bottom') && (
+            <div
+              className={cn(
+                'absolute left-0 right-0 h-5 rounded-sm border border-primary/40 bg-primary/10 pointer-events-none',
+                panePreviewPosition === 'top' ? 'top-0' : 'bottom-0'
+              )}
+            />
+          )}
+
+          <div
+            className={cn(
+              'w-full h-full relative transition-transform duration-150 ease-out',
+              previewTranslateClass
+            )}
+          >
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'terminal' } => t.type === 'terminal')
+              .map((tab) => {
+                const terminal = terminalsInPane.find((t) => t.id === tab.terminalId)
+                if (!terminal) {
+                  return null
+                }
+                // CRITICAL: Only skip rendering if terminal doesn't have a PTY
+                // ID yet — this prevents spawn loops when workspace tabs aren't
+                // fully synced. For agent terminals with a ptyId, ConnectedTerminal
+                // MUST mount so it can attach the renderer (which sets
+                // rendererAttachmentCount to 1). Instead of blocking the mount,
+                // we overlay the agent loading icon on top until the renderer
+                // attaches — see the overlay div after ConnectedTerminal.
+                if (!terminal.ptyId) {
+                  const isVisible = visibleTabId === tab.id
+                  const isAgent = terminal.kind === 'agent' && !!terminal.agentId
+                  return (
+                    <div
+                      key={tab.id}
+                      className={
+                        isVisible
+                          ? 'w-full h-full flex flex-col items-center justify-center gap-3'
+                          : 'hidden'
+                      }
+                    >
+                      {isAgent ? (
+                        <>
+                          <span className="animate-pulse motion-reduce:animate-none">
+                            <AgentIcon agentId={terminal.agentId!} className="h-16 w-16" />
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            Starting {terminal.agentName ?? terminal.name}…
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Connecting…</span>
+                      )}
+                    </div>
+                  )
+                }
+                const isVisible = visibleTabId === tab.id
+                const isAgentLoading =
+                  terminal.kind === 'agent' &&
+                  !!terminal.agentId &&
+                  agentLoadingIds.has(terminal.id)
+                const connectedTerminalSpawnOptions = {
+                  projectId: terminal.projectId,
+                  shell: terminal.shell,
+                  cwd: terminal.cwd
+                }
+                return (
+                  <div
+                    key={tab.id}
+                    className={cn(
+                      isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS,
+                      // In-app highlight: ring the whole terminal content when its
+                      // process finished while unfocused. Distinct amber accent,
+                      // inset so it stays inside the pane and clear of the
+                      // active-pane primary ring and drop overlays. Pulse is
+                      // disabled under prefers-reduced-motion.
+                      terminal.needsAttention &&
+                        'rounded-sm ring-2 ring-inset ring-warning/70 animate-pulse motion-reduce:animate-none'
+                    )}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <ConnectedTerminal
+                        terminalId={terminal.ptyId}
+                        storeTerminalId={terminal.id}
+                        autoSpawn={false}
+                        spawnOptions={connectedTerminalSpawnOptions}
+                        onBoundToStoreTerminal={(ptyId) => {
+                          if (terminal.ptyId !== ptyId) {
+                            setTerminalPtyId(terminal.id, ptyId)
+                          }
+                        }}
+                        initialScrollback={terminal.pendingScrollback}
+                        initialModes={terminal.pendingModes}
+                        className="w-full h-full"
+                        isVisible={isVisible}
+                      />
+                    </Suspense>
+                    {/* Agent loading overlay: shown until ConnectedTerminal attaches
+											the renderer (rendererAttachmentCount flips to 1). Covers the
+											xterm div with a centered pulsing icon so the user sees feedback. */}
+                    {isAgentLoading && (
+                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/95">
+                        <span className="animate-pulse motion-reduce:animate-none">
+                          <AgentIcon
+                            agentId={terminal.agentId!}
+                            name={terminal.agentName}
+                            className="h-16 w-16"
+                          />
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          Starting {terminal.agentName ?? terminal.name}…
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+            {/* The editor store is one global store swapped per project, so a
+                hidden tree's editor tabs would show another project's files:
+                render them only while this project is on screen. */}
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'editor' } => t.type === 'editor')
+              .filter(() => isActiveProject)
+              .map((tab) => {
+                const isVisible = visibleTabId === tab.id
+                return (
+                  <div
+                    key={tab.id}
+                    className={isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <EditorPanel filePath={tab.filePath} isVisible={isVisible} />
+                    </Suspense>
+                  </div>
+                )
+              })}
+
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'browser' } => t.type === 'browser')
+              .map((tab) => {
+                const isVisible = visibleBrowserTabId === tab.id
+                return (
+                  <div
+                    key={tab.id}
+                    className={isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <BrowserPanel browserTabId={tab.browserTabId} isVisible={isVisible} />
+                    </Suspense>
+                  </div>
+                )
+              })}
+
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'canvas' } => t.type === 'canvas')
+              .map((tab) => {
+                const isVisible = visibleTabId === tab.id
+                return (
+                  <div
+                    key={tab.id}
+                    className={isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <CanvasPanel
+                        projectId={tab.projectId}
+                        docPath={tab.docPath}
+                        isVisible={isVisible}
+                      />
+                    </Suspense>
+                  </div>
+                )
+              })}
+
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'git' } => t.type === 'git')
+              .map((tab) => {
+                const isVisible = visibleTabId === tab.id
+                return (
+                  <div
+                    key={tab.id}
+                    className={isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <GitPanel cwd={tab.cwd} isVisible={isVisible} />
+                    </Suspense>
+                  </div>
+                )
+              })}
+
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'git-history' } => t.type === 'git-history')
+              .map((tab) => {
+                const isVisible = visibleTabId === tab.id
+                return (
+                  <div
+                    key={tab.id}
+                    className={isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <GitHistoryPanel cwd={tab.cwd} isVisible={isVisible} />
+                    </Suspense>
+                  </div>
+                )
+              })}
+
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'diff' } => t.type === 'diff')
+              .map((tab) => {
+                const isVisible = visibleTabId === tab.id
+                return (
+                  <div
+                    key={tab.id}
+                    className={isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <DiffTab
+                        cwd={tab.cwd}
+                        path={tab.path}
+                        staged={tab.staged}
+                        isVisible={isVisible}
+                      />
+                    </Suspense>
+                  </div>
+                )
+              })}
+
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'commit-diff' } => t.type === 'commit-diff')
+              .map((tab) => {
+                const isVisible = visibleTabId === tab.id
+                return (
+                  <div
+                    key={tab.id}
+                    className={isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <CommitDiffTab
+                        cwd={tab.cwd}
+                        commit={tab.commit}
+                        path={tab.path}
+                        oldPath={tab.oldPath}
+                        isVisible={isVisible}
+                      />
+                    </Suspense>
+                  </div>
+                )
+              })}
+
+            {pane.tabs
+              .filter((t): t is WorkspaceTab & { type: 'agent-chat' } => t.type === 'agent-chat')
+              .map((tab) => {
+                const isVisible = visibleTabId === tab.id
+                return (
+                  // Mount fade: a chat tab that appears while the launcher
+                  // exits reveals its content gradually — the text doesn't
+                  // pop in behind the morphing composer.
+                  // mountKey (not tab.id): remapAgentChatSession swaps the
+                  // tab id placeholder→real session, and keying on id would
+                  // unmount the whole chat panel — a blank flash + fade
+                  // replay. The stable key turns it into a sessionId prop
+                  // change on the same mounted AgentChatPanel.
+                  <motion.div
+                    key={tab.mountKey ?? tab.id}
+                    className={isVisible ? 'w-full h-full' : INACTIVE_TAB_PANE_CLASS}
+                    data-chat-tab-state={isVisible ? 'visible' : 'hidden'}
+                    initial={reducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                  >
+                    <Suspense fallback={<PaneSkeleton />}>
+                      <AgentChatPanel sessionId={tab.sessionId} isVisible={isVisible} />
+                    </Suspense>
+                  </motion.div>
+                )
+              })}
+
+            {/* Launcher→chat handoff boundary: the launcher unmounts through
+                AnimatePresence so its exit choreography (composer morph /
+                in-place dismiss) can play instead of a hard cut. The wrapper
+                stays pointer-events-none — the launcher root re-enables them
+                while present — so the fresh tab is interactive mid-exit. */}
+            <AnimatePresence initial={false}>
+              {isActiveProject && pane.tabs.length === 0 ? (
+                <motion.div
+                  key={`agent-launcher-${pane.id}`}
+                  className="pointer-events-none absolute inset-0"
+                  initial={false}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={launcherExitTransition}
+                >
+                  {/* ADR-004.5: agent launch + plain terminal picker */}
+                  <AgentLauncher paneId={pane.id} />
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* AnimatePresence lets the overlay's exit fade play on drop/dragend
+            instead of vanishing the moment isDragging flips off. */}
+        <AnimatePresence initial={false}>
+          {isDragging && !isFullscreenPane && (
+            <DropZoneOverlay key={`drop-zones-${pane.id}`} paneId={pane.id} />
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* ADR-004.5 overlay: pane-level so Ctrl+T covers tab bar + content. Same
+          handoff boundary as the empty-pane launcher — launch/dismiss plays
+          the launcher's own exit choreography instead of cutting away. The
+          visual backdrop + close control live inside AgentLauncher so their
+          fades can branch on launch vs dismiss; the wrapper stays
+          pointer-events-none (the launcher root re-enables hits while
+          present) so the pane is interactive mid-exit. */}
+      <AnimatePresence initial={false}>
+        {isActiveProject && agentLauncherPaneId === pane.id && pane.tabs.length > 0 ? (
+          <motion.div
+            key={`agent-launcher-overlay-${pane.id}`}
+            className={cn(
+              'pointer-events-none absolute z-30 flex flex-col',
+              // A top-edge pane keeps its whole top row (tabs, drag space,
+              // window controls) uncovered.
+              topRow?.topEdge ? 'inset-x-0 bottom-0 top-10' : 'inset-0'
+            )}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Agent launcher"
+            initial={false}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={launcherExitTransition}
+            onKeyDown={(e) => {
+              // An Esc that bubbles out of a portaled selector (Radix prevents the
+              // Esc it consumes; any other React-tree portal sits outside this
+              // wrapper) belongs to that layer, not to the launcher.
+              if (
+                e.key === 'Escape' &&
+                !e.defaultPrevented &&
+                e.currentTarget.contains(e.target as Node)
+              ) {
+                useWorkspaceStore.getState().hideAgentLauncher()
+              }
+            }}
+          >
+            <AgentLauncher paneId={pane.id} />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  )
+}

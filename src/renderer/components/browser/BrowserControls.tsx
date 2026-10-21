@@ -1,0 +1,146 @@
+import { useCallback, useEffect, useState } from 'react'
+import { ArrowLeft, ArrowRight, Bug, Globe, PenTool, RotateCcw } from '@/components/icons'
+import { INNER_FIELD_FOCUS_CLASS } from '@/components/ui/panel-styles'
+import { Spinner } from '@/components/ui/spinner'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import {
+  browserTabGoBack,
+  browserTabGoForward,
+  browserTabInjectAgentation,
+  browserTabOpenDevtools,
+  browserTabReload
+} from '@/lib/browser-api'
+import { logFrontendError } from '@/lib/log-api'
+import { useBrowserSessionStore } from '@/stores/browser-session-store'
+
+interface BrowserControlsProps {
+  browserTabId: string
+}
+
+export function BrowserControls({ browserTabId }: BrowserControlsProps): React.JSX.Element {
+  const tabUrl = useBrowserSessionStore((state) => state.tabs.get(browserTabId)?.url ?? '')
+  const tabLoading = useBrowserSessionStore(
+    (state) => state.tabs.get(browserTabId)?.loading ?? false
+  )
+  const [inputUrl, setInputUrl] = useState(tabUrl || '')
+
+  // Sync inputUrl with store URL changes (e.g. from real-time sync)
+  useEffect(() => {
+    if (tabUrl) {
+      setInputUrl(tabUrl)
+    }
+  }, [tabUrl])
+
+  const handleNavigate = useCallback(() => {
+    let url = inputUrl.trim()
+    if (!url) return
+    if (!/^https?:\/\//i.test(url) && !/^about:/i.test(url)) {
+      url = `https://${url}`
+    }
+    useBrowserSessionStore.getState().updateUrl(browserTabId, url)
+  }, [browserTabId, inputUrl])
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        handleNavigate()
+      }
+    },
+    [handleNavigate]
+  )
+
+  const handleInjectAgentation = useCallback(() => {
+    browserTabInjectAgentation(browserTabId)
+      .then((result) => {
+        if (!result.success) {
+          logFrontendError({
+            level: 'warn',
+            message: `Toolbar injection failed: ${result.error ?? 'unknown'} [${result.code ?? 'NO_CODE'}]`,
+            source: 'BrowserControls'
+          })
+        }
+      })
+      .catch((e) => {
+        logFrontendError({
+          level: 'warn',
+          message: `Toolbar injection error: ${e instanceof Error ? e.message : String(e)}`,
+          source: 'BrowserControls'
+        })
+      })
+  }, [browserTabId])
+
+  if (!tabUrl) return <></>
+
+  return (
+    <div className="flex flex-col shrink-0">
+      <div className="h-9 flex items-center gap-1.5 px-2 bg-card border-b border-border">
+        <button
+          onClick={() => browserTabGoBack(browserTabId).catch(console.error)}
+          className="p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          title="Back"
+        >
+          <ArrowLeft size={14} />
+        </button>
+        <button
+          onClick={() => browserTabGoForward(browserTabId).catch(console.error)}
+          className="p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          title="Forward"
+        >
+          <ArrowRight size={14} />
+        </button>
+        <button
+          onClick={() => browserTabReload(browserTabId).catch(console.error)}
+          className="p-1.5 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+          title="Reload"
+        >
+          <RotateCcw size={14} />
+        </button>
+        <div className="flex h-7 min-w-0 flex-1 items-center gap-2 rounded-md px-2 transition-shadow duration-150 ease-out focus-within:ring-1 focus-within:ring-ring">
+          {tabLoading ? (
+            <Spinner size={14} decorative className="text-primary" />
+          ) : (
+            <Globe size={14} className="text-muted-foreground shrink-0" />
+          )}
+          <input
+            type="text"
+            value={inputUrl}
+            onChange={(e) => setInputUrl(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleNavigate}
+            className={`flex-1 bg-transparent text-sm text-foreground min-w-0 ${INNER_FIELD_FOCUS_CLASS}`}
+            placeholder="Enter URL..."
+          />
+        </div>
+        {!import.meta.env.PROD && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => browserTabOpenDevtools(browserTabId).catch(console.error)}
+                className="p-1.5 rounded shrink-0 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Open debug console"
+                title="Debug Console"
+              >
+                <Bug size={14} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Debug Console</TooltipContent>
+          </Tooltip>
+        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              onClick={handleInjectAgentation}
+              className="p-1.5 rounded shrink-0 hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Inject agentation toolbar"
+              title="Agentation Toolbar"
+            >
+              <PenTool size={14} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">Agentation Toolbar</TooltipContent>
+        </Tooltip>
+      </div>
+    </div>
+  )
+}

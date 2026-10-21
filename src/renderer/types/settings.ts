@@ -1,0 +1,517 @@
+﻿import { MONO_STACK } from '@/lib/font-stacks'
+
+// Context bar visibility settings
+export interface ContextBarSettings {
+  showProjectName: boolean
+  showGitBranch: boolean
+  showGitStatus: boolean
+  showWorkingDirectory: boolean
+  showExitCode: boolean
+}
+
+// Default settings for users with no saved blob: project name and file counts
+// (`showGitStatus`) are hidden; branch, directory and exit code are shown.
+export const DEFAULT_CONTEXT_BAR_SETTINGS: ContextBarSettings = {
+  showProjectName: false,
+  showGitBranch: true,
+  showGitStatus: false,
+  showWorkingDirectory: true,
+  showExitCode: true
+}
+
+// Table of contents panel settings
+export interface TocSettings {
+  isVisible: boolean
+  maxHeadingLevel: number
+  width: number
+}
+
+export const TOC_MIN_WIDTH = 180
+export const TOC_MAX_WIDTH = 360
+/** Below this editor-pane width the outline folds into a tick strip. */
+export const TOC_NARROW_PANE_WIDTH = 720
+
+export const DEFAULT_TOC_SETTINGS: TocSettings = {
+  isVisible: true,
+  maxHeadingLevel: 3,
+  width: 240
+}
+
+export type TerminalUrlOpenMode = 'system' | 'termul'
+
+/** Which interface the remote terminal HTTP server binds to when started. */
+export type RemoteBindMode = 'localhost' | 'all'
+
+/**
+ * A saved way to open a terminal. `shell` is a path or a PATH name; empty
+ * means the project or app default shell. `args` go to `shell` as separate
+ * argv entries, so a profile with args always names a shell. An empty `cwd`
+ * opens in the active project or worktree folder. Parse stored or typed
+ * profiles with `lib/terminal-profiles.ts`, which rejects bad env keys.
+ */
+export interface TerminalProfile {
+  id: string
+  name: string
+  shell: string
+  args: string[]
+  cwd: string
+  env: Record<string, string>
+}
+
+// Application-wide settings
+export interface AppSettings {
+  /** Persisted for old profiles. The terminal ignores this and uses Paper Mono. */
+  terminalFontFamily: string
+  terminalFontSize: number
+  terminalBufferSize: number // Scrollback buffer size in lines
+  terminalRenderer: 'auto' | 'webgl' | 'dom'
+  terminalScreenReaderMode: boolean // xterm screenReaderMode for new terminals (off by default)
+  defaultShell: string
+  defaultProjectColor: string // Default color for new projects (from PROJECT_COLORS)
+  confirmTerminalClose: boolean // Show a confirmation dialog before closing a terminal
+  terminalUrlOpenMode: TerminalUrlOpenMode // Controls how Ctrl/Cmd+Click terminal URLs are opened
+  /** Remote server bind: localhost (127.0.0.1) or all interfaces (0.0.0.0). */
+  remoteBindMode: RemoteBindMode
+  /** App-wide color theme family id (without `-light` suffix). */
+  colorTheme: string
+  /** Light, dark, or follow OS (maps to `{colorTheme}` / `{colorTheme}-light`). */
+  appearanceMode: 'light' | 'dark'
+  /** Whole-UI zoom factor (1.0 = 100%). Scales the entire window like VS Code's window zoom. */
+  uiZoomLevel: number
+  /** ACP turn hard-cap timeout in seconds, or null = use the env var / Rust
+   * default (unlimited by default). Set via App Preferences; pushed to the
+   * Rust core. */
+  acpTurnTimeoutSecs: number | null
+  /** Automatically save dirty editor files after edits pause (GH-539). */
+  editorAutoSave: boolean
+  /** Idle delay in ms before a dirty editor file is auto-saved (GH-539). */
+  editorAutoSaveDelayMs: number
+  /** `canvas.autosave_ms`: quiet time before the host autosaves a dirty canvas
+   * document (spine AD-23). Sent with each canvas open. */
+  canvasAutosaveMs: number
+  /** `canvas.autosave_max_ms`: longest a dirty canvas document waits for an
+   * autosave while edits keep coming faster than `canvasAutosaveMs` (an agent
+   * driving the canvas). Sent with each canvas open. */
+  canvasAutosaveMaxMs: number
+  /** `canvas.lease_grace_ms`: how long a window keeps its canvas lease after
+   * its connection drops, so a reload or reconnect keeps it (spine AD-30).
+   * Sent with each canvas open. */
+  canvasLeaseGraceMs: number
+  /** `canvas.max_mounted`: how many canvases stay mounted at once; opening
+   * another unloads the least recently active one after saving it (spine
+   * AD-26). Sent with each canvas open; the host clamps it to 1..16. */
+  canvasMaxMounted: number
+  /** `canvas.crash_timeouts`: consecutive timed-out canvas calls that mark the
+   * editor crashed and remount it (spine AD-31). Sent with each canvas open. */
+  canvasCrashTimeouts: number
+  /** ACP per-turn idle timeout in seconds, or null = use the env var / Rust
+   * default (unlimited by default). Set via App Preferences; pushed to the
+   * Rust core. */
+  acpTurnIdleTimeoutSecs: number | null
+  /** ACP session/new timeout in seconds, or null = use the env var / Rust
+   * default (60s). Set via App Preferences; pushed to the Rust core. */
+  acpSessionNewTimeoutSecs: number | null
+  /** ACP session reopen (load/resume) timeout in seconds, or null = use the
+   * env var / Rust default (60s). Set via App Preferences; pushed to the
+   * Rust core. */
+  acpSessionReopenTimeoutSecs: number | null
+  /** How long an idle agent chat stays open, in seconds. `null` follows
+   * `$TERMUL_AGENT_IDLE_REAP_SECS` or the 30-minute default. The env var
+   * wins over this value. */
+  agentIdleWindowSecs: number | null
+  /**
+   * OS/web notification when a terminal tab that was producing output for a
+   * long stretch (typically an in-terminal AI harness) goes idle (GH-645).
+   */
+  notifyOnTerminalIdle: boolean
+  /** OS/web notification when an Agent Chat turn finishes (issue #865). */
+  notifyOnAgentChatTurnFinished: boolean
+  /** OS/web notification when an Agent Chat waits for approval or a question. */
+  notifyOnAgentChatNeedsYou: boolean
+  /** Saved shell + args + folder + env combinations, opened from the command palette. */
+  terminalProfiles: TerminalProfile[]
+}
+
+/** Whole-UI zoom bounds â€” match the native View menu semantics (0.5xâ€“3.0x, 10% steps). */
+export const UI_ZOOM_DEFAULT = 1.0
+export const UI_ZOOM_MIN = 0.5
+export const UI_ZOOM_MAX = 3.0
+export const UI_ZOOM_STEP = 0.1
+
+export type AppSettingsUpdate = Partial<AppSettings>
+
+// Terminal buffer size options
+export const BUFFER_SIZE_OPTIONS = [
+  { value: 1000, label: '1,000 lines' },
+  { value: 5000, label: '5,000 lines' },
+  { value: 10000, label: '10,000 lines' },
+  { value: 25000, label: '25,000 lines' },
+  { value: 50000, label: '50,000 lines' }
+]
+
+// Editor auto-save delay options (GH-539)
+export const EDITOR_AUTO_SAVE_DELAY_OPTIONS = [
+  { value: 500, label: '0.5 seconds' },
+  { value: 1000, label: '1 second' },
+  { value: 2000, label: '2 seconds' },
+  { value: 5000, label: '5 seconds' }
+]
+
+// Terminal renderer strategy options
+export const TERMINAL_RENDERER_OPTIONS = [
+  { value: 'auto', label: 'Auto (Prefer WebGL, DOM fallback)' },
+  { value: 'webgl', label: 'WebGL' },
+  { value: 'dom', label: 'DOM' }
+]
+
+// Terminal URL opening mode options
+export const TERMINAL_URL_OPEN_MODE_OPTIONS: Array<{
+  value: TerminalUrlOpenMode
+  label: string
+}> = [
+  { value: 'system', label: 'System Default Browser' },
+  { value: 'termul', label: 'Termul Browser' }
+]
+
+export const REMOTE_BIND_MODE_OPTIONS: Array<{
+  value: RemoteBindMode
+  label: string
+  description: string
+}> = [
+  {
+    value: 'localhost',
+    label: 'Localhost only (127.0.0.1)',
+    description: 'Only this machine can connect directly. Safest default.'
+  },
+  {
+    value: 'all',
+    label: 'All interfaces (0.0.0.0)',
+    description: 'Listen on every network interface. Other devices on your LAN can reach the port.'
+  }
+]
+
+// ACP turn (hard-cap) timeout options for the App Preferences UI. `null` =
+// follow the env var / Rust default (unlimited); a number is the override in
+// seconds.
+export const ACP_TURN_TIMEOUT_OPTIONS: Array<{
+  value: number | null
+  label: string
+}> = [
+  { value: null, label: 'No limit' },
+  { value: 3600, label: '1 hour' },
+  { value: 7200, label: '2 hours' },
+  { value: 21600, label: '6 hours' },
+  { value: 86400, label: '24 hours' },
+  { value: 31536000, label: '1 year' }
+]
+
+// ACP turn idle-timeout options (the silent-turn window). `null` = follow the
+// env var / Rust default (unlimited); a number is the override in seconds.
+export const ACP_TURN_IDLE_TIMEOUT_OPTIONS: Array<{
+  value: number | null
+  label: string
+}> = [
+  { value: null, label: 'No limit' },
+  { value: 300, label: '5 minutes' },
+  { value: 600, label: '10 minutes' },
+  { value: 900, label: '15 minutes' },
+  { value: 1800, label: '30 minutes' },
+  { value: 3600, label: '1 hour' }
+]
+
+// ACP session/new timeout options. `null` = follow the env var / Rust default
+// (60 seconds); a number is the override in seconds.
+export const ACP_SESSION_NEW_TIMEOUT_OPTIONS: Array<{
+  value: number | null
+  label: string
+}> = [
+  { value: null, label: '1 minute' },
+  { value: 30, label: '30 seconds' },
+  { value: 120, label: '2 minutes' },
+  { value: 300, label: '5 minutes' }
+]
+
+// ACP session reopen (load/resume) timeout options. `null` = follow the env
+// var / Rust default (60 seconds); a number is the override in seconds.
+export const ACP_SESSION_REOPEN_TIMEOUT_OPTIONS: Array<{
+  value: number | null
+  label: string
+}> = [
+  { value: null, label: '1 minute' },
+  { value: 30, label: '30 seconds' },
+  { value: 120, label: '2 minutes' },
+  { value: 300, label: '5 minutes' }
+]
+
+/** How long an idle agent chat stays open. `null` = env var or 30 minutes. */
+export const AGENT_IDLE_WINDOW_OPTIONS: Array<{
+  value: number | null
+  label: string
+}> = [
+  { value: 900, label: '15 minutes' },
+  { value: null, label: '30 minutes' },
+  { value: 3600, label: '1 hour' },
+  { value: 7200, label: '2 hours' },
+  { value: 21600, label: '6 hours' },
+  { value: 86400, label: '24 hours' }
+]
+
+/** Plain label for a live idle-window reading (seconds). */
+export function formatAgentIdleWindow(secs: number): string {
+  const known = AGENT_IDLE_WINDOW_OPTIONS.find((option) => option.value === secs)
+  if (known?.label) return known.label
+  if (secs > 0 && secs % 3600 === 0) {
+    const hours = secs / 3600
+    return hours === 1 ? '1 hour' : `${hours} hours`
+  }
+  if (secs > 0 && secs % 60 === 0) {
+    const minutes = secs / 60
+    return minutes === 1 ? '1 minute' : `${minutes} minutes`
+  }
+  return secs === 1 ? '1 second' : `${secs} seconds`
+}
+
+// Default application settings
+export const DEFAULT_APP_SETTINGS: AppSettings = {
+  // Kept so old profiles still parse. The terminal always renders MONO_STACK
+  // and does not read this value.
+  terminalFontFamily: MONO_STACK,
+  terminalFontSize: 14,
+  terminalBufferSize: 10000,
+  terminalRenderer: 'auto',
+  terminalScreenReaderMode: false,
+  defaultShell: '',
+  defaultProjectColor: 'blue',
+  confirmTerminalClose: true,
+  terminalUrlOpenMode: 'system',
+  remoteBindMode: 'localhost',
+  colorTheme: 'termul',
+  appearanceMode: 'dark',
+  uiZoomLevel: UI_ZOOM_DEFAULT,
+  acpTurnTimeoutSecs: null,
+  editorAutoSave: false,
+  editorAutoSaveDelayMs: 1000,
+  canvasAutosaveMs: 1500,
+  canvasAutosaveMaxMs: 10000,
+  canvasLeaseGraceMs: 5000,
+  canvasMaxMounted: 2,
+  canvasCrashTimeouts: 3,
+  acpTurnIdleTimeoutSecs: null,
+  acpSessionNewTimeoutSecs: null,
+  acpSessionReopenTimeoutSecs: null,
+  agentIdleWindowSecs: null,
+  notifyOnTerminalIdle: true,
+  notifyOnAgentChatTurnFinished: true,
+  notifyOnAgentChatNeedsYou: true,
+  terminalProfiles: []
+}
+
+// Keyboard shortcut definition
+export interface KeyboardShortcut {
+  id: string
+  label: string
+  description: string
+  defaultKey: string // Normalized format: "ctrl+k", "ctrl+shift+p"
+  customKey?: string // User's custom binding, undefined = use default
+}
+
+// All keyboard shortcuts configuration
+export type KeyboardShortcutsConfig = Record<string, KeyboardShortcut>
+
+// Default keyboard shortcuts matching current WorkspaceDashboard handlers
+export const DEFAULT_KEYBOARD_SHORTCUTS: KeyboardShortcutsConfig = {
+  commandPalette: {
+    id: 'commandPalette',
+    label: 'Command Palette',
+    description: 'Open the command palette for quick actions',
+    defaultKey: 'ctrl+k'
+  },
+  commandPaletteAlt: {
+    id: 'commandPaletteAlt',
+    label: 'Command Palette (Alt)',
+    description: 'Open command palette (VS Code style)',
+    defaultKey: 'ctrl+shift+p'
+  },
+  terminalSearch: {
+    id: 'terminalSearch',
+    label: 'Terminal Search',
+    description: 'Search within terminal output',
+    defaultKey: 'ctrl+f'
+  },
+  commandHistory: {
+    id: 'commandHistory',
+    label: 'Command History',
+    description: 'Search command history',
+    defaultKey: 'ctrl+r'
+  },
+  newProject: {
+    id: 'newProject',
+    label: 'New Project',
+    description: 'Create a new project',
+    defaultKey: 'ctrl+n'
+  },
+  newTerminal: {
+    id: 'newTerminal',
+    label: 'Agent Launcher',
+    description: 'Show the agent launcher prompt in the active pane',
+    defaultKey: 'ctrl+t'
+  },
+  newBrowserTab: {
+    id: 'newBrowserTab',
+    label: 'New Browser Tab',
+    description: 'Create a new browser tab',
+    defaultKey: 'ctrl+shift+n'
+  },
+  nextTerminal: {
+    id: 'nextTerminal',
+    label: 'Next Tab',
+    description: 'Switch to next tab (terminal or editor) using the Tauri-safe fallback',
+    defaultKey: 'ctrl+pagedown'
+  },
+  prevTerminal: {
+    id: 'prevTerminal',
+    label: 'Previous Tab',
+    description: 'Switch to previous tab (terminal or editor) using the Tauri-safe fallback',
+    defaultKey: 'ctrl+pageup'
+  },
+  zoomIn: {
+    id: 'zoomIn',
+    label: 'Zoom In',
+    description: 'Zoom in the entire UI',
+    defaultKey: 'ctrl+='
+  },
+  zoomOut: {
+    id: 'zoomOut',
+    label: 'Zoom Out',
+    description: 'Zoom out the entire UI',
+    defaultKey: 'ctrl+-'
+  },
+  zoomReset: {
+    id: 'zoomReset',
+    label: 'Reset Zoom',
+    description: 'Reset the whole-UI zoom to 100%',
+    defaultKey: 'ctrl+0'
+  },
+  sidebarToggle: {
+    id: 'sidebarToggle',
+    label: 'Toggle Projects',
+    description: 'Expand or collapse projects',
+    defaultKey: 'ctrl+shift+b'
+  },
+  closeTab: {
+    id: 'closeTab',
+    label: 'Close Tab',
+    description: 'Close the active tab (terminal, editor, or browser)',
+    defaultKey: 'ctrl+w'
+  },
+  saveFile: {
+    id: 'saveFile',
+    label: 'Save File',
+    description: 'Save the current editor file',
+    defaultKey: 'ctrl+s'
+  },
+  toggleFileExplorer: {
+    id: 'toggleFileExplorer',
+    label: 'Toggle Side Panel',
+    description: 'Show or hide side panel',
+    defaultKey: 'ctrl+b'
+  },
+  fileExplorerRename: {
+    id: 'fileExplorerRename',
+    label: 'Rename File',
+    description: 'Rename selected file',
+    defaultKey: 'f2'
+  },
+  fileExplorerDelete: {
+    id: 'fileExplorerDelete',
+    label: 'Delete Files',
+    description: 'Delete selected files',
+    defaultKey: 'delete'
+  },
+
+  // Worktree shortcuts
+  worktreeCreate: {
+    id: 'worktreeCreate',
+    label: 'Create Worktree',
+    description: 'Open the new worktree creation modal',
+    defaultKey: 'ctrl+shift+alt+n'
+  },
+  worktreeSwitchNext: {
+    id: 'worktreeSwitchNext',
+    label: 'Switch to Next Worktree',
+    description: 'Cycle to the next worktree in the sidebar',
+    defaultKey: 'ctrl+shift+arrowdown'
+  },
+  worktreeSwitchPrev: {
+    id: 'worktreeSwitchPrev',
+    label: 'Switch to Previous Worktree',
+    description: 'Cycle to the previous worktree in the sidebar',
+    defaultKey: 'ctrl+shift+arrowup'
+  },
+  worktreeOpenTerminal: {
+    id: 'worktreeOpenTerminal',
+    label: 'Open Terminal in Worktree',
+    description: 'Spawn a new terminal in the active worktree',
+    defaultKey: 'ctrl+shift+alt+t'
+  },
+  worktreeSwitchRoot: {
+    id: 'worktreeSwitchRoot',
+    label: 'Switch to Project Root',
+    description: 'Switch active context to the project root directory',
+    defaultKey: 'ctrl+shift+home'
+  },
+  colorThemePicker: {
+    id: 'colorThemePicker',
+    label: 'Change Color Theme',
+    description: 'Open the color theme picker with live preview',
+    defaultKey: 'ctrl+alt+t'
+  },
+  settings: {
+    id: 'settings',
+    label: 'Settings',
+    description: 'Open app settings',
+    defaultKey: 'ctrl+,'
+  }
+}
+
+/**
+ * Web-client default-key overrides (issue #858).
+ *
+ * Chrome/Edge/Firefox reserve `ctrl+n` (new window), `ctrl+t` (new tab),
+ * `ctrl+w` (close tab), `ctrl+shift+n` (incognito), `ctrl+pageup/pagedown`
+ * (tab cycling) and `ctrl+r` (reload) in a normal tab — the web app cannot
+ * intercept them (only an installed PWA can). `ctrl+=/-/0` are the browser
+ * zoom keys. The web defaults swap these to Alt-based (or unbound) combos;
+ * user `customKey`s still win over both default sets.
+ */
+const WEB_DEFAULT_KEY_OVERRIDES: Record<string, string> = {
+  newProject: 'alt+n',
+  newTerminal: 'alt+t',
+  newBrowserTab: 'alt+shift+n',
+  closeTab: 'alt+w',
+  nextTerminal: 'alt+pagedown',
+  prevTerminal: 'alt+pageup',
+  // Ctrl+R is the browser reload key: don't bind a default on web at all
+  // (empty string never matches a normalized event).
+  commandHistory: '',
+  zoomIn: 'alt+=',
+  zoomOut: 'alt+-',
+  zoomReset: 'alt+0',
+  settings: 'alt+,'
+}
+
+/** Platform-aware default bindings. See `WEB_DEFAULT_KEY_OVERRIDES`. */
+export function getDefaultKeyboardShortcuts(): KeyboardShortcutsConfig {
+  const isTauri =
+    typeof window !== 'undefined' &&
+    typeof (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ !== 'undefined'
+  if (isTauri) return DEFAULT_KEYBOARD_SHORTCUTS
+
+  const webDefaults: KeyboardShortcutsConfig = {}
+  for (const [key, shortcut] of Object.entries(DEFAULT_KEYBOARD_SHORTCUTS)) {
+    const override = WEB_DEFAULT_KEY_OVERRIDES[key]
+    webDefaults[key] =
+      override === undefined ? { ...shortcut } : { ...shortcut, defaultKey: override }
+  }
+  return webDefaults
+}

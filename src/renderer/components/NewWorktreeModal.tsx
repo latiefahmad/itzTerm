@@ -1,0 +1,696 @@
+import type { BranchInfo } from '@shared/types/worktree.types'
+import { AnimatePresence, motion } from 'framer-motion'
+import { type KeyboardEvent, useCallback, useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { WorktreeCreationCard } from '@/components/chat/WorktreeCreationCard'
+import { AlertTriangle, GitBranch, Link2, Search, Terminal, X } from '@/components/icons'
+import { Button } from '@/components/ui/button'
+import { FIELD_FOCUS_CLASS } from '@/components/ui/panel-styles'
+import { Spinner } from '@/components/ui/spinner'
+import { worktreeApi } from '@/lib/api'
+import { logFrontendError } from '@/lib/log-api'
+import { openTerminalAtCwd } from '@/lib/terminal-spawn'
+import { cn } from '@/lib/utils'
+import { randomUUID } from '@/lib/uuid'
+import { reconcileProjectWorktrees } from '@/lib/worktree-reconciler'
+import { useProjectActions, useProjectStore } from '@/stores/project-store'
+import { useWorktreeProgressStore } from '@/stores/worktree-progress-store'
+import type { Worktree } from '@/types/project'
+
+interface NewWorktreeModalProps {
+  isOpen: boolean
+  onClose: () => void
+  projectId: string
+}
+
+export function NewWorktreeModal({ isOpen, onClose, projectId }: NewWorktreeModalProps) {
+  const project = useProjectStore((state) => state.projects.find((p) => p.id === projectId))
+  const isWorktreeOperationLocked = useProjectStore((state) => state.isWorktreeOperationLocked)
+  const { setWorktreeOperationLock } = useProjectActions()
+
+  // Form state
+  const [branchType, setBranchType] = useState<'existing' | 'new'>('new')
+  const [selectedBranch, setSelectedBranch] = useState('')
+  const [newBranchName, setNewBranchName] = useState('')
+  const [startRef, setStartRef] = useState('')
+  const [worktreeName, setWorktreeName] = useState('')
+
+  // Branches state
+  const [branches, setBranches] = useState<BranchInfo[]>([])
+  const [showRemoteBranches, setShowRemoteBranches] = useState(false)
+  const [branchSearch, setBranchSearch] = useState('')
+  const [branchesLoading, setBranchesLoading] = useState(false)
+
+  // Operation state
+  const [isCreating, setIsCreating] = useState(false)
+  const [createProgressId, setCreateProgressId] = useState<string | null>(null)
+  const [validationError, setValidationError] = useState<string | null>(null)
+
+  // Symlink dirs state
+  const [enabledSymlinkDirs, setEnabledSymlinkDirs] = useState<Set<string>>(new Set())
+  const [showSymlinkSection, setShowSymlinkSection] = useState(false)
+
+  // Advanced (git plumbing) disclosure — collapsed by default for non-technical users
+  const [showAdvanced, setShowAdvanced] = useState(false)
+
+  const projectPath = project?.path ?? ''
+  const isGitRepo = project?.isGitRepo ?? false
+
+  // Sanitize branch name for git (replace invalid chars with dashes)
+  const sanitizeBranchName = useCallback((name: string): string => {
+    return name
+      .replace(/[^a-zA-Z0-9/_.-]/g, '-')
+      .replace(/--+/g, '-')
+      .replace(/^-|-$/g, '')
+  }, [])
+
+  // Auto-fill worktree name from branch ONLY when the user hasn't named it yet.
+  // Name is the primary field now; never clobber a user-entered name.
+  useEffect(() => {
+    if (worktreeName.trim()) return
+    if (branchType === 'new' && newBranchName) {
+      setWorktreeName(sanitizeBranchName(newBranchName))
+    } else if (branchType === 'existing' && selectedBranch) {
+      // Extract branch name after last /
+      const name = selectedBranch.split('/').pop() ?? selectedBranch
+      setWorktreeName(name)
+    }
+  }, [branchType, newBranchName, selectedBranch, worktreeName, sanitizeBranchName])
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setBranchType('new')
+      setSelectedBranch('')
+      setNewBranchName('')
+      setStartRef('')
+      setWorktreeName('')
+      setBranchSearch('')
+      setShowRemoteBranches(false)
+      setValidationError(null)
+      setIsCreating(false)
+      setShowSymlinkSection(false)
+      setShowAdvanced(false)
+
+      // Initialize symlink dirs from project settings
+      const projectSymlinkDirs = project?.symlinkDirs ?? []
+      setEnabledSymlinkDirs(new Set(projectSymlinkDirs))
+    }
+  }, [isOpen, project?.symlinkDirs])
+
+  // Keep symlink dirs in sync with project settings without resetting the form
+  useEffect(() => {
+    const dirs = project?.symlinkDirs ?? []
+    setEnabledSymlinkDirs(new Set(dirs))
+  }, [project?.symlinkDirs])
+
+  // Fetch branches when modal opens
+  useEffect(() => {
+    if (!isOpen || !projectPath) return
+
+    const fetchBranches = async () => {
+      setBranchesLoading(true)
+      try {
+        const result = await worktreeApi.branches(projectPath)
+        if (result.success && result.data) {
+          setBranches(result.data)
+        } else {
+          setBranches([])
+        }
+      } catch {
+        setBranches([])
+      } finally {
+        setBranchesLoading(false)
+      }
+    }
+    void fetchBranches()
+  }, [isOpen, projectPath])
+
+  // Handle Escape key
+  useEffect(() => {
+    if (!isOpen) return
+    const handleEscape = (e: globalThis.KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [isOpen, onClose])
+
+  // Validate form
+  const validate = useCallback((): string | null => {
+    if (!isGitRepo) return 'Project is not a git repository'
+    if (isWorktreeOperationLocked) return 'Another worktree operation is in progress'
+
+    // Simple path: when creating a new branch and the Advanced branch field is empty,
+    // derive the branch from the worktree name.
+    const effectiveNewBranch = newBranchName.trim() || worktreeName.trim()
+
+    // Check if branch already has a worktree
+    const branch =
+      branchType === 'existing' ? selectedBranch : sanitizeBranchName(effectiveNewBranch)
+    const existingWorktree = project?.worktrees?.find(
+      (w: Worktree) => w.branch === branch || w.name === worktreeName
+    )
+    if (existingWorktree) {
+      return `A worktree for branch "${branch}" already exists`
+    }
+
+    if (branchType === 'new') {
+      if (!effectiveNewBranch) return 'Name is required'
+      // A name was entered but sanitized to nothing (e.g. "---") — it's invalid, not missing.
+      if (!sanitizeBranchName(effectiveNewBranch).trim())
+        return 'Name contains no usable characters'
+    } else {
+      if (!selectedBranch) return 'Select a branch'
+    }
+
+    if (!worktreeName.trim()) return 'Name is required'
+
+    // Check for path length (Windows MAX_PATH = 260)
+    const targetPath = `${projectPath}/.termul/worktrees/${worktreeName}/`
+    if (targetPath.length > 240) return 'Path too long'
+
+    return null
+  }, [
+    isGitRepo,
+    isWorktreeOperationLocked,
+    branchType,
+    selectedBranch,
+    newBranchName,
+    worktreeName,
+    project,
+    sanitizeBranchName,
+    projectPath
+  ])
+
+  // Pre-check before modal can proceed
+  const canProceed = isGitRepo && !isWorktreeOperationLocked
+
+  // Filter branches for search
+  const filteredBranches = branches.filter((b) => {
+    if (!showRemoteBranches && b.isRemote) return false
+    if (branchSearch && !b.name.toLowerCase().includes(branchSearch.toLowerCase())) return false
+    return true
+  })
+
+  // Local branches first, then remote
+  const sortedBranches = [...filteredBranches].sort((a, b) => {
+    if (a.isRemote !== b.isRemote) return a.isRemote ? 1 : -1
+    if (a.isCurrent) return -1
+    if (b.isCurrent) return 1
+    return a.name.localeCompare(b.name)
+  })
+
+  const handleCreate = useCallback(async () => {
+    const error = validate()
+    if (error) {
+      setValidationError(error)
+      return
+    }
+
+    setIsCreating(true)
+    setValidationError(null)
+    setWorktreeOperationLock(true)
+    const progressStore = useWorktreeProgressStore.getState()
+    const progressId = randomUUID()
+
+    try {
+      const branch =
+        branchType === 'existing'
+          ? selectedBranch
+          : sanitizeBranchName(newBranchName.trim() || worktreeName.trim())
+
+      // Live progress card inside the modal — same store/card the chat
+      // timeline uses for worktree launches (Tauri event + web NDJSON).
+      progressStore.begin(progressId, branch)
+      setCreateProgressId(progressId)
+      const result = await worktreeApi.create({
+        projectPath,
+        name: worktreeName,
+        branch,
+        isNewBranch: branchType === 'new',
+        startRef: startRef || undefined,
+        progressId,
+        onProgress: progressStore.handleEvent
+      })
+      if (result.success && result.data) {
+        progressStore.finish(progressId)
+      } else {
+        progressStore.finish(
+          progressId,
+          !result.success ? result.error : 'Failed to create worktree'
+        )
+      }
+
+      if (result.success && result.data) {
+        // Register through the single-flight reconciler (the only writer of
+        // `project.worktrees`). The switcher pick is not touched.
+        await reconcileProjectWorktrees(projectId)
+
+        // Create symlinks for enabled directories
+        const enabledDirs = Array.from(enabledSymlinkDirs)
+        if (enabledDirs.length > 0) {
+          try {
+            const symlinkResult = await worktreeApi.createSymlinks(
+              projectPath,
+              result.data.path,
+              enabledDirs
+            )
+            if (symlinkResult.success && symlinkResult.data) {
+              const created = symlinkResult.data.filter((r) => r.status === 'created').length
+              const skipped = symlinkResult.data.filter((r) => r.status === 'skipped').length
+              const failed = symlinkResult.data.filter((r) => r.status === 'failed').length
+              if (failed > 0) {
+                toast('Worktree created with symlink warnings', {
+                  description: `${created} symlink(s) created, ${skipped} skipped, ${failed} failed.`
+                })
+              } else {
+                toast('Worktree created', {
+                  description: `"${result.data.name}" created on branch "${result.data.branch}" with ${created} symlink(s).`
+                })
+              }
+            } else {
+              // Symlink creation failed but worktree was created successfully
+              toast('Worktree created', {
+                description: `"${result.data.name}" created on branch "${result.data.branch}". Symlink setup had issues.`
+              })
+            }
+          } catch {
+            // Symlink failure is non-blocking
+            toast('Worktree created', {
+              description: `"${result.data.name}" created on branch "${result.data.branch}". Symlink setup skipped.`
+            })
+          }
+        } else {
+          toast('Worktree created', {
+            description: `"${result.data.name}" created successfully on branch "${result.data.branch}".`
+          })
+        }
+
+        // Open a terminal in the new worktree (the switcher pick is unchanged).
+        // Best-effort — a spawn failure must not block the (already successful) creation.
+        const outcome = await openTerminalAtCwd(projectId, result.data.path)
+        if (outcome.status === 'no-pane') {
+          toast('Worktree ready — terminal not opened', {
+            description: 'No active pane to open a terminal in. Switch to a workspace pane first.'
+          })
+        } else if (outcome.status === 'spawn-failed') {
+          toast('Worktree ready — terminal not opened', {
+            description: outcome.error || 'Could not open a terminal in the new worktree.'
+          })
+        }
+
+        onClose()
+      } else {
+        void logFrontendError({
+          level: 'warn',
+          source: 'newWorktreeModal.worktreeCreate',
+          message: `worktree create failed code=${result.success ? 'UNKNOWN' : result.code}`
+        })
+        setValidationError(!result.success ? result.error : 'Failed to create worktree')
+        toast.error('Failed to create worktree', {
+          description: !result.success ? result.error : 'Unknown error'
+        })
+      }
+    } catch (err) {
+      const msg = String(err)
+      void logFrontendError({
+        level: 'warn',
+        source: 'newWorktreeModal.worktreeCreate',
+        message: 'worktree create threw code=UNKNOWN'
+      })
+      setValidationError(msg)
+      toast.error('Error creating worktree', {
+        description: msg
+      })
+    } finally {
+      setIsCreating(false)
+      setCreateProgressId(null)
+      progressStore.clear(progressId)
+      setWorktreeOperationLock(false)
+    }
+  }, [
+    validate,
+    branchType,
+    selectedBranch,
+    newBranchName,
+    worktreeName,
+    startRef,
+    projectPath,
+    projectId,
+    setWorktreeOperationLock,
+    onClose,
+    enabledSymlinkDirs,
+    sanitizeBranchName
+  ])
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' && canProceed && worktreeName.trim()) {
+        e.preventDefault()
+        void handleCreate()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    },
+    [canProceed, worktreeName, handleCreate, onClose]
+  )
+
+  // Path preview
+  const pathPreview = projectPath
+    ? `${projectPath}/.termul/worktrees/${worktreeName || '<name>'}/`
+    : '<select a project>'
+
+  if (!project) return null
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-overlay/60 backdrop-blur-sm z-50 flex items-center justify-center"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="bg-card rounded-lg shadow-2xl w-[520px] border border-border overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={handleKeyDown}
+          >
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-border flex justify-between items-center bg-secondary/50">
+              <div className="flex items-center gap-2">
+                <GitBranch size={14} className="text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">New Worktree</h3>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              {/* Project name (read-only) */}
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Project
+                </label>
+                <input
+                  type="text"
+                  value={project.name}
+                  readOnly
+                  className={`w-full bg-secondary/50 border border-border rounded px-3 py-1.5 text-sm text-muted-foreground cursor-not-allowed ${FIELD_FOCUS_CLASS}`}
+                />
+              </div>
+
+              {/* Worktree name — primary, only required field for the simple path */}
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Name</label>
+                <input
+                  type="text"
+                  value={worktreeName}
+                  onChange={(e) => setWorktreeName(e.target.value)}
+                  placeholder="e.g. try-new-hero"
+                  className={`w-full bg-secondary border border-border rounded px-3 py-1.5 text-sm text-foreground placeholder-muted-foreground ${FIELD_FOCUS_CLASS}`}
+                />
+                <p className="text-3xs text-muted-foreground mt-0.5">
+                  A separate place to work. Your main project stays untouched.
+                </p>
+              </div>
+
+              {/* Advanced (git plumbing) — collapsed by default for non-technical users */}
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                aria-expanded={showAdvanced}
+              >
+                <GitBranch size={12} aria-hidden="true" />
+                <span>Advanced (branch options)</span>
+                <span className="text-3xs" aria-hidden="true">
+                  {showAdvanced ? '▼' : '▶'}
+                </span>
+              </button>
+
+              {showAdvanced && (
+                <div className="space-y-4">
+                  {/* Branch type toggle */}
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                      Branch Type
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setBranchType('new')}
+                        className={cn(
+                          'flex-1 px-3 py-1.5 text-xs font-medium rounded border transition-colors',
+                          branchType === 'new'
+                            ? 'bg-primary-fill text-primary-foreground border-primary'
+                            : 'bg-secondary text-muted-foreground border-border hover:bg-muted'
+                        )}
+                      >
+                        New Branch
+                      </button>
+                      <button
+                        onClick={() => setBranchType('existing')}
+                        className={cn(
+                          'flex-1 px-3 py-1.5 text-xs font-medium rounded border transition-colors',
+                          branchType === 'existing'
+                            ? 'bg-primary-fill text-primary-foreground border-primary'
+                            : 'bg-secondary text-muted-foreground border-border hover:bg-muted'
+                        )}
+                      >
+                        Existing Branch
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Branch picker for existing branches */}
+                  {branchType === 'existing' && (
+                    <div>
+                      <label className="block text-xs font-medium text-muted-foreground mb-1">
+                        Select Branch
+                      </label>
+                      {branchesLoading ? (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                          <Spinner size={14} decorative />
+                          Loading branches...
+                        </div>
+                      ) : (
+                        <>
+                          {/* Branch search */}
+                          <div className="relative mb-2">
+                            <Search
+                              size={12}
+                              className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                            />
+                            <input
+                              type="text"
+                              value={branchSearch}
+                              onChange={(e) => setBranchSearch(e.target.value)}
+                              placeholder="Search branches..."
+                              className={`w-full bg-secondary border border-border rounded pl-7 pr-3 py-1 text-xs text-foreground placeholder-muted-foreground ${FIELD_FOCUS_CLASS}`}
+                            />
+                          </div>
+                          {/* Remote toggle */}
+                          <label className="flex items-center gap-1.5 mb-2 text-xs text-muted-foreground cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={showRemoteBranches}
+                              onChange={(e) => setShowRemoteBranches(e.target.checked)}
+                              className="rounded border-border"
+                            />
+                            Show remote branches
+                          </label>
+                          {/* Branch list */}
+                          <div className="max-h-32 overflow-y-auto border border-border rounded bg-secondary/50">
+                            {sortedBranches.length === 0 ? (
+                              <div className="p-2 text-xs text-muted-foreground text-center">
+                                No branches found
+                              </div>
+                            ) : (
+                              sortedBranches.map((branch) => (
+                                <button
+                                  key={branch.name}
+                                  onClick={() => setSelectedBranch(branch.name)}
+                                  className={cn(
+                                    'w-full flex items-center px-3 py-1 text-xs transition-colors text-left',
+                                    selectedBranch === branch.name
+                                      ? 'bg-primary/15 text-foreground'
+                                      : 'text-muted-foreground hover:bg-sidebar-accent/50'
+                                  )}
+                                >
+                                  <GitBranch size={10} className="mr-1.5 flex-shrink-0" />
+                                  <span className="truncate flex-1">{branch.name}</span>
+                                  {branch.isCurrent && (
+                                    <span className="text-3xs text-primary ml-1">current</span>
+                                  )}
+                                  {branch.isRemote && (
+                                    <span className="text-3xs text-muted-foreground ml-1">
+                                      remote
+                                    </span>
+                                  )}
+                                </button>
+                              ))
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* New branch name + start ref */}
+                  {branchType === 'new' && (
+                    <>
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                          Branch Name <span className="text-muted-foreground/60">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={newBranchName}
+                          onChange={(e) => setNewBranchName(e.target.value)}
+                          placeholder={
+                            worktreeName ? sanitizeBranchName(worktreeName) : 'feature/my-feature'
+                          }
+                          className={`w-full bg-secondary border border-border rounded px-3 py-1.5 text-sm text-foreground placeholder-muted-foreground ${FIELD_FOCUS_CLASS}`}
+                        />
+                        <p className="text-3xs text-muted-foreground mt-0.5">
+                          {newBranchName && sanitizeBranchName(newBranchName) !== newBranchName
+                            ? `Will be sanitized to: ${sanitizeBranchName(newBranchName)}`
+                            : 'Defaults to the name above.'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-muted-foreground mb-1">
+                          Start Reference{' '}
+                          <span className="text-muted-foreground/60">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={startRef}
+                          onChange={(e) => setStartRef(e.target.value)}
+                          placeholder="HEAD, main, or a commit hash"
+                          className={`w-full bg-secondary border border-border rounded px-3 py-1.5 text-sm text-foreground placeholder-muted-foreground ${FIELD_FOCUS_CLASS}`}
+                        />
+                        <p className="text-3xs text-muted-foreground mt-0.5">
+                          Defaults to HEAD if not specified
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Path preview */}
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Path Preview
+                </label>
+                <code className="block text-3xs text-muted-foreground bg-secondary/50 border border-border rounded px-3 py-1.5 overflow-x-auto whitespace-nowrap">
+                  {pathPreview}
+                </code>
+              </div>
+
+              {/* Symlink Directories section */}
+              {project.symlinkDirs && project.symlinkDirs.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setShowSymlinkSection(!showSymlinkSection)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Link2 size={12} />
+                    <span>Symlink Directories ({project.symlinkDirs.length})</span>
+                    <span className="text-3xs">{showSymlinkSection ? '▼' : '▶'}</span>
+                  </button>
+                  {showSymlinkSection && (
+                    <div className="mt-1.5 border border-border rounded bg-secondary/30 p-2 space-y-1">
+                      {project.symlinkDirs.map((dir) => (
+                        <label
+                          key={dir}
+                          className="flex items-center gap-2 text-xs text-foreground cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={enabledSymlinkDirs.has(dir)}
+                            onChange={(e) => {
+                              const next = new Set(enabledSymlinkDirs)
+                              if (e.target.checked) {
+                                next.add(dir)
+                              } else {
+                                next.delete(dir)
+                              }
+                              setEnabledSymlinkDirs(next)
+                            }}
+                            className="rounded border-border"
+                          />
+                          <span>{dir}</span>
+                        </label>
+                      ))}
+                      <p className="text-3xs text-muted-foreground mt-1">
+                        Checked directories will be symlinked from the project root into the
+                        worktree.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Live creation progress (git worktree add output) — boxed to
+                  match the dialog's bordered section chrome. */}
+              {createProgressId && (
+                <div className="mt-2 rounded-lg border border-border bg-muted/30 px-2 py-1.5">
+                  <WorktreeCreationCard progressId={createProgressId} />
+                </div>
+              )}
+
+              {/* Validation error */}
+              {validationError && (
+                <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded px-3 py-2">
+                  <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" />
+                  {validationError}
+                </div>
+              )}
+
+              {/* Pre-check warnings */}
+              {!isGitRepo && (
+                <div className="flex items-start gap-2 text-xs text-warning bg-warning/10 border border-warning/20 rounded px-3 py-2">
+                  <AlertTriangle size={12} className="flex-shrink-0 mt-0.5" />
+                  This project is not a git repository. Worktrees require a git repo.
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-3 bg-secondary/50 flex justify-end gap-2 border-t border-border">
+              <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void handleCreate()}
+                disabled={!canProceed || isCreating || !worktreeName.trim()}
+              >
+                {isCreating ? <Spinner size={12} decorative /> : <Terminal />}
+                {isCreating ? 'Creating...' : 'Create & open'}
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}

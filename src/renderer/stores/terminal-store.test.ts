@@ -1,0 +1,1175 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import {
+  mockProject,
+  resetTerminalStore,
+  seedProjectStore,
+  seedTerminalStore
+} from '@/lib/test-utils/store'
+import { mockTerminal } from '@/lib/test-utils/terminal'
+import { serializeTerminalsForProject } from '../hooks/useTerminalAutoSave'
+import { useProjectStore } from './project-store'
+import {
+  HIDDEN_BUFFER_TRUNCATION_DELAY,
+  MAX_TRANSCRIPT_CHARS,
+  TRUNCATED_BUFFER_SIZE,
+  useTerminalStore
+} from './terminal-store'
+
+describe('terminal-store', () => {
+  beforeEach(() => {
+    // Reset stores to initial state before each test
+    seedProjectStore(
+      [
+        mockProject({ id: '1', name: 'Project 1', isActive: true }),
+        mockProject({ id: '2', name: 'Project 2', color: 'green' })
+      ],
+      '1'
+    )
+
+    seedTerminalStore(
+      [
+        mockTerminal({
+          id: 't1',
+          name: 'Terminal 1',
+          projectId: '1',
+          shell: 'powershell',
+          output: []
+        }),
+        mockTerminal({
+          id: 't2',
+          name: 'Terminal 2',
+          projectId: '1',
+          shell: 'powershell',
+          output: []
+        }),
+        mockTerminal({ id: 't3', name: 'Terminal 3', projectId: '2', output: [] })
+      ],
+      { activeTerminalId: 't1' }
+    )
+  })
+
+  describe('initial state', () => {
+    it('should have empty terminals array by default', () => {
+      // Reset to true initial state (no beforeEach data)
+      resetTerminalStore()
+      const { terminals } = useTerminalStore.getState()
+      expect(terminals).toEqual([])
+    })
+
+    it('should have empty activeTerminalId by default', () => {
+      // Reset to true initial state (no beforeEach data)
+      resetTerminalStore()
+      const { activeTerminalId } = useTerminalStore.getState()
+      expect(activeTerminalId).toBe('')
+    })
+  })
+
+  describe('selectTerminal', () => {
+    it('should update activeTerminalId', () => {
+      const { selectTerminal } = useTerminalStore.getState()
+      selectTerminal('t2')
+
+      const { activeTerminalId } = useTerminalStore.getState()
+      expect(activeTerminalId).toBe('t2')
+    })
+
+    it('should update isActive property on terminals', () => {
+      const { selectTerminal } = useTerminalStore.getState()
+      selectTerminal('t2')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal1 = terminals.find((t) => t.id === 't1')
+      const terminal2 = terminals.find((t) => t.id === 't2')
+
+      expect(terminal1?.isActive).toBe(false)
+      expect(terminal2?.isActive).toBe(true)
+    })
+  })
+
+  describe('addTerminal', () => {
+    it('should add a new terminal to the array', () => {
+      const { addTerminal } = useTerminalStore.getState()
+      const initialCount = useTerminalStore.getState().terminals.length
+
+      addTerminal('New Terminal', '1')
+
+      const { terminals } = useTerminalStore.getState()
+      expect(terminals.length).toBe(initialCount + 1)
+    })
+
+    it('should return the created terminal', () => {
+      const { addTerminal } = useTerminalStore.getState()
+      const newTerminal = addTerminal('Test Terminal', '1', 'bash')
+
+      expect(newTerminal.name).toBe('Test Terminal')
+      expect(newTerminal.projectId).toBe('1')
+      expect(newTerminal.shell).toBe('bash')
+      expect(newTerminal.id).toBeTruthy()
+    })
+
+    it('gives terminals added in the same millisecond distinct ids', () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date('2026-10-13T00:00:00.000Z'))
+        const { addTerminal } = useTerminalStore.getState()
+        const first = addTerminal('A', '1')
+        const second = addTerminal('B', '1')
+        expect(first.id).not.toBe(second.id)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('can add a terminal without making it the active one', () => {
+      const { addTerminal, selectTerminal } = useTerminalStore.getState()
+      const local = addTerminal('Local', '1')
+      selectTerminal(local.id)
+      addTerminal('Background', 'ssh-p1', 'ssh', undefined, undefined, { activate: false })
+      expect(useTerminalStore.getState().activeTerminalId).toBe(local.id)
+    })
+
+    it('should set activeTerminalId to new terminal', () => {
+      const { addTerminal } = useTerminalStore.getState()
+      const newTerminal = addTerminal('New', '1')
+
+      const { activeTerminalId } = useTerminalStore.getState()
+      expect(activeTerminalId).toBe(newTerminal.id)
+    })
+
+    it('should default shell to powershell', () => {
+      const { addTerminal } = useTerminalStore.getState()
+      const newTerminal = addTerminal('Test', '1')
+
+      expect(newTerminal.shell).toBe('powershell')
+    })
+
+    it('should store cwd when provided', () => {
+      const { addTerminal } = useTerminalStore.getState()
+      const newTerminal = addTerminal('Test', '1', 'bash', '/home/user/project')
+
+      expect(newTerminal.cwd).toBe('/home/user/project')
+    })
+
+    it('should have undefined cwd when not provided', () => {
+      const { addTerminal } = useTerminalStore.getState()
+      const newTerminal = addTerminal('Test', '1', 'powershell')
+
+      expect(newTerminal.cwd).toBeUndefined()
+    })
+  })
+
+  describe('closeTerminal', () => {
+    it('should remove terminal from array', () => {
+      const { closeTerminal } = useTerminalStore.getState()
+      const initialCount = useTerminalStore.getState().terminals.length
+
+      closeTerminal('t2', '1')
+
+      const { terminals } = useTerminalStore.getState()
+      expect(terminals.length).toBe(initialCount - 1)
+      expect(terminals.find((t) => t.id === 't2')).toBeUndefined()
+    })
+
+    it('should update activeTerminalId when closing active terminal', () => {
+      const { closeTerminal } = useTerminalStore.getState()
+      closeTerminal('t1', '1')
+
+      const { activeTerminalId } = useTerminalStore.getState()
+      expect(activeTerminalId).toBe('t2')
+    })
+
+    it('should not change activeTerminalId when closing non-active terminal', () => {
+      const { closeTerminal } = useTerminalStore.getState()
+      closeTerminal('t2', '1')
+
+      const { activeTerminalId } = useTerminalStore.getState()
+      expect(activeTerminalId).toBe('t1')
+    })
+
+    it('should set empty activeTerminalId when closing last terminal for project', () => {
+      // Close all terminals for project 2
+      const { closeTerminal } = useTerminalStore.getState()
+      useTerminalStore.setState({ activeTerminalId: 't3' })
+
+      closeTerminal('t3', '2')
+
+      const { activeTerminalId } = useTerminalStore.getState()
+      expect(activeTerminalId).toBe('')
+    })
+  })
+
+  describe('renameTerminal', () => {
+    it('should update terminal name', () => {
+      const { renameTerminal } = useTerminalStore.getState()
+      renameTerminal('t1', 'Renamed Terminal')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+
+      expect(terminal?.name).toBe('Renamed Terminal')
+    })
+  })
+
+  describe('reorderTerminals', () => {
+    it('should reorder terminals for a project', () => {
+      const { reorderTerminals } = useTerminalStore.getState()
+      reorderTerminals('1', ['t2', 't1'])
+
+      const { terminals } = useTerminalStore.getState()
+      const projectTerminals = terminals.filter((t) => t.projectId === '1')
+
+      expect(projectTerminals[0].id).toBe('t2')
+      expect(projectTerminals[1].id).toBe('t1')
+    })
+
+    it('should not affect terminals from other projects', () => {
+      const { reorderTerminals } = useTerminalStore.getState()
+      reorderTerminals('1', ['t2', 't1'])
+
+      const { terminals } = useTerminalStore.getState()
+      const project2Terminals = terminals.filter((t) => t.projectId === '2')
+
+      expect(project2Terminals.length).toBe(1)
+      expect(project2Terminals[0].id).toBe('t3')
+    })
+  })
+
+  describe('setTerminals', () => {
+    it('should replace all terminals', () => {
+      const { setTerminals } = useTerminalStore.getState()
+      const newTerminals = [
+        { id: 'new', name: 'New', projectId: '1', shell: 'bash' as const, output: [] }
+      ]
+
+      setTerminals(newTerminals)
+
+      const { terminals } = useTerminalStore.getState()
+      expect(terminals.length).toBe(1)
+      expect(terminals[0].id).toBe('new')
+    })
+  })
+
+  describe('setTerminalPtyId', () => {
+    it('should set ptyId on existing terminal', () => {
+      const { setTerminalPtyId } = useTerminalStore.getState()
+
+      const didSet = setTerminalPtyId('t1', 'terminal-123-1')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+      expect(didSet).toBe(true)
+      expect(terminal?.ptyId).toBe('terminal-123-1')
+    })
+
+    it('should not affect other terminals', () => {
+      const { setTerminalPtyId } = useTerminalStore.getState()
+
+      const didSet = setTerminalPtyId('t1', 'terminal-123-1')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal2 = terminals.find((t) => t.id === 't2')
+      expect(didSet).toBe(true)
+      expect(terminal2?.ptyId).toBeUndefined()
+    })
+
+    it('should reject assigning same ptyId to different terminal', () => {
+      const { setTerminalPtyId } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'terminal-shared')
+      const secondSet = setTerminalPtyId('t2', 'terminal-shared')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal1 = terminals.find((t) => t.id === 't1')
+      const terminal2 = terminals.find((t) => t.id === 't2')
+
+      expect(secondSet).toBe(false)
+      expect(terminal1?.ptyId).toBe('terminal-shared')
+      expect(terminal2?.ptyId).toBeUndefined()
+    })
+
+    it('should ignore attempts to replace existing different ptyId', () => {
+      const { setTerminalPtyId } = useTerminalStore.getState()
+
+      const firstSet = setTerminalPtyId('t1', 'terminal-old')
+      const secondSet = setTerminalPtyId('t1', 'terminal-new')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+      expect(firstSet).toBe(true)
+      expect(secondSet).toBe(false)
+      expect(terminal?.ptyId).toBe('terminal-old')
+    })
+  })
+
+  describe('findTerminalByPtyId', () => {
+    it('should find terminal by ptyId', () => {
+      const { setTerminalPtyId, findTerminalByPtyId } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'terminal-123-1')
+      const terminal = findTerminalByPtyId('terminal-123-1')
+
+      expect(terminal).toBeDefined()
+      expect(terminal?.id).toBe('t1')
+    })
+
+    it('should return undefined when ptyId not found', () => {
+      const { findTerminalByPtyId } = useTerminalStore.getState()
+
+      const terminal = findTerminalByPtyId('non-existent')
+      expect(terminal).toBeUndefined()
+    })
+
+    it('should find correct terminal when multiple have ptyIds', () => {
+      const { setTerminalPtyId, findTerminalByPtyId } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'terminal-123-1')
+      setTerminalPtyId('t2', 'terminal-123-2')
+
+      const terminal1 = findTerminalByPtyId('terminal-123-1')
+      const terminal2 = findTerminalByPtyId('terminal-123-2')
+
+      expect(terminal1?.id).toBe('t1')
+      expect(terminal2?.id).toBe('t2')
+    })
+  })
+
+  describe('clearTerminalPtyId', () => {
+    it('should clear ptyId from matching terminal', () => {
+      const { setTerminalPtyId, clearTerminalPtyId } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'terminal-123-1')
+      clearTerminalPtyId('terminal-123-1')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+      expect(terminal?.ptyId).toBeUndefined()
+    })
+
+    it('should not affect terminals with different ptyId', () => {
+      const { setTerminalPtyId, clearTerminalPtyId } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'terminal-123-1')
+      setTerminalPtyId('t2', 'terminal-123-2')
+      clearTerminalPtyId('terminal-123-1')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal2 = terminals.find((t) => t.id === 't2')
+      expect(terminal2?.ptyId).toBe('terminal-123-2')
+    })
+
+    it('should be a no-op when ptyId does not exist', () => {
+      const { setTerminalPtyId, clearTerminalPtyId } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'terminal-123-1')
+      clearTerminalPtyId('non-existent')
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal1 = terminals.find((t) => t.id === 't1')
+      expect(terminal1?.ptyId).toBe('terminal-123-1')
+    })
+  })
+
+  describe('updateTerminalExitCode', () => {
+    it('should update exit code for existing terminal', () => {
+      const { updateTerminalExitCode } = useTerminalStore.getState()
+
+      updateTerminalExitCode('t1', 0)
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+      expect(terminal?.lastExitCode).toBe(0)
+    })
+
+    it('should update exit code to non-zero value', () => {
+      const { updateTerminalExitCode } = useTerminalStore.getState()
+
+      updateTerminalExitCode('t1', 127)
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+      expect(terminal?.lastExitCode).toBe(127)
+    })
+
+    it('should update exit code to null', () => {
+      const { updateTerminalExitCode } = useTerminalStore.getState()
+
+      // First set a value
+      updateTerminalExitCode('t1', 1)
+      expect(useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.lastExitCode).toBe(1)
+
+      // Then reset to null
+      updateTerminalExitCode('t1', null)
+      expect(
+        useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.lastExitCode
+      ).toBeNull()
+    })
+
+    it('should not affect other terminals', () => {
+      const { updateTerminalExitCode } = useTerminalStore.getState()
+
+      updateTerminalExitCode('t1', 42)
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal1 = terminals.find((t) => t.id === 't1')
+      const terminal2 = terminals.find((t) => t.id === 't2')
+
+      expect(terminal1?.lastExitCode).toBe(42)
+      expect(terminal2?.lastExitCode).toBeUndefined()
+    })
+  })
+
+  describe('detached output buffering', () => {
+    it('should append detached output for terminal by ptyId', () => {
+      const { setTerminalPtyId, appendDetachedOutput } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-detached-1')
+
+      appendDetachedOutput('pty-detached-1', 'hello')
+      appendDetachedOutput('pty-detached-1', ' world')
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.detachedOutput).toBe('hello world')
+    })
+
+    it('should consume detached output once and clear it', () => {
+      const { setTerminalPtyId, appendDetachedOutput, consumeDetachedOutput } =
+        useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-detached-1')
+      appendDetachedOutput('pty-detached-1', 'stream chunk')
+
+      expect(consumeDetachedOutput('pty-detached-1')).toBe('stream chunk')
+      expect(consumeDetachedOutput('pty-detached-1')).toBe('')
+    })
+
+    it('should track renderer attachment count per pty', () => {
+      const { setTerminalPtyId, setRendererAttached } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-renderer-1')
+
+      setRendererAttached('pty-renderer-1', true)
+      setRendererAttached('pty-renderer-1', true)
+      setRendererAttached('pty-renderer-1', false)
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.rendererAttachmentCount).toBe(1)
+    })
+
+    it('should append transcript for terminal by ptyId', () => {
+      const { setTerminalPtyId, appendTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-transcript-1')
+
+      appendTranscript('pty-transcript-1', '\u001b[32mhello\u001b[0m')
+      appendTranscript('pty-transcript-1', ' world')
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcript).toBe('\u001b[32mhello\u001b[0m world')
+    })
+
+    it('should trim transcript on a full CRLF boundary', () => {
+      const { setTerminalPtyId, appendTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-transcript-crlf')
+
+      const prefix = `header\r\n${'x'.repeat(499995)}`
+      appendTranscript('pty-transcript-crlf', prefix)
+      appendTranscript('pty-transcript-crlf', 'tail')
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcript?.startsWith('\n')).toBe(false)
+    })
+
+    it('should consume transcript once and clear it', () => {
+      const { setTerminalPtyId, appendTranscript, consumeTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-transcript-1')
+      appendTranscript('pty-transcript-1', 'chunk')
+
+      expect(consumeTranscript('pty-transcript-1')).toBe('chunk')
+      expect(consumeTranscript('pty-transcript-1')).toBe('')
+    })
+
+    it('should allow replay code to peek transcript before consuming it', () => {
+      const { setTerminalPtyId, appendTranscript, peekTranscript, consumeTranscript } =
+        useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-transcript-1')
+      appendTranscript('pty-transcript-1', 'chunk')
+
+      expect(peekTranscript('pty-transcript-1')).toBe('chunk')
+      expect(consumeTranscript('pty-transcript-1')).toBe('chunk')
+      expect(peekTranscript('pty-transcript-1')).toBe('')
+    })
+
+    it('leaves transcriptTrimmed unset while the transcript stays under the cap', () => {
+      const { setTerminalPtyId, appendTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-trim-flag-under')
+
+      appendTranscript('pty-trim-flag-under', 'line 1\n')
+      appendTranscript('pty-trim-flag-under', 'x'.repeat(MAX_TRANSCRIPT_CHARS - 8))
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcript?.length).toBe(MAX_TRANSCRIPT_CHARS - 1)
+      expect(terminal?.transcript?.startsWith('line 1\n')).toBe(true)
+      expect(terminal?.transcriptTrimmed).toBeFalsy()
+    })
+
+    it('sets transcriptTrimmed when appendTranscript trims past the cap', () => {
+      const { setTerminalPtyId, appendTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-trim-flag-over')
+
+      appendTranscript('pty-trim-flag-over', `head\n${'x'.repeat(MAX_TRANSCRIPT_CHARS - 10)}\n`)
+      appendTranscript('pty-trim-flag-over', 'tail line\n')
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcriptTrimmed).toBe(true)
+      expect(terminal?.transcript?.includes('head')).toBe(false)
+      expect(terminal?.transcript?.endsWith('tail line\n')).toBe(true)
+    })
+
+    it('line-aligns and flags a transcript that lands exactly on the cap', () => {
+      const { setTerminalPtyId, appendTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-trim-flag-exact')
+
+      // A coalesced buffer the detached-output hook clipped to exactly the cap:
+      // its head line is partial, so it must be dropped.
+      const partialHead = 'clipped-head-line\n'
+      const body = `${'y'.repeat(MAX_TRANSCRIPT_CHARS - partialHead.length - 1)}\n`
+      expect((partialHead + body).length).toBe(MAX_TRANSCRIPT_CHARS)
+      appendTranscript('pty-trim-flag-exact', partialHead + body)
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcript).toBe(body)
+      expect(terminal?.transcriptTrimmed).toBe(true)
+    })
+
+    it('clears transcriptTrimmed together with the transcript in consumeTranscript', () => {
+      const { setTerminalPtyId, appendTranscript, consumeTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-trim-flag-consume')
+
+      appendTranscript('pty-trim-flag-consume', `head\n${'x'.repeat(MAX_TRANSCRIPT_CHARS)}`)
+      const trimmedLength =
+        useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.transcript?.length ?? 0
+      expect(trimmedLength).toBe(MAX_TRANSCRIPT_CHARS)
+
+      const stillTrimmed = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(stillTrimmed?.transcriptTrimmed).toBe(true)
+
+      expect(consumeTranscript('pty-trim-flag-consume').length).toBe(MAX_TRANSCRIPT_CHARS)
+      const consumed = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(consumed?.transcript).toBeUndefined()
+      expect(consumed?.transcriptTrimmed).toBeFalsy()
+
+      appendTranscript('pty-trim-flag-consume', 'fresh\n')
+      const fresh = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(fresh?.transcript).toBe('fresh\n')
+      expect(fresh?.transcriptTrimmed).toBeFalsy()
+    })
+
+    it('keeps transcriptTrimmed through a small append after a trim', () => {
+      const { setTerminalPtyId, appendTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-trim-flag-sticky')
+      useTerminalStore.setState((state) => ({
+        terminals: state.terminals.map((t) =>
+          t.id === 't1' ? { ...t, transcript: 'tail\n', transcriptTrimmed: true } : t
+        )
+      }))
+
+      appendTranscript('pty-trim-flag-sticky', 'more\n')
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcript).toBe('tail\nmore\n')
+      expect(terminal?.transcriptTrimmed).toBe(true)
+    })
+
+    it('clears transcriptTrimmed on consume even when the trim left an empty transcript', () => {
+      const { setTerminalPtyId, consumeTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-trim-flag-empty')
+      useTerminalStore.setState((state) => ({
+        terminals: state.terminals.map((t) =>
+          t.id === 't1' ? { ...t, transcript: '', transcriptTrimmed: true } : t
+        )
+      }))
+
+      expect(consumeTranscript('pty-trim-flag-empty')).toBe('')
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcriptTrimmed).toBeFalsy()
+    })
+
+    it('clears transcriptTrimmed when the terminal restarts', () => {
+      const { setTerminalPtyId, restartTerminal } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-trim-flag-restart')
+      useTerminalStore.setState((state) => ({
+        terminals: state.terminals.map((t) =>
+          t.id === 't1' ? { ...t, transcript: 'tail\n', transcriptTrimmed: true } : t
+        )
+      }))
+
+      restartTerminal('t1')
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcript).toBeUndefined()
+      expect(terminal?.transcriptTrimmed).toBeFalsy()
+    })
+  })
+
+  describe('updateTerminalScrollback', () => {
+    it('should update pendingScrollback field when called with scrollback array', () => {
+      const { updateTerminalScrollback } = useTerminalStore.getState()
+
+      updateTerminalScrollback('t1', ['line 1', 'line 2', 'line 3'])
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+      expect(terminal?.pendingScrollback).toEqual(['line 1', 'line 2', 'line 3'])
+    })
+
+    it('should set pendingScrollback to undefined when called with undefined', () => {
+      const { updateTerminalScrollback } = useTerminalStore.getState()
+
+      // First set a value
+      updateTerminalScrollback('t1', ['existing line 1', 'existing line 2'])
+      expect(
+        useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.pendingScrollback
+      ).toHaveLength(2)
+
+      // Then clear it
+      updateTerminalScrollback('t1', undefined)
+      expect(
+        useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.pendingScrollback
+      ).toBeUndefined()
+    })
+
+    it('should not affect other terminals', () => {
+      const { updateTerminalScrollback } = useTerminalStore.getState()
+
+      updateTerminalScrollback('t1', ['terminal 1 lines'])
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal1 = terminals.find((t) => t.id === 't1')
+      const terminal2 = terminals.find((t) => t.id === 't2')
+
+      expect(terminal1?.pendingScrollback).toEqual(['terminal 1 lines'])
+      expect(terminal2?.pendingScrollback).toBeUndefined()
+    })
+
+    it('should handle non-existent terminal id gracefully', () => {
+      const { updateTerminalScrollback } = useTerminalStore.getState()
+
+      // Should not throw
+      expect(() => updateTerminalScrollback('non-existent-id', ['lines'])).not.toThrow()
+
+      const { terminals } = useTerminalStore.getState()
+      expect(terminals).toHaveLength(3)
+    })
+  })
+
+  describe('updateTerminalActivity', () => {
+    it('should set hasActivity to true', () => {
+      const { updateTerminalActivity } = useTerminalStore.getState()
+
+      updateTerminalActivity('t1', true)
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+      expect(terminal?.hasActivity).toBe(true)
+    })
+
+    it('should set hasActivity to false', () => {
+      const { updateTerminalActivity } = useTerminalStore.getState()
+
+      // First set to true
+      updateTerminalActivity('t1', true)
+      expect(useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.hasActivity).toBe(
+        true
+      )
+
+      // Then set to false
+      updateTerminalActivity('t1', false)
+      expect(useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.hasActivity).toBe(
+        false
+      )
+    })
+
+    it('should not affect other terminals', () => {
+      const { updateTerminalActivity } = useTerminalStore.getState()
+
+      updateTerminalActivity('t1', true)
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal1 = terminals.find((t) => t.id === 't1')
+      const terminal2 = terminals.find((t) => t.id === 't2')
+
+      expect(terminal1?.hasActivity).toBe(true)
+      expect(terminal2?.hasActivity).toBeUndefined()
+    })
+  })
+
+  describe('retention policies', () => {
+    it('truncates transcripts to the configured max chars while preserving the newest content', () => {
+      const { setTerminalPtyId, appendTranscript } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-transcript-retention')
+
+      const prefix = 'stale-header\n'
+      const retainedBody = 'x'.repeat(MAX_TRANSCRIPT_CHARS)
+      appendTranscript('pty-transcript-retention', prefix + retainedBody)
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.transcript?.length).toBe(MAX_TRANSCRIPT_CHARS)
+      expect(terminal?.transcript?.startsWith('x')).toBe(true)
+      expect(terminal?.transcript?.endsWith('x')).toBe(true)
+      expect(terminal?.transcript?.includes('stale-header')).toBe(false)
+      expect(terminal?.transcriptTrimmed).toBe(true)
+    })
+
+    it('truncates hidden buffers after the configured delay and keeps transcript aligned', () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date('2026-05-02T00:00:00.000Z'))
+
+        const {
+          updateTerminalScrollback,
+          setTerminalHidden,
+          setAppHidden,
+          truncateHiddenTerminalBuffers
+        } = useTerminalStore.getState()
+
+        const largeScrollback = Array.from(
+          { length: TRUNCATED_BUFFER_SIZE + 25 },
+          (_, index) => `line-${index + 1}`
+        )
+        const transcriptWithAnsi = largeScrollback
+          .map((line, index) => `\u001b[3${index % 7}m${line}\u001b[0m`)
+          .join('\n')
+        updateTerminalScrollback('t1', largeScrollback)
+        useTerminalStore.setState((state) => ({
+          terminals: state.terminals.map((terminal) =>
+            terminal.id === 't1' ? { ...terminal, transcript: transcriptWithAnsi } : terminal
+          )
+        }))
+
+        setTerminalHidden('t1', true)
+        setAppHidden(true)
+        vi.advanceTimersByTime(HIDDEN_BUFFER_TRUNCATION_DELAY + 1)
+        truncateHiddenTerminalBuffers()
+
+        const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+        expect(terminal?.pendingScrollback).toHaveLength(TRUNCATED_BUFFER_SIZE)
+        expect(terminal?.pendingScrollback?.[0]).toBe(`line-26`)
+        expect(terminal?.pendingScrollback?.at(-1)).toBe(`line-${TRUNCATED_BUFFER_SIZE + 25}`)
+        expect(terminal?.transcript).toContain('\u001b[')
+        expect(terminal?.transcript).not.toBe(terminal?.pendingScrollback?.join('\n'))
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('truncates transcript-only hidden terminals after the configured delay', () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date('2026-05-02T00:00:00.000Z'))
+
+        const { setTerminalPtyId, appendTranscript, setAppHidden, truncateHiddenTerminalBuffers } =
+          useTerminalStore.getState()
+        setTerminalPtyId('t1', 'pty-hidden-transcript-only')
+        appendTranscript(
+          'pty-hidden-transcript-only',
+          Array.from(
+            { length: TRUNCATED_BUFFER_SIZE + 10 },
+            (_, index) => `line-${index + 1}`
+          ).join('\n')
+        )
+
+        setAppHidden(true)
+        vi.advanceTimersByTime(HIDDEN_BUFFER_TRUNCATION_DELAY + 1)
+        truncateHiddenTerminalBuffers()
+
+        const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+        expect(terminal?.transcript?.split(/\r\n|\r|\n/)).toHaveLength(TRUNCATED_BUFFER_SIZE)
+        expect(terminal?.transcriptTrimmed).toBe(true)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('leaves transcriptTrimmed unset when the hidden truncation keeps the transcript intact', () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date('2026-05-02T00:00:00.000Z'))
+
+        const { setTerminalPtyId, appendTranscript, setAppHidden, truncateHiddenTerminalBuffers } =
+          useTerminalStore.getState()
+        setTerminalPtyId('t1', 'pty-hidden-transcript-small')
+        // Longer than TRUNCATED_BUFFER_SIZE chars but well under that many
+        // lines, with CRLF and bare-CR separators: nothing may be rewritten.
+        const transcript = Array.from(
+          { length: 200 },
+          (_, index) => `line-${index + 1} ${'z'.repeat(40)}\r\nprogress\r`
+        ).join('')
+        expect(transcript.length).toBeGreaterThan(TRUNCATED_BUFFER_SIZE)
+        appendTranscript('pty-hidden-transcript-small', transcript)
+
+        setAppHidden(true)
+        vi.advanceTimersByTime(HIDDEN_BUFFER_TRUNCATION_DELAY + 1)
+        truncateHiddenTerminalBuffers()
+
+        const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+        expect(terminal?.transcript).toBe(transcript)
+        expect(terminal?.transcriptTrimmed).toBeFalsy()
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('keeps the original separators of the retained lines when hidden truncation drops a head', () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date('2026-05-02T00:00:00.000Z'))
+
+        const { setTerminalPtyId, appendTranscript, setAppHidden, truncateHiddenTerminalBuffers } =
+          useTerminalStore.getState()
+        setTerminalPtyId('t1', 'pty-hidden-transcript-crlf')
+        const lines = Array.from({ length: TRUNCATED_BUFFER_SIZE + 10 }, (_, i) => `line-${i + 1}`)
+        appendTranscript('pty-hidden-transcript-crlf', lines.join('\r\n'))
+
+        setAppHidden(true)
+        vi.advanceTimersByTime(HIDDEN_BUFFER_TRUNCATION_DELAY + 1)
+        truncateHiddenTerminalBuffers()
+
+        const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+        expect(terminal?.transcript).toBe(lines.slice(-TRUNCATED_BUFFER_SIZE).join('\r\n'))
+        expect(terminal?.transcriptTrimmed).toBe(true)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('does not reset hidden timers on repeated hidden notifications', () => {
+      vi.useFakeTimers()
+      try {
+        vi.setSystemTime(new Date('2026-05-02T00:00:00.000Z'))
+
+        const { setAppHidden } = useTerminalStore.getState()
+        setAppHidden(true)
+        const firstHiddenSince = useTerminalStore.getState().terminals[0]?.appHiddenSince
+
+        vi.advanceTimersByTime(1000)
+        setAppHidden(true)
+        const secondHiddenSince = useTerminalStore.getState().terminals[0]?.appHiddenSince
+
+        expect(secondHiddenSince).toBe(firstHiddenSince)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+  })
+
+  describe('updateTerminalLastActivityTimestamp', () => {
+    it('should update the lastActivityTimestamp', () => {
+      const { updateTerminalLastActivityTimestamp } = useTerminalStore.getState()
+      const timestamp = Date.now()
+
+      updateTerminalLastActivityTimestamp('t1', timestamp)
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal = terminals.find((t) => t.id === 't1')
+      expect(terminal?.lastActivityTimestamp).toBe(timestamp)
+    })
+
+    it('should not affect other terminals', () => {
+      const { updateTerminalLastActivityTimestamp } = useTerminalStore.getState()
+      const timestamp = Date.now()
+
+      updateTerminalLastActivityTimestamp('t1', timestamp)
+
+      const { terminals } = useTerminalStore.getState()
+      const terminal1 = terminals.find((t) => t.id === 't1')
+      const terminal2 = terminals.find((t) => t.id === 't2')
+
+      expect(terminal1?.lastActivityTimestamp).toBe(timestamp)
+      expect(terminal2?.lastActivityTimestamp).toBeUndefined()
+    })
+
+    it('should overwrite existing timestamp', () => {
+      const { updateTerminalLastActivityTimestamp } = useTerminalStore.getState()
+      const firstTimestamp = 1000000
+      const secondTimestamp = 2000000
+
+      updateTerminalLastActivityTimestamp('t1', firstTimestamp)
+      expect(
+        useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.lastActivityTimestamp
+      ).toBe(firstTimestamp)
+
+      updateTerminalLastActivityTimestamp('t1', secondTimestamp)
+      expect(
+        useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.lastActivityTimestamp
+      ).toBe(secondTimestamp)
+    })
+  })
+
+  // ========== Multi-Project Terminal Preservation Tests ==========
+  // These tests verify AC1, AC3, AC6 from the tech spec:
+  // - AC1: Terminals are NOT killed when switching projects
+  // - AC3: Terminals with live PTY reconnect when returning to project
+  // - AC6: Workspace tabs remain stable across project switches
+
+  describe('multi-project terminal preservation', () => {
+    it('should preserve terminals from project A when project B becomes active', () => {
+      // Setup: Terminals exist for both projects
+      const { setTerminalPtyId } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-project-1-a')
+      setTerminalPtyId('t2', 'pty-project-1-b')
+      setTerminalPtyId('t3', 'pty-project-2')
+
+      // Simulate switching to project 2
+      useProjectStore.setState({ activeProjectId: '2' })
+
+      // Verify: All terminals still exist
+      const { terminals } = useTerminalStore.getState()
+      const project1Terminals = terminals.filter((t) => t.projectId === '1')
+      const project2Terminals = terminals.filter((t) => t.projectId === '2')
+
+      // AC1: Terminals from project 1 should NOT be removed
+      expect(project1Terminals.length).toBe(2)
+      expect(project2Terminals.length).toBe(1)
+
+      // AC3: ptyId bindings should be preserved
+      expect(project1Terminals[0].ptyId).toBe('pty-project-1-a')
+      expect(project1Terminals[1].ptyId).toBe('pty-project-1-b')
+    })
+
+    it('should find terminals by ptyId across multiple projects', () => {
+      // Setup: Terminals with ptyIds across projects
+      const { setTerminalPtyId, findTerminalByPtyId } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-cross-project-1')
+      setTerminalPtyId('t3', 'pty-cross-project-2')
+
+      // Test: findTerminalByPtyId should work regardless of which project is active
+      const terminal1 = findTerminalByPtyId('pty-cross-project-1')
+      const terminal2 = findTerminalByPtyId('pty-cross-project-2')
+
+      expect(terminal1?.projectId).toBe('1')
+      expect(terminal2?.projectId).toBe('2')
+    })
+
+    it('should maintain ptyIdIndex across project switches', () => {
+      // Setup: Assign ptyIds
+      const { setTerminalPtyId, findTerminalByPtyId } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-index-test-1')
+      setTerminalPtyId('t3', 'pty-index-test-2')
+
+      // Switch to project 2
+      useProjectStore.setState({ activeProjectId: '2' })
+
+      // The ptyIdIndex should still work for lookups
+      const terminal = findTerminalByPtyId('pty-index-test-1')
+      expect(terminal).toBeDefined()
+      expect(terminal?.projectId).toBe('1')
+    })
+
+    it('should allow re-selecting terminals when returning to a project', () => {
+      // Setup: Terminals exist for project 1 with ptyIds
+      const { setTerminalPtyId, selectTerminal } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-return-test')
+      setTerminalPtyId('t2', 'pty-return-test-2')
+
+      // Switch to project 2
+      useProjectStore.setState({ activeProjectId: '2' })
+      useTerminalStore.setState({ activeTerminalId: 't3' })
+
+      // Switch back to project 1
+      useProjectStore.setState({ activeProjectId: '1' })
+
+      // Select a terminal from project 1
+      selectTerminal('t2')
+
+      const { activeTerminalId, terminals } = useTerminalStore.getState()
+      expect(activeTerminalId).toBe('t2')
+
+      // Terminal should still have its ptyId
+      const terminal = terminals.find((t) => t.id === 't2')
+      expect(terminal?.ptyId).toBe('pty-return-test-2')
+    })
+
+    it('should maintain separate terminal lists per project', () => {
+      const { terminals } = useTerminalStore.getState()
+
+      // Verify terminals are properly associated with their projects
+      const project1Ids = terminals.filter((t) => t.projectId === '1').map((t) => t.id)
+      const project2Ids = terminals.filter((t) => t.projectId === '2').map((t) => t.id)
+
+      expect(project1Ids).toEqual(expect.arrayContaining(['t1', 't2']))
+      expect(project2Ids).toEqual(['t3'])
+
+      // No overlap between projects
+      const overlap = project1Ids.filter((id) => project2Ids.includes(id))
+      expect(overlap).toHaveLength(0)
+    })
+  })
+
+  describe('setTerminalNeedsAttention', () => {
+    it('sets the needsAttention flag on the target terminal', () => {
+      useTerminalStore.getState().setTerminalNeedsAttention('t2', true)
+
+      const t2 = useTerminalStore.getState().terminals.find((t) => t.id === 't2')
+      expect(t2?.needsAttention).toBe(true)
+    })
+
+    it('clears the needsAttention flag', () => {
+      useTerminalStore.getState().setTerminalNeedsAttention('t2', true)
+      useTerminalStore.getState().setTerminalNeedsAttention('t2', false)
+
+      const t2 = useTerminalStore.getState().terminals.find((t) => t.id === 't2')
+      expect(t2?.needsAttention).toBe(false)
+    })
+
+    it('does not affect other terminals', () => {
+      useTerminalStore.getState().setTerminalNeedsAttention('t2', true)
+
+      const t1 = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      const t3 = useTerminalStore.getState().terminals.find((t) => t.id === 't3')
+      expect(t1?.needsAttention).toBeFalsy()
+      expect(t3?.needsAttention).toBeFalsy()
+    })
+
+    it('is a no-op (same state reference) when the value is unchanged', () => {
+      // Already false by default — setting false again must not produce a new array.
+      const before = useTerminalStore.getState().terminals
+      useTerminalStore.getState().setTerminalNeedsAttention('t2', false)
+      const after = useTerminalStore.getState().terminals
+      expect(after).toBe(before)
+    })
+
+    it('ignores unknown terminal ids', () => {
+      const before = useTerminalStore.getState().terminals
+      useTerminalStore.getState().setTerminalNeedsAttention('does-not-exist', true)
+      const after = useTerminalStore.getState().terminals
+      expect(after).toBe(before)
+    })
+  })
+
+  // ========== CAP-3: reclaimable terminal lease (claim) lifecycle ==========
+  // The claim credential is in-memory only: set on spawn/rotate, cleared on
+  // kill/close/restart/clearTerminalPtyId, and NEVER written to persistence.
+
+  describe('CAP-3 terminal claim lifecycle', () => {
+    it('setTerminalClaim sets the claim on the terminal owning the ptyId', () => {
+      const { setTerminalPtyId, setTerminalClaim } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'pty-cap3-claim')
+      setTerminalClaim('pty-cap3-claim', 'lease-credential-1')
+
+      const { terminals } = useTerminalStore.getState()
+      expect(terminals.find((t) => t.id === 't1')?.claim).toBe('lease-credential-1')
+      expect(terminals.find((t) => t.id === 't2')?.claim).toBeUndefined()
+      expect(terminals.find((t) => t.id === 't3')?.claim).toBeUndefined()
+    })
+
+    it('setTerminalClaim is a no-op for an unknown ptyId', () => {
+      const { setTerminalPtyId, setTerminalClaim } = useTerminalStore.getState()
+      setTerminalPtyId('t1', 'pty-cap3-known')
+
+      const before = useTerminalStore.getState().terminals
+      setTerminalClaim('pty-cap3-unknown', 'lease-orphan')
+      const after = useTerminalStore.getState().terminals
+
+      // Same state reference: nothing was rewritten for a ptyId nobody owns.
+      expect(after).toBe(before)
+      expect(after.find((t) => t.id === 't1')?.claim).toBeUndefined()
+      expect(after.some((t) => t.claim === 'lease-orphan')).toBe(false)
+    })
+
+    it('clears the claim when setTerminalClaim is called with undefined', () => {
+      const { setTerminalPtyId, setTerminalClaim } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'pty-cap3-clear')
+      setTerminalClaim('pty-cap3-clear', 'lease-to-clear')
+      expect(useTerminalStore.getState().terminals.find((t) => t.id === 't1')?.claim).toBe(
+        'lease-to-clear'
+      )
+
+      setTerminalClaim('pty-cap3-clear', undefined)
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.claim).toBeUndefined()
+      // The ptyId binding survives claim clearing — only the lease is gone.
+      expect(terminal?.ptyId).toBe('pty-cap3-clear')
+    })
+
+    it('rotation semantics: setting a new claim replaces the previous credential', () => {
+      const { setTerminalPtyId, setTerminalClaim } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'pty-cap3-rotate')
+      setTerminalClaim('pty-cap3-rotate', 'lease-generation-1')
+      setTerminalClaim('pty-cap3-rotate', 'lease-generation-2')
+
+      const { terminals } = useTerminalStore.getState()
+      expect(terminals.find((t) => t.id === 't1')?.claim).toBe('lease-generation-2')
+      // The rotated-out credential must not linger on any terminal record.
+      expect(terminals.some((t) => t.claim === 'lease-generation-1')).toBe(false)
+    })
+
+    it('clearTerminalPtyId drops the claim bound to that PTY', () => {
+      const { setTerminalPtyId, setTerminalClaim, clearTerminalPtyId } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'pty-cap3-drop')
+      setTerminalClaim('pty-cap3-drop', 'lease-bound-to-pty')
+
+      clearTerminalPtyId('pty-cap3-drop')
+
+      const terminal = useTerminalStore.getState().terminals.find((t) => t.id === 't1')
+      expect(terminal?.ptyId).toBeUndefined()
+      expect(terminal?.claim).toBeUndefined()
+    })
+
+    it('closeTerminal removes the record carrying the claim', () => {
+      const { setTerminalPtyId, setTerminalClaim, closeTerminal } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'pty-cap3-close')
+      setTerminalClaim('pty-cap3-close', 'lease-on-closed-terminal')
+
+      closeTerminal('t1', '1')
+
+      const { terminals } = useTerminalStore.getState()
+      expect(terminals.find((t) => t.id === 't1')).toBeUndefined()
+      expect(terminals.some((t) => t.claim === 'lease-on-closed-terminal')).toBe(false)
+    })
+
+    it('restartTerminal drops the stale claim of the replaced PTY', () => {
+      const { setTerminalPtyId, setTerminalClaim, restartTerminal } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'pty-cap3-restart')
+      setTerminalClaim('pty-cap3-restart', 'lease-stale-after-restart')
+
+      restartTerminal('t1')
+
+      const { terminals } = useTerminalStore.getState()
+      const restarted = terminals.find((t) => t.id === 't1')
+      // The old lease belonged to the old PTY — the record gets a fresh
+      // placeholder ptyId and no claim until the restart re-spawns.
+      expect(restarted?.claim).toBeUndefined()
+      expect(restarted?.ptyId).toBeDefined()
+      expect(restarted?.ptyId).not.toBe('pty-cap3-restart')
+      expect(terminals.some((t) => t.claim === 'lease-stale-after-restart')).toBe(false)
+    })
+
+    it('excludes the claim from the auto-save persisted payload (persistence exclusion)', () => {
+      const claimCredential = 'cap3-lease-credential-0123456789abcdef'
+      const { setTerminalPtyId, setTerminalClaim, appendTranscript } = useTerminalStore.getState()
+
+      setTerminalPtyId('t1', 'pty-cap3-persist')
+      setTerminalClaim('pty-cap3-persist', claimCredential)
+      appendTranscript('pty-cap3-persist', 'persisted output line 1\npersisted output line 2\n')
+
+      const { terminals, activeTerminalId } = useTerminalStore.getState()
+      const layout = serializeTerminalsForProject(terminals, '1', activeTerminalId)
+
+      const persisted = layout.terminals.find((t) => t.id === 't1')
+      expect(persisted).toBeDefined()
+      // Ordinary continuity data still persists...
+      expect(persisted?.transcript).toBe('persisted output line 1\npersisted output line 2\n')
+      expect(persisted?.scrollback).toEqual(['persisted output line 1', 'persisted output line 2'])
+      // ...but the lease credential never does.
+      expect(persisted).not.toHaveProperty('claim')
+      expect(persisted).not.toHaveProperty('ptyId')
+
+      const serialized = JSON.stringify(layout)
+      expect(serialized).not.toContain(claimCredential)
+      expect(serialized).not.toContain('"claim"')
+    })
+  })
+})

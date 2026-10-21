@@ -1,0 +1,172 @@
+/**
+ * ADR-004.4: Launch orchestration for terminal-native CLI agents.
+ *
+ * Sibling of `terminal-spawn.ts`. Reuses the same store-read / env /
+ * symlink mechanics, differing only in: building the agent argv from the Agent
+ * Registry, passing `program`/`args`/`kind:'agent'` to the spawn primitive
+ * (ADR-004.2), and tagging the created Terminal record with descriptive-only
+ * agent metadata (ADR-004.4).
+ *
+ * The user's prompt is delivered to the PTY as a discrete argv element and is
+ * NEVER shell-interpolated — the Rust spawn path (argv on POSIX, audited
+ * command-line quoting on Windows) guarantees this.
+ */
+
+import { buildAgentArgv, type TerminalAgentDefinition } from '@/lib/agents/agent-registry'
+import { terminalApi } from '@/lib/api'
+import { resolveAgentEnv, resolveEnvForSpawn } from '@/lib/env-parser'
+import { ensureWorktreeSymlinks } from '@/lib/worktree-context'
+import { useProjectStore } from '@/stores/project-store'
+import { useTerminalStore } from '@/stores/terminal-store'
+import { useWorkspaceStore } from '@/stores/workspace-store'
+
+/** Re-exported for restore/spawn paths that merge agent env with project env. */
+export { resolveAgentEnv }
+
+export interface LaunchAgentOptions {
+  /** Project environment variables for spawn. */
+  envVars?: Array<{ key: string; value: string; enabled?: boolean }>
+}
+
+export interface LaunchAgentResult {
+  success: boolean
+  error?: string
+  terminalId?: string
+}
+
+/**
+ * Launch a CLI agent's interactive TUI in a specific workspace pane.
+ *
+ * Reads stores via getState() at call time. Returns a result object so callers
+ * decide how to surface errors. On success the pane gains a terminal tab whose
+ * foreground process is the agent binary, seeded with `prompt`.
+ */
+export async function launchAgentInPane(
+  paneId: string,
+  projectId: string,
+  cwd: string,
+  def: TerminalAgentDefinition,
+  prompt: string | undefined,
+  options?: LaunchAgentOptions
+): Promise<LaunchAgentResult> {
+  const terminalStore = useTerminalStore.getState()
+  const workspaceStore = useWorkspaceStore.getState()
+
+  const project = useProjectStore.getState().projects.find((p) => p.id === projectId)
+
+  try {
+    // Ensure worktree symlinks are present when launching into a worktree path.
+    if (project?.worktrees?.some((w) => w.path === cwd)) {
+      await ensureWorktreeSymlinks(projectId)
+    }
+
+    // Resolve project env vars for spawn (same as terminal spawn).
+    const { env: projectEnv, hasProjectEnv } = resolveEnvForSpawn(
+      options?.envVars ?? project?.envVars,
+      {}
+    )
+
+    // Merge any agent-declared env on top of project env. Values may reference
+    // an existing var with a leading `$` (resolved against the project env).
+    const agentEnv = resolveAgentEnv(def.env, projectEnv)
+    const mergedEnv = { ...projectEnv, ...agentEnv }
+    const hasEnv = hasProjectEnv || Object.keys(agentEnv).length > 0
+
+    // Build argv from the registry definition + prompt (pure, injection-safe).
+    const { program, args } = buildAgentArgv(def, prompt)
+
+    const spawnResult = await terminalApi.spawn({
+      projectId,
+      cwd,
+      program,
+      args,
+      kind: 'agent',
+      ...(hasEnv ? { env: mergedEnv } : {})
+    })
+
+    if (!spawnResult.success) {
+      return {
+        success: false,
+        error: spawnResult.error || 'Failed to launch agent'
+      }
+    }
+
+    // Create the terminal record. Name defaults to the agent name so the tab
+    // reads e.g. "Claude Code" instead of "Terminal 3".
+    //
+    // CRITICAL: Batch all terminal store mutations into a single set() call to
+    // prevent intermediate Zustand subscriptions from firing syncTerminalTabs
+    // before the terminal has a ptyId or the tab has been added to the pane.
+    // The old approach (addTerminal → setTerminalAgentMetadata → setTerminalPtyId)
+    // triggered 3+ separate re-renders, each one making the terminal look
+    // "orphaned" to syncTerminalTabs, which removed the tab and cascaded into
+    // a MOUNT/UNMOUNT storm.
+    const terminalId = Date.now().toString()
+    const agentArgsCopy = [...def.baseArgs]
+
+    const latestTerminals = useTerminalStore.getState().terminals
+    terminalStore.setTerminals([
+      ...latestTerminals,
+      {
+        id: terminalId,
+        name: def.name,
+        projectId,
+        shell: program,
+        cwd,
+        output: [],
+        healthStatus: 'running',
+        isHidden: false,
+        ptyId: spawnResult.data.id,
+        // ADR-004.4: descriptive-only agent metadata
+        kind: 'agent',
+        agentId: def.id,
+        agentName: def.name,
+        agentProgram: program,
+        agentArgs: agentArgsCopy,
+        // CAP-3: the issued lease credential, captured in the SAME batched
+        // set() as the ptyId — it is in-memory only and never persisted.
+        ...(spawnResult.data.claim ? { claim: spawnResult.data.claim } : {})
+      }
+    ])
+
+    // Select the new terminal.
+    terminalStore.selectTerminal(terminalId)
+
+    // Add terminal tab to the workspace pane.
+    workspaceStore.addTabToPane(paneId, {
+      type: 'terminal',
+      id: `term-${terminalId}`,
+      terminalId
+    })
+
+    return { success: true, terminalId }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : String(err)
+    }
+  }
+}
+
+/**
+ * Convenience wrapper: reads the active pane
+ * from the store, then launches the agent. Used by the
+ * launcher UI and command bar.
+ */
+export async function launchAgentInActivePane(
+  projectId: string,
+  cwd: string,
+  def: TerminalAgentDefinition,
+  prompt: string | undefined
+): Promise<LaunchAgentResult> {
+  const paneId = useWorkspaceStore.getState().activePaneId
+  if (!paneId) {
+    return { success: false, error: 'No active pane' }
+  }
+
+  const project = useProjectStore.getState().projects.find((p) => p.id === projectId)
+
+  return launchAgentInPane(paneId, projectId, cwd, def, prompt, {
+    envVars: project?.envVars
+  })
+}

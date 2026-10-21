@@ -1,0 +1,403 @@
+import { renderHook, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { StoredAgentConfig } from '@/lib/acp-agents-persistence'
+import {
+  buildSupportedAcpAgents,
+  pickDefaultSupportedAgent
+} from '@/lib/agents/supported-acp-agents'
+import { useAcpAgents } from './use-acp-agents'
+
+const {
+  mockLoadAgentConfigs,
+  mockPrewarmAgent,
+  mockSaveAgentConfig,
+  mockSetSelectedAgentConfigId,
+  mockRetargetWarmPool,
+  mockPrepareChat,
+  mockPersistRead,
+  stateRef,
+  projectRef,
+  tauriContextRef
+} = vi.hoisted(() => ({
+  mockLoadAgentConfigs: vi.fn(),
+  mockPrewarmAgent: vi.fn(),
+  mockSaveAgentConfig: vi.fn(),
+  mockSetSelectedAgentConfigId: vi.fn(),
+  mockRetargetWarmPool: vi.fn(),
+  mockPrepareChat: vi.fn(),
+  mockPersistRead: vi.fn(),
+  stateRef: { current: { agentConfigs: [] as StoredAgentConfig[] } },
+  projectRef: { current: { activeProjectId: 'proj-1' as string } },
+  tauriContextRef: { current: true as boolean }
+}))
+
+vi.mock('@/lib/tauri-runtime', () => ({
+  isTauriContext: () => tauriContextRef.current
+}))
+
+vi.mock('@tauri-apps/plugin-os', () => ({
+  platform: vi.fn(() => 'windows'),
+  arch: vi.fn(() => 'x86_64')
+}))
+
+vi.mock('@/lib/api', () => ({
+  persistenceApi: { read: mockPersistRead }
+}))
+
+vi.mock('@/lib/worktree-context', () => ({
+  getDefaultCwdForProject: (projectId: string) => `/work/${projectId}`
+}))
+
+vi.mock('@/lib/acp-api', () => ({
+  acpApi: {
+    probeRuntime: vi.fn(async () => ({ npx: true, uvx: true }))
+  }
+}))
+
+vi.mock('@/lib/agents/supported-acp-agents', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/agents/supported-acp-agents')>(
+    '@/lib/agents/supported-acp-agents'
+  )
+  return {
+    ...actual,
+    // CAP-6 / Story 8: `useAcpAgents` resolves supported agents from the host
+    // catalog via `resolveSupportedAcpAgents`. Component tests delegate to the
+    // synchronous offline-first derivation so the prewarm selection assertions
+    // match the previous `buildSupportedAcpAgents(...)` behavior exactly.
+    resolveSupportedAcpAgents: async (configs: readonly StoredAgentConfig[]) =>
+      actual.buildSupportedAcpAgents(configs, 'windows-x86_64', undefined, {
+        npx: true,
+        uvx: true
+      })
+  }
+})
+
+vi.mock('@/stores/project-store', () => {
+  const getState = () => ({ activeProjectId: projectRef.current.activeProjectId })
+  const useProjectStore = (sel?: (s: ReturnType<typeof getState>) => unknown) =>
+    sel ? sel(getState()) : getState()
+  useProjectStore.getState = getState
+  return { useProjectStore }
+})
+
+vi.mock('@/stores/acp-store', () => {
+  const getState = () => ({
+    agentConfigs: stateRef.current.agentConfigs,
+    loadAgentConfigs: mockLoadAgentConfigs,
+    saveAgentConfig: mockSaveAgentConfig,
+    prewarmAgent: mockPrewarmAgent,
+    setSelectedAgentConfigId: mockSetSelectedAgentConfigId,
+    retargetWarmPool: mockRetargetWarmPool,
+    prepareChat: mockPrepareChat
+  })
+  const useAcpStore = (sel?: (s: ReturnType<typeof getState>) => unknown) =>
+    sel ? sel(getState()) : getState()
+  useAcpStore.getState = getState
+  return { useAcpStore }
+})
+
+function prewarmedCwds(): string[] {
+  return mockPrewarmAgent.mock.calls.map(([, cwd]) => cwd as string)
+}
+
+function config(id: string): StoredAgentConfig {
+  return { id, name: id, command: 'npx', args: [], env: {}, templateId: id }
+}
+
+describe('useAcpAgents', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    tauriContextRef.current = true
+    stateRef.current.agentConfigs = []
+    projectRef.current.activeProjectId = 'proj-1'
+    mockLoadAgentConfigs.mockResolvedValue(undefined)
+    mockPersistRead.mockResolvedValue({ success: true, data: undefined })
+    mockSaveAgentConfig.mockImplementation(async (entry: StoredAgentConfig) => {
+      stateRef.current.agentConfigs = [...stateRef.current.agentConfigs, entry]
+    })
+  })
+
+  it('loads agent configs on mount', async () => {
+    renderHook(() => useAcpAgents())
+    await waitFor(() => expect(mockLoadAgentConfigs).toHaveBeenCalledTimes(1))
+  })
+
+  it('prewarms only the selected ready agent after configs load', async () => {
+    // The store mutates its own state during loadAgentConfigs; simulate that by
+    // populating agentConfigs as the load resolves.
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      stateRef.current.agentConfigs = [
+        config('acp-registry:claude-acp'),
+        config('acp-registry:gemini')
+      ]
+    })
+    mockPersistRead.mockResolvedValue({
+      success: true,
+      data: { agentId: 'acp-registry:gemini', mode: 'acp' }
+    })
+
+    renderHook(() => useAcpAgents())
+
+    await waitFor(() => {
+      expect(mockPrewarmAgent).toHaveBeenCalledWith('acp-registry:gemini', '/work/proj-1')
+    })
+    expect(mockPrewarmAgent).toHaveBeenCalledTimes(1)
+    expect(mockSetSelectedAgentConfigId).toHaveBeenCalledWith('acp-registry:gemini')
+    // Story 8: boot warms the agent PROCESS only — the warm SESSION is
+    // created lazily on launcher open, so boot never seeds the warm pool
+    // (and therefore never fires `create_session` for it).
+    expect(mockRetargetWarmPool).not.toHaveBeenCalled()
+    expect(mockPrepareChat).not.toHaveBeenCalled()
+  })
+
+  it('prewarms the default supported agent when no selection is persisted', async () => {
+    const defaultAgent = pickDefaultSupportedAgent(
+      buildSupportedAcpAgents([], 'windows-x86_64', undefined, {
+        npx: true,
+        uvx: true
+      })
+    )
+    expect(defaultAgent).toBeDefined()
+
+    renderHook(() => useAcpAgents())
+
+    await waitFor(() => {
+      expect(mockPrewarmAgent).toHaveBeenCalledWith(defaultAgent?.configId, '/work/proj-1')
+    })
+    expect(mockSaveAgentConfig).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: defaultAgent?.configId,
+        templateId: defaultAgent?.id
+      })
+    )
+    expect(mockPrewarmAgent).toHaveBeenCalledTimes(1)
+  })
+
+  it('prewarms nothing when no active project cwd is available', async () => {
+    projectRef.current.activeProjectId = ''
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      stateRef.current.agentConfigs = [config('a')]
+    })
+
+    renderHook(() => useAcpAgents())
+
+    await waitFor(() => expect(mockLoadAgentConfigs).toHaveBeenCalled())
+    expect(mockPrewarmAgent).not.toHaveBeenCalled()
+  })
+
+  it('prewarms at once on boot and only the last project of a rapid switch burst', async () => {
+    vi.useFakeTimers()
+    try {
+      mockLoadAgentConfigs.mockImplementation(async () => {
+        stateRef.current.agentConfigs = [config('acp-registry:claude-acp')]
+      })
+      const { rerender } = renderHook(() => useAcpAgents())
+      await vi.advanceTimersByTimeAsync(0)
+      expect(prewarmedCwds()).toEqual(['/work/proj-1'])
+
+      for (const projectId of ['proj-2', 'proj-3', 'proj-4']) {
+        projectRef.current.activeProjectId = projectId
+        rerender()
+        await vi.advanceTimersByTimeAsync(500)
+      }
+      expect(prewarmedCwds()).toEqual(['/work/proj-1'])
+
+      await vi.advanceTimersByTimeAsync(3_000)
+      expect(prewarmedCwds()).toEqual(['/work/proj-1', '/work/proj-4'])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not prewarm on mount when activeProjectId is empty, then prewarms after it resolves', async () => {
+    projectRef.current.activeProjectId = ''
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      stateRef.current.agentConfigs = [config('acp-registry:claude-acp')]
+    })
+    mockPersistRead.mockResolvedValue({ success: true, data: undefined })
+
+    const { rerender } = renderHook(() => useAcpAgents())
+
+    await waitFor(() => expect(mockLoadAgentConfigs).toHaveBeenCalled())
+    expect(mockPrewarmAgent).not.toHaveBeenCalled()
+
+    // Project resolves after mount
+    projectRef.current.activeProjectId = 'proj-late'
+    rerender()
+
+    await waitFor(() => {
+      expect(mockPrewarmAgent).toHaveBeenCalledWith(expect.any(String), '/work/proj-late')
+    })
+  })
+
+  it('cancels the stale prewarm run when the active project switches mid-flight', async () => {
+    projectRef.current.activeProjectId = 'proj-1'
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      stateRef.current.agentConfigs = [config('acp-registry:claude-acp')]
+    })
+    // Block each in-flight run at persistenceApi.read (which runs AFTER the cwd
+    // snapshot) so a project switch can happen while run #1 is still in flight.
+    const persistResolvers: Array<() => void> = []
+    mockPersistRead.mockImplementation(
+      () =>
+        new Promise<{ success: boolean; data: unknown }>((resolve) => {
+          persistResolvers.push(() => resolve({ success: true, data: undefined }))
+        })
+    )
+
+    const { rerender } = renderHook(() => useAcpAgents())
+
+    // Run #1 (proj-1) is in flight, blocked on persistRead; cwd = '/work/proj-1'.
+    await waitFor(() => expect(persistResolvers).toHaveLength(1))
+
+    // Switch project + re-render: cleanup cancels run #1; run #2 (proj-2) starts.
+    projectRef.current.activeProjectId = 'proj-2'
+    rerender()
+    await waitFor(() => expect(persistResolvers).toHaveLength(2))
+
+    // Resume run #1 (cancelled) — it must NOT prewarm the stale proj-1 cwd.
+    persistResolvers[0]()
+    // Resume run #2 (the latest) — it prewarms the proj-2 cwd.
+    persistResolvers[1]()
+
+    await waitFor(() => {
+      expect(mockPrewarmAgent).toHaveBeenCalledWith(expect.any(String), '/work/proj-2')
+    })
+    expect(mockPrewarmAgent).not.toHaveBeenCalledWith(expect.any(String), '/work/proj-1')
+  })
+
+  // ---- Issue #840: web never prewarms on page load --------------------------
+
+  it('does not prewarm on web page load even when a configured ready agent exists', async () => {
+    tauriContextRef.current = false
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      stateRef.current.agentConfigs = [config('acp-registry:claude-acp')]
+    })
+    mockPersistRead.mockResolvedValue({ success: true, data: undefined })
+
+    renderHook(() => useAcpAgents())
+
+    // The selection still resolves (the launcher preselects a configured
+    // agent), but no process is spawned at page load on web.
+    await waitFor(() => {
+      expect(mockSetSelectedAgentConfigId).toHaveBeenCalledWith('acp-registry:claude-acp')
+    })
+    // Give any wrongly-dispatched prewarm a chance to fire before asserting.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(mockPrewarmAgent).not.toHaveBeenCalled()
+  })
+
+  it('web defaults to configured agents only and persists no new config', async () => {
+    tauriContextRef.current = false
+    // No persisted configs: the catalog-derived preferred default (codex via
+    // npx) must NOT be auto-selected or auto-persisted on web.
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      stateRef.current.agentConfigs = []
+    })
+    mockPersistRead.mockResolvedValue({ success: true, data: undefined })
+
+    renderHook(() => useAcpAgents())
+
+    await waitFor(() => expect(mockLoadAgentConfigs).toHaveBeenCalled())
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(mockSetSelectedAgentConfigId).toHaveBeenCalledWith(null)
+    expect(mockSaveAgentConfig).not.toHaveBeenCalled()
+    expect(mockPrewarmAgent).not.toHaveBeenCalled()
+  })
+
+  it('web honors a persisted selection when the agent is ready with a derivable config', async () => {
+    tauriContextRef.current = false
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      // Only claude is configured; the persisted selection points at codex.
+      stateRef.current.agentConfigs = [config('acp-registry:claude-acp')]
+    })
+    mockPersistRead.mockResolvedValue({
+      success: true,
+      data: { agentId: 'acp-registry:codex-acp', mode: 'acp' }
+    })
+
+    renderHook(() => useAcpAgents())
+
+    // Issue #907: a READY entry with a derivable config (codex via npx)
+    // restores the SELECTION — a reload must keep the user's agent, not
+    // silently swap to another configured one. Boot still persists nothing
+    // and prewarms nothing on web (#840 invariant): selection-only.
+    await waitFor(() => {
+      expect(mockSetSelectedAgentConfigId).toHaveBeenCalledWith('acp-registry:codex-acp')
+    })
+    expect(mockSaveAgentConfig).not.toHaveBeenCalled()
+    expect(mockPrewarmAgent).not.toHaveBeenCalled()
+  })
+
+  it('web falls back to the configured default when the persisted selection is not ready', async () => {
+    tauriContextRef.current = false
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      // Only claude is configured; the persisted selection points at an
+      // install-required binary agent with no derivable config.
+      stateRef.current.agentConfigs = [config('acp-registry:claude-acp')]
+    })
+    mockPersistRead.mockResolvedValue({
+      success: true,
+      data: { agentId: 'acp-registry:opencode', mode: 'acp' }
+    })
+
+    renderHook(() => useAcpAgents())
+
+    // Issue #840 unchanged: an install-required (not-ready, config-less)
+    // entry must NOT restore on web — the configured default wins.
+    await waitFor(() => {
+      expect(mockSetSelectedAgentConfigId).toHaveBeenCalledWith('acp-registry:claude-acp')
+    })
+    expect(mockSaveAgentConfig).not.toHaveBeenCalled()
+    expect(mockPrewarmAgent).not.toHaveBeenCalled()
+  })
+
+  it('desktop keeps prewarming the preferred default on load', async () => {
+    tauriContextRef.current = true
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      stateRef.current.agentConfigs = []
+    })
+    mockPersistRead.mockResolvedValue({ success: true, data: undefined })
+
+    renderHook(() => useAcpAgents())
+
+    // Desktop behavior is unchanged: the preferred default (codex first) is
+    // picked, persisted, and prewarmed.
+    await waitFor(() => {
+      expect(mockPrewarmAgent).toHaveBeenCalledWith(
+        expect.stringContaining('codex'),
+        '/work/proj-1'
+      )
+    })
+    expect(mockSaveAgentConfig).toHaveBeenCalled()
+  })
+
+  it('cancels the in-flight prewarm when the component unmounts before persistRead resolves', async () => {
+    projectRef.current.activeProjectId = 'proj-1'
+    mockLoadAgentConfigs.mockImplementation(async () => {
+      stateRef.current.agentConfigs = [config('acp-registry:claude-acp')]
+    })
+    // Block the run at persistenceApi.read (which runs AFTER the cwd snapshot)
+    // so unmount can happen while the prewarm sequence is still in flight.
+    let resolvePersistRead!: () => void
+    mockPersistRead.mockImplementation(
+      () =>
+        new Promise<{ success: boolean; data: unknown }>((resolve) => {
+          resolvePersistRead = () => resolve({ success: true, data: undefined })
+        })
+    )
+
+    const { unmount } = renderHook(() => useAcpAgents())
+
+    // The run is in flight, blocked on persistRead; cwd = '/work/proj-1'.
+    await waitFor(() => expect(mockPersistRead).toHaveBeenCalledTimes(1))
+
+    // Unmount fires the effect cleanup -> cancelled = true.
+    unmount()
+
+    // Resume the in-flight continuation; it must no-op and never prewarm.
+    resolvePersistRead()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(mockPrewarmAgent).not.toHaveBeenCalled()
+  })
+})

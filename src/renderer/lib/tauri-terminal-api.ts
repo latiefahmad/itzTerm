@@ -1,0 +1,707 @@
+import type {
+  GitStatus,
+  IpcResult,
+  PreservedTerminalEntry,
+  RotatedClaim,
+  SpawnedTerminal,
+  TerminalApi,
+  TerminalAttachResult,
+  TerminalCwdChangedCallback,
+  TerminalDataCallback,
+  TerminalExitCallback,
+  TerminalExitCodeChangedCallback,
+  TerminalGitBranchChangedCallback,
+  TerminalGitStatusChangedCallback,
+  TerminalSpawnOptions
+} from '@shared/types/ipc.types'
+import { Channel } from '@tauri-apps/api/core'
+import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { invokeIpcCommand } from './acp-transport/tauri-verdicts'
+import { entityKeyOf } from './ipc/http'
+import { invokeIpc } from './ipc/tauri'
+import { logFrontendError } from './log-api'
+import { cleanupTauriListener, isTauriContext } from './tauri-runtime'
+import { recoverLostRotation } from './terminal-claim-recovery'
+import { terminalCursorEpoch } from './terminal-cursor'
+import { trackTerminalKill } from './terminal-kill-requests'
+
+/**
+ * IPC Event names matching Rust commands in src-tauri/src/commands.rs
+ * Using kebab-case as defined in tech spec
+ */
+const IPC_EVENTS = {
+  TERMINAL_DATA: 'terminal-data',
+  TERMINAL_EXIT: 'terminal-exit',
+  TERMINAL_CWD_CHANGED: 'terminal-cwd-changed',
+  TERMINAL_GIT_BRANCH_CHANGED: 'terminal-git-branch-changed',
+  TERMINAL_GIT_STATUS_CHANGED: 'terminal-git-status-changed',
+  TERMINAL_EXIT_CODE_CHANGED: 'terminal-exit-code-changed'
+} as const
+
+type EventPayloadMap = {
+  [IPC_EVENTS.TERMINAL_DATA]: { id: string; data: string }
+  [IPC_EVENTS.TERMINAL_EXIT]: { id: string; exitCode: number | null; signal: number | null }
+  [IPC_EVENTS.TERMINAL_CWD_CHANGED]: { terminalId: string; cwd: string }
+  [IPC_EVENTS.TERMINAL_GIT_BRANCH_CHANGED]: { terminalId: string; branch: string | null }
+  [IPC_EVENTS.TERMINAL_GIT_STATUS_CHANGED]: { terminalId: string; status: GitStatus | null }
+  [IPC_EVENTS.TERMINAL_EXIT_CODE_CHANGED]: { terminalId: string; exitCode: number }
+}
+
+type SharedListenerEntry<T> = {
+  callbacks: Map<number, (payload: T) => void>
+  nextCallbackId: number
+  unlisten?: Promise<UnlistenFn>
+}
+
+/**
+ * IPC Command names matching Rust commands in src-tauri/src/commands/terminal.rs
+ */
+const IPC_COMMANDS = {
+  SPAWN: 'terminal_spawn',
+  ATTACH: 'terminal_attach',
+  LIST_PRESERVED: 'terminal_list_preserved',
+  ROTATE_CLAIM: 'terminal_rotate_claim',
+  REVOKE_CLAIM: 'terminal_revoke_claim',
+  WRITE: 'terminal_write',
+  RESIZE: 'terminal_resize',
+  KILL: 'terminal_kill',
+  GET_CWD: 'terminal_get_cwd',
+  GET_GIT_BRANCH: 'terminal_get_git_branch',
+  GET_GIT_STATUS: 'terminal_get_git_status',
+  GET_EXIT_CODE: 'terminal_get_exit_code'
+} as const
+
+/**
+ * Spawn tracking variables to detect and prevent spawn loops
+ */
+const IS_DEV = import.meta.env.DEV
+
+function devLog(...args: unknown[]): void {
+  if (IS_DEV) {
+    console.log(...args)
+  }
+}
+
+const sharedEventListeners = new Map<keyof EventPayloadMap, SharedListenerEntry<unknown>>()
+
+function subscribeSharedEvent<K extends keyof EventPayloadMap>(
+  eventName: K,
+  callback: (payload: EventPayloadMap[K]) => void,
+  debugLabel: string
+): () => void {
+  if (!isTauriContext()) {
+    if (IS_DEV) {
+      devLog(`[TauriTerminalAPI] Skipping ${debugLabel} listener outside Tauri runtime`)
+    }
+    return () => {}
+  }
+
+  let entry = sharedEventListeners.get(eventName) as
+    | SharedListenerEntry<EventPayloadMap[K]>
+    | undefined
+
+  if (!entry) {
+    if (IS_DEV) {
+      devLog(`[TauriTerminalAPI] Creating shared ${debugLabel} native listener`)
+    }
+
+    entry = {
+      callbacks: new Map<number, (payload: EventPayloadMap[K]) => void>(),
+      nextCallbackId: 0
+    }
+
+    sharedEventListeners.set(eventName, entry as SharedListenerEntry<unknown>)
+
+    try {
+      entry.unlisten = listen<EventPayloadMap[K]>(eventName, ({ payload }) => {
+        const currentEntry = sharedEventListeners.get(eventName) as
+          | SharedListenerEntry<EventPayloadMap[K]>
+          | undefined
+
+        if (!currentEntry) {
+          return
+        }
+
+        for (const [subscriberId, subscriber] of currentEntry.callbacks.entries()) {
+          try {
+            subscriber(payload)
+          } catch (error) {
+            console.error(`[TauriTerminalAPI] Listener callback failed`, {
+              eventName,
+              debugLabel,
+              subscriberId,
+              subscriberCount: currentEntry.callbacks.size,
+              error
+            })
+          }
+        }
+      }).catch((error) => {
+        console.error(`[TauriTerminalAPI] Failed to register ${debugLabel} listener:`, error)
+        if (sharedEventListeners.get(eventName) === (entry as SharedListenerEntry<unknown>)) {
+          sharedEventListeners.delete(eventName)
+        }
+        return () => {}
+      })
+    } catch (error) {
+      console.error(`[TauriTerminalAPI] Failed to register ${debugLabel} listener:`, error)
+      sharedEventListeners.delete(eventName)
+      return () => {}
+    }
+  }
+
+  const subscriberId = entry.nextCallbackId++
+  entry.callbacks.set(subscriberId, callback)
+
+  if (IS_DEV) {
+    devLog(
+      `[TauriTerminalAPI] Shared ${debugLabel} subscriber added (count=${entry.callbacks.size})`
+    )
+  }
+
+  return () => {
+    const currentEntry = sharedEventListeners.get(eventName) as
+      | SharedListenerEntry<EventPayloadMap[K]>
+      | undefined
+
+    if (!currentEntry) {
+      return
+    }
+
+    currentEntry.callbacks.delete(subscriberId)
+
+    if (IS_DEV) {
+      devLog(
+        `[TauriTerminalAPI] Shared ${debugLabel} subscriber removed (count=${currentEntry.callbacks.size})`
+      )
+    }
+
+    if (currentEntry.callbacks.size > 0) {
+      return
+    }
+
+    if (IS_DEV) {
+      devLog(`[TauriTerminalAPI] Disposing shared ${debugLabel} native listener`)
+    }
+
+    sharedEventListeners.delete(eventName)
+    cleanupTauriListener(currentEntry.unlisten)
+  }
+}
+
+let SPAWN_CALL_COUNTER = 0
+const SPAWN_CALLS: Array<{
+  id: string
+  timestamp: number
+  shell?: string
+  cwd?: string
+  stack: string
+}> = []
+
+/**
+ * Capture stack trace for debugging spawn calls
+ */
+function captureStackTrace(): string {
+  const stack = new Error().stack?.split('\n').slice(3).join('\n') || ''
+  return stack
+}
+
+/**
+ * Create a TerminalApi implementation using Tauri IPC
+ *
+ * This adapter maps all TerminalApi methods to Tauri invoke() calls and event listeners.
+ * It maintains the same interface as the Electron preload script for easy migration.
+ */
+export function createTauriTerminalApi(): TerminalApi {
+  // Per-terminal data callback stored between onData registration and spawn
+  const dataCallbacks = new Set<TerminalDataCallback>()
+  /** Project each terminal was spawned or listed for (recovers a rotated claim via `list_preserved`). */
+  const terminalProjects = new Map<string, string>()
+  const _registerListener = <T>(
+    eventName: string,
+    callback: (payload: T) => void,
+    debugLabel: string
+  ): (() => void) => {
+    if (!isTauriContext()) {
+      if (import.meta.env.DEV) {
+        devLog(`[TauriTerminalAPI] Skipping ${debugLabel} listener outside Tauri runtime`)
+      }
+      return () => {}
+    }
+
+    let unlisten: Promise<UnlistenFn> | undefined
+
+    try {
+      unlisten = listen<T>(eventName, ({ payload }) => {
+        callback(payload)
+      })
+    } catch (error) {
+      console.error(`[TauriTerminalAPI] Failed to register ${debugLabel} listener:`, error)
+      return () => {}
+    }
+
+    return () => {
+      cleanupTauriListener(unlisten)
+    }
+  }
+
+  /**
+   * CAP-3: attach to a terminal's output stream with terminalId + claim +
+   * lastSeq. The host verifies the credential BEFORE any replay; every
+   * verification failure resolves to the generic UNAUTHORIZED error with no
+   * terminal metadata or output. Output streams through a dedicated raw
+   * channel (parity with the spawn channel), and the response's `latestSeq`
+   * is the desktop reattach cursor.
+   */
+  const attach = async (
+    terminalId: string,
+    claim: string,
+    lastSeq: number,
+    logEpoch?: string
+  ): Promise<IpcResult<TerminalAttachResult>> => {
+    // Never present an id-only attach — the credential is the gate.
+    if (!claim) {
+      return { success: false, error: 'Unauthorized', code: 'UNAUTHORIZED' }
+    }
+    const on_data = new Channel<ArrayBuffer>()
+    const deliver = (bytes: Uint8Array): void => {
+      for (const callback of dataCallbacks) {
+        try {
+          callback(terminalId, bytes)
+        } catch (err) {
+          console.error('[BinaryChannel] Error in attach data callback:', err)
+        }
+      }
+    }
+    // The host streams the replay through the channel BEFORE the attach
+    // result resolves, and only the result says whether the cursor was
+    // refused (`reset`). Hold the replay until then so a reset can clear the
+    // terminal first.
+    let held: Uint8Array[] | null = []
+    on_data.onmessage = (buf: ArrayBuffer) => {
+      const bytes = new Uint8Array(buf)
+      if (held) held.push(bytes)
+      else deliver(bytes)
+    }
+    const result = await invokeIpc<TerminalAttachResult>(IPC_COMMANDS.ATTACH, {
+      terminalId,
+      claim,
+      lastSeq,
+      // A nonzero cursor without its epoch is untrusted (see terminal-cursor).
+      logEpoch: terminalCursorEpoch(lastSeq, logEpoch),
+      onData: on_data
+    })
+    if (!result.success) {
+      // Rejected (or failed) — release the channel so it cannot leak.
+      held = null
+      on_data.onmessage = () => {}
+      return result
+    }
+    if (result.data.reset) {
+      // The cursor did not belong to this terminal's log: discard what was
+      // rendered (RIS, ESC c) before the full replay, as the web path does.
+      deliver(new Uint8Array([0x1b, 0x63]))
+    }
+    const replay = held
+    held = null
+    for (const bytes of replay) deliver(bytes)
+    return result
+  }
+
+  async function listPreserved(
+    projectId: string,
+    terminalId?: string
+  ): Promise<IpcResult<PreservedTerminalEntry[]>> {
+    const result = await invokeIpc<PreservedTerminalEntry[]>(IPC_COMMANDS.LIST_PRESERVED, {
+      projectId,
+      terminalId
+    })
+    if (!result.success) {
+      void logFrontendError({
+        level: 'warn',
+        source: 'TauriTerminalAPI.listPreserved',
+        message: `list preserved terminals failed (${result.code ?? 'UNKNOWN'})`
+      })
+      return result
+    }
+    for (const entry of result.data) terminalProjects.set(entry.id, projectId)
+    return result
+  }
+
+  return {
+    /**
+     * Spawn a new terminal PTY
+     *
+     * CAP-3: the successful result carries the issued `claim` credential —
+     * spawn is the only issuance path. Callers must store the claim in the
+     * terminal store (in-memory only; it is never persisted).
+     */
+    async spawn(options?: TerminalSpawnOptions): Promise<IpcResult<SpawnedTerminal>> {
+      if (IS_DEV) {
+        const spawnId = `spawn-${SPAWN_CALL_COUNTER++}-${Date.now().toString(36)}`
+        const stack = captureStackTrace()
+
+        const callInfo = {
+          id: spawnId,
+          timestamp: Date.now(),
+          shell: options?.shell,
+          cwd: options?.cwd,
+          stack
+        }
+
+        SPAWN_CALLS.push(callInfo)
+
+        devLog('═══════════════════════════════════════════════════════════════')
+        devLog('[SPAWN CALL]', {
+          id: spawnId,
+          totalCalls: SPAWN_CALLS.length,
+          options,
+          stackTrace: stack,
+          recentCalls: SPAWN_CALLS.slice(-5).map((c) => ({
+            id: c.id,
+            time: new Date(c.timestamp).toISOString().split('T')[1].slice(0, 12),
+            shell: c.shell,
+            cwd: c.cwd
+          }))
+        })
+        devLog('═══════════════════════════════════════════════════════════════')
+
+        if (SPAWN_CALLS.length >= 5) {
+          const last5 = SPAWN_CALLS.slice(-5)
+          const timeSpan = last5[4].timestamp - last5[0].timestamp
+          if (timeSpan < 2000) {
+            console.warn('⚠️ Rapid spawns detected', {
+              callCount: last5.length,
+              timeSpan: `${timeSpan}ms`,
+              calls: last5.map((c) => ({
+                id: c.id,
+                time: new Date(c.timestamp).toISOString().split('T')[1].slice(0, 12),
+                stack: c.stack
+              }))
+            })
+          }
+        }
+
+        if (SPAWN_CALLS.length >= 10) {
+          console.debug(`Spawn tracking: ${SPAWN_CALLS.length} terminals spawned`)
+        }
+      }
+
+      // Create a binary data channel for this terminal session.
+      // PTY output arrives as ArrayBuffer with no JSON encoding overhead.
+      const on_data = new Channel<ArrayBuffer>()
+
+      // Capture terminal ID from the invoke response once available.
+      // We pass the channel to Rust synchronously. The channel's onmessage
+      // fires with ArrayBuffer chunks as they arrive. We dispatch to all
+      // registered TerminalDataCallback instances, but we need the terminal ID
+      // which we get from the spawn result.
+      //
+      // We handle this by buffering data in-flight before the spawn result
+      // arrives (unlikely but possible with fast PTY output).
+      let pendingBuffer: Uint8Array[] = []
+      let capturedTerminalId: string | null = null
+
+      on_data.onmessage = (buf: ArrayBuffer) => {
+        const bytes = new Uint8Array(buf)
+
+        if (capturedTerminalId) {
+          // Normal path: we know the terminal ID
+          for (const callback of dataCallbacks) {
+            try {
+              callback(capturedTerminalId, bytes)
+            } catch (err) {
+              console.error('[BinaryChannel] Error in data callback:', err)
+            }
+          }
+        } else {
+          // Data arrived before spawn result — buffer it
+          pendingBuffer.push(bytes)
+        }
+      }
+
+      // One id per spawn intent, minted + journaled by the engine (every call
+      // site goes through this facade). A resend after a lost reply carries the
+      // SAME id: the host answers with the existing terminal and a FRESH claim,
+      // and drops this call's new Channel — the first spawn's Channel stays
+      // bound to the PTY (possibly an abandoned one), so a replayed spawn is
+      // followed by an attach with the fresh claim and ignores this Channel.
+      let replayed = false
+      const result = await invokeIpcCommand<SpawnedTerminal>(
+        IPC_COMMANDS.SPAWN,
+        (commandId) => ({ options: { ...options, commandId }, onData: on_data }),
+        {
+          kind: 'terminal_spawn',
+          // A new terminal is a new intent: never answer it with the PTY an earlier,
+          // unconfirmed spawn of the same project/cwd/program made. (An in-call
+          // resend still reuses its id.)
+          fresh: true,
+          entityKey: entityKeyOf(
+            options?.projectId,
+            options?.cwd,
+            options?.program ?? options?.shell
+          ),
+          onRun: (run) => {
+            replayed = run.resent
+          }
+        }
+      )
+
+      if (result.success && result.data && replayed) {
+        pendingBuffer = []
+        on_data.onmessage = () => {}
+        const attached = await attach(result.data.id, result.data.claim, 0)
+        if (!attached.success) {
+          // The PTY exists but its output cannot be received: do not orphan it.
+          void invokeIpcCommand<void>(
+            IPC_COMMANDS.KILL,
+            { terminalId: result.data.id },
+            { kind: 'terminal_kill', entityKey: result.data.id }
+          )
+          return { success: false, error: attached.error, code: attached.code }
+        }
+      } else if (result.success && result.data) {
+        capturedTerminalId = result.data.id
+
+        // Flush any buffered data that arrived before we knew the terminal ID
+        if (pendingBuffer.length > 0) {
+          for (const bytes of pendingBuffer) {
+            for (const callback of dataCallbacks) {
+              try {
+                callback(capturedTerminalId, bytes)
+              } catch (err) {
+                console.error('[BinaryChannel] Error in buffered data callback:', err)
+              }
+            }
+          }
+          pendingBuffer = []
+        }
+      } else {
+        // Spawn failed — clean up channel to prevent memory leaks
+        pendingBuffer = []
+        on_data.onmessage = () => {}
+      }
+
+      if (result.success && options?.projectId) {
+        terminalProjects.set(result.data.id, options.projectId)
+      }
+      return result
+    },
+
+    attach,
+
+    listPreserved,
+
+    /**
+     * CAP-3: possession-based rotation — the returned credential replaces the
+     * presented one atomically.
+     */
+    async rotateClaim(terminalId: string, claim: string): Promise<IpcResult<RotatedClaim>> {
+      const result = await invokeIpcCommand<RotatedClaim>(
+        IPC_COMMANDS.ROTATE_CLAIM,
+        { terminalId, claim },
+        { kind: 'terminal_rotate_claim', entityKey: terminalId }
+      )
+      return recoverLostRotation(
+        result,
+        terminalId,
+        terminalProjects.get(terminalId),
+        listPreserved
+      )
+    },
+
+    /**
+     * CAP-3: revoke the credential; the PTY keeps running.
+     */
+    async revokeClaim(terminalId: string, claim: string): Promise<IpcResult<void>> {
+      return invokeIpcCommand<void>(
+        IPC_COMMANDS.REVOKE_CLAIM,
+        { terminalId, claim },
+        { kind: 'terminal_revoke_claim', entityKey: terminalId }
+      )
+    },
+
+    /**
+     * Write data to terminal PTY
+     */
+    async write(terminalId: string, data: string): Promise<IpcResult<void>> {
+      // No commandId: the desktop IPC has no lost-reply window, and an id per
+      // keystroke would flood the host's shared ledger.
+      return invokeIpc<void>(IPC_COMMANDS.WRITE, { terminalId, data })
+    },
+
+    /**
+     * Resize terminal PTY
+     */
+    async resize(terminalId: string, cols: number, rows: number): Promise<IpcResult<void>> {
+      return invokeIpc<void>(IPC_COMMANDS.RESIZE, { terminalId, cols, rows })
+    },
+
+    /**
+     * Kill terminal PTY
+     */
+    async kill(terminalId: string): Promise<IpcResult<void>> {
+      terminalProjects.delete(terminalId)
+      return trackTerminalKill(terminalId, () =>
+        invokeIpcCommand<void>(
+          IPC_COMMANDS.KILL,
+          { terminalId },
+          { kind: 'terminal_kill', entityKey: terminalId }
+        )
+      )
+    },
+
+    /**
+     * Subscribe to terminal data events (binary channel)
+     * Each callback receives (terminalId, data as Uint8Array).
+     *
+     * Data arrives via per-terminal Tauri Channels created during spawn(),
+     * then dispatched to registered callbacks.
+     */
+    onData(callback: TerminalDataCallback): () => void {
+      dataCallbacks.add(callback)
+      return () => {
+        dataCallbacks.delete(callback)
+      }
+    },
+
+    /**
+     * Subscribe to terminal exit events
+     * Returns cleanup function (UnlistenFn)
+     */
+    onExit(callback: TerminalExitCallback): () => void {
+      return subscribeSharedEvent(
+        IPC_EVENTS.TERMINAL_EXIT,
+        (payload) => {
+          if (import.meta.env.DEV) {
+            devLog(`[TauriTerminalAPI] Terminal ${payload.id} exited with code ${payload.exitCode}`)
+          }
+          callback(payload.id, payload.exitCode ?? -1, payload.signal ?? undefined)
+        },
+        'terminal-exit'
+      )
+    },
+
+    /**
+     * Subscribe to CWD change events
+     * Returns cleanup function (UnlistenFn)
+     */
+    onCwdChanged(callback: TerminalCwdChangedCallback): () => void {
+      return subscribeSharedEvent(
+        IPC_EVENTS.TERMINAL_CWD_CHANGED,
+        (payload) => {
+          callback(payload.terminalId, payload.cwd)
+        },
+        'terminal-cwd-changed'
+      )
+    },
+
+    /**
+     * Get current working directory for terminal
+     */
+    async getCwd(terminalId: string): Promise<IpcResult<string | null>> {
+      return invokeIpc<string | null>(IPC_COMMANDS.GET_CWD, { terminalId })
+    },
+
+    /**
+     * Subscribe to git branch change events
+     * Returns cleanup function (UnlistenFn)
+     */
+    onGitBranchChanged(callback: TerminalGitBranchChangedCallback): () => void {
+      return subscribeSharedEvent(
+        IPC_EVENTS.TERMINAL_GIT_BRANCH_CHANGED,
+        (payload) => {
+          callback(payload.terminalId, payload.branch)
+        },
+        'terminal-git-branch-changed'
+      )
+    },
+
+    /**
+     * Get git branch for terminal
+     */
+    async getGitBranch(terminalId: string): Promise<IpcResult<string | null>> {
+      return invokeIpc<string | null>(IPC_COMMANDS.GET_GIT_BRANCH, { terminalId })
+    },
+
+    /**
+     * Subscribe to git status change events
+     * Returns cleanup function (UnlistenFn)
+     */
+    onGitStatusChanged(callback: TerminalGitStatusChangedCallback): () => void {
+      return subscribeSharedEvent(
+        IPC_EVENTS.TERMINAL_GIT_STATUS_CHANGED,
+        (payload) => {
+          callback(payload.terminalId, payload.status)
+        },
+        'terminal-git-status-changed'
+      )
+    },
+
+    /**
+     * Get git status for terminal
+     */
+    async getGitStatus(terminalId: string): Promise<IpcResult<GitStatus | null>> {
+      return invokeIpc<GitStatus | null>(IPC_COMMANDS.GET_GIT_STATUS, { terminalId })
+    },
+
+    /**
+     * Subscribe to exit code change events
+     * Returns cleanup function (UnlistenFn)
+     */
+    onExitCodeChanged(callback: TerminalExitCodeChangedCallback): () => void {
+      return subscribeSharedEvent(
+        IPC_EVENTS.TERMINAL_EXIT_CODE_CHANGED,
+        (payload) => {
+          callback(payload.terminalId, payload.exitCode)
+        },
+        'terminal-exit-code-changed'
+      )
+    },
+
+    /**
+     * Get exit code for terminal
+     */
+    async getExitCode(terminalId: string): Promise<IpcResult<number | null>> {
+      return invokeIpc<number | null>(IPC_COMMANDS.GET_EXIT_CODE, { terminalId })
+    }
+  }
+}
+
+/**
+ * Expose spawn tracking for debugging
+ * Access via: window.__TERMUL_SPAWN_TRACKER__
+ */
+if (typeof window !== 'undefined' && IS_DEV) {
+  const globalDebug = window as unknown as Record<string, unknown>
+  globalDebug.__TERMUL_SPAWN_TRACKER__ = {
+    getCalls: () => [...SPAWN_CALLS],
+    getCallCount: () => SPAWN_CALLS.length,
+    clearCalls: () => {
+      SPAWN_CALLS.length = 0
+    },
+    getLastNCalls: (n: number) => SPAWN_CALLS.slice(-n),
+    printSummary: () => {
+      console.table(
+        SPAWN_CALLS.map((c) => ({
+          id: c.id,
+          time: new Date(c.timestamp).toISOString().split('T')[1].slice(0, 12),
+          shell: c.shell || 'N/A',
+          cwd: c.cwd || 'N/A',
+          caller: c.stack.split(' <- ')[0] || 'unknown'
+        }))
+      )
+      devLog(`Total spawn calls: ${SPAWN_CALLS.length}`)
+
+      // Detect potential loops
+      if (SPAWN_CALLS.length >= 5) {
+        const last5 = SPAWN_CALLS.slice(-5)
+        const timeSpan = last5[4].timestamp - last5[0].timestamp
+        if (timeSpan < 2000) {
+          console.error('🚨 POTENTIAL SPAWN LOOP DETECTED 🚨')
+          console.error('5 spawns within', timeSpan, 'ms')
+          console.table(last5)
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,637 @@
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Bot,
+  Bug,
+  Edit2,
+  FolderPlus,
+  Globe,
+  History,
+  Keyboard,
+  Monitor,
+  Palette,
+  Pin,
+  Save,
+  Settings,
+  SlidersHorizontal,
+  Terminal,
+  X
+} from '@/components/icons'
+import { ProjectIcon } from '@/components/ProjectIcon'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList
+} from '@/components/ui/command'
+import { Kbd } from '@/components/ui/kbd'
+import { useMobileWebShell } from '@/hooks/use-mobile-web-shell'
+import { usePinnedCommandIds, useTogglePinnedCommand } from '@/hooks/use-pinned-commands'
+import { useRecentCommandIds, useSaveRecentCommand } from '@/hooks/use-recent-commands'
+import { getColorClasses } from '@/lib/colors'
+import { isTauriContext } from '@/lib/tauri-runtime'
+import { terminalProfileCommandLine } from '@/lib/terminal-profiles'
+import { cn } from '@/lib/utils'
+import type { Project, ProjectColor } from '@/types/project'
+import type { TerminalProfile } from '@/types/settings'
+
+type CommandShortcutId = 'newTerminal' | 'newBrowserTab' | 'commandHistory' | 'colorThemePicker'
+
+interface CommandPaletteProps {
+  isOpen: boolean
+  onClose: () => void
+  projects: Project[]
+  onSwitchProject: (id: string) => void
+  onAddTerminal?: () => void
+  terminalProfiles?: TerminalProfile[]
+  onOpenTerminalProfile?: (profile: TerminalProfile) => void
+  onShowAgentLauncher?: () => void
+  onLaunchAgent?: () => void
+  onSaveSnapshot?: () => void
+  onNewBrowserTab?: () => void
+  /** Opens the active project's `.figcraft` document as the canvas tab.
+   * Hidden on the mobile web shell (no canvas on phones). */
+  onOpenCanvas?: () => void
+  /** Story 7: opens the New Project modal (mobile creation entry + desktop). */
+  onNewProject?: () => void
+  onOpenProjectSettings?: () => void
+  onOpenAppPreferences?: () => void
+  onOpenCommandHistory?: () => void
+  onOpenShortcutMenu?: () => void
+  onOpenThemePicker?: () => void
+  /** Opens the Report a Bug dialog (spec-bug-report-dialog). */
+  onReportBug?: () => void
+  onSSHConnect?: (profileId: string) => void
+  sshProfiles?: Array<{ id: string; name: string; host: string; username: string }>
+  getShortcutLabel?: (id: CommandShortcutId) => string | undefined
+  getProjectShortcutLabel?: (index: number) => string | undefined
+}
+
+type CommandCategory = 'workspace' | 'navigation' | 'projects' | 'tools'
+
+const COMMAND_CATEGORY_LABELS: Record<CommandCategory, string> = {
+  workspace: 'Workspace',
+  navigation: 'Navigation',
+  projects: 'Projects',
+  tools: 'Tools'
+}
+
+const COMMAND_CATEGORY_ORDER: CommandCategory[] = ['projects', 'workspace', 'navigation', 'tools']
+
+interface CommandDef {
+  id: string
+  category: CommandCategory
+  icon: React.ReactNode
+  label: string
+  description?: string
+  keywords?: string[]
+  shortcut?: string
+  execute: () => void
+  projectColor?: ProjectColor
+}
+
+function getSearchableValue(cmd: CommandDef): string {
+  return [
+    cmd.label,
+    cmd.description,
+    cmd.category,
+    COMMAND_CATEGORY_LABELS[cmd.category],
+    ...(cmd.keywords ?? [])
+  ]
+    .filter(Boolean)
+    .join(' ')
+}
+
+export function CommandPalette({
+  isOpen,
+  onClose,
+  projects,
+  onSwitchProject,
+  onAddTerminal,
+  terminalProfiles,
+  onOpenTerminalProfile,
+  onShowAgentLauncher,
+  onLaunchAgent,
+  onSaveSnapshot,
+  onNewBrowserTab,
+  onOpenCanvas,
+  onNewProject,
+  onOpenProjectSettings,
+  onOpenAppPreferences,
+  onOpenCommandHistory,
+  onOpenShortcutMenu,
+  onOpenThemePicker,
+  onReportBug,
+  onSSHConnect,
+  sshProfiles,
+  getShortcutLabel,
+  getProjectShortcutLabel
+}: CommandPaletteProps): React.JSX.Element {
+  const [query, setQuery] = useState('')
+  const recentCommandIds = useRecentCommandIds()
+  const saveRecentCommand = useSaveRecentCommand()
+  const pinnedCommandIds = usePinnedCommandIds()
+  const togglePinnedCommand = useTogglePinnedCommand()
+  // Story 11 (QA F9): on the mobile web shell the palette is top-anchored at
+  // pt-[7vh] (thumb-unreachable), shows dead ↑↓/↵/Esc desktop key hints, and
+  // offers no visible close. Mobile repositions to the lower third, hides the
+  // kbd hints, and renders a touch-sized close button. Desktop unchanged.
+  const isMobile = useMobileWebShell()
+  const commands: CommandDef[] = useMemo(
+    () => [
+      ...(onAddTerminal
+        ? [
+            {
+              id: 'new-terminal',
+              category: 'workspace' as const,
+              icon: <Terminal aria-hidden="true" size={16} />,
+              label: 'New Terminal',
+              description: 'Open a new shell in the active pane',
+              keywords: ['shell', 'console', 'pty', 'workspace'],
+              execute: onAddTerminal
+            }
+          ]
+        : []),
+      ...(onOpenTerminalProfile && terminalProfiles
+        ? terminalProfiles.map((profile) => ({
+            id: `terminal-profile-${profile.id}`,
+            category: 'workspace' as const,
+            icon: <Terminal aria-hidden="true" size={16} />,
+            label: `New Terminal: ${profile.name}`,
+            description: terminalProfileCommandLine(profile),
+            keywords: ['profile', 'shell', 'terminal', profile.name, profile.shell],
+            execute: () => onOpenTerminalProfile(profile)
+          }))
+        : []),
+      ...(onNewProject
+        ? [
+            {
+              id: 'new-project',
+              category: 'workspace' as const,
+              icon: <FolderPlus aria-hidden="true" size={16} />,
+              label: 'New Project',
+              description: 'Create a new project workspace',
+              keywords: ['project', 'create', 'new', 'workspace', 'folder'],
+              execute: onNewProject
+            }
+          ]
+        : []),
+      ...(onShowAgentLauncher
+        ? [
+            {
+              id: 'show-agent-launcher',
+              category: 'workspace' as const,
+              icon: <Bot aria-hidden="true" size={16} />,
+              label: 'Agent Launcher',
+              description: 'Show the agent launcher prompt in the active pane',
+              keywords: ['agent', 'ai', 'claude', 'codex', 'prompt', 'launcher'],
+              shortcut: getShortcutLabel?.('newTerminal'),
+              execute: onShowAgentLauncher
+            }
+          ]
+        : []),
+      ...(onLaunchAgent
+        ? [
+            {
+              id: 'launch-agent',
+              category: 'workspace' as const,
+              icon: <Bot aria-hidden="true" size={16} />,
+              label: 'Launch Agent',
+              description: "Open a CLI agent's TUI in the active pane",
+              keywords: ['agent', 'ai', 'claude', 'codex', 'gemini', 'cursor', 'opencode', 'cli'],
+              execute: onLaunchAgent
+            }
+          ]
+        : []),
+      ...(onNewBrowserTab && isTauriContext()
+        ? [
+            {
+              id: 'new-browser-tab',
+              category: 'workspace' as const,
+              icon: <Globe aria-hidden="true" size={16} />,
+              label: 'New Browser Tab',
+              description: 'Open a browser tab in the active pane',
+              keywords: ['web', 'url', 'workspace'],
+              shortcut: getShortcutLabel?.('newBrowserTab'),
+              execute: onNewBrowserTab
+            }
+          ]
+        : []),
+      ...(onSaveSnapshot
+        ? [
+            {
+              id: 'save-snapshot',
+              category: 'workspace' as const,
+              icon: <Save aria-hidden="true" size={16} />,
+              label: 'Save Workspace Snapshot',
+              description: 'Capture the current workspace layout',
+              keywords: ['snapshot', 'checkpoint', 'layout', 'save'],
+              execute: onSaveSnapshot
+            }
+          ]
+        : []),
+      // Canvas is unavailable on the phone-width shell — the command itself
+      // is hidden there (the facade also answers a typed UNSUPPORTED_SURFACE
+      // failure for direct calls).
+      ...(onOpenCanvas && !isMobile
+        ? [
+            {
+              id: 'open-canvas',
+              category: 'workspace' as const,
+              icon: <Edit2 aria-hidden="true" size={16} />,
+              label: 'Open Canvas',
+              description: "Open the project's .figcraft design document as a canvas tab",
+              keywords: ['canvas', 'figcraft', 'design', 'drawing', 'vector'],
+              execute: onOpenCanvas
+            }
+          ]
+        : []),
+      ...(onOpenProjectSettings
+        ? [
+            {
+              id: 'open-project-settings',
+              category: 'navigation' as const,
+              icon: <Settings aria-hidden="true" size={16} />,
+              label: 'Project Settings',
+              description: 'Configure the active project workspace',
+              keywords: ['settings', 'project', 'configure', 'config'],
+              execute: onOpenProjectSettings
+            }
+          ]
+        : []),
+      ...(onOpenAppPreferences
+        ? [
+            {
+              id: 'open-app-preferences',
+              category: 'navigation' as const,
+              icon: <SlidersHorizontal aria-hidden="true" size={16} />,
+              label: 'App Preferences',
+              description: 'Open global application preferences',
+              keywords: ['preferences', 'prefs', 'settings', 'app', 'global'],
+              execute: onOpenAppPreferences
+            }
+          ]
+        : []),
+      ...projects.map((project, index) => ({
+        id: `project-${project.id}`,
+        category: 'projects' as const,
+        icon: <ProjectIcon project={project} size={16} />,
+        label: project.name,
+        description: project.path ?? 'Switch active workspace project',
+        keywords: ['project', 'switch', project.name, project.path].filter(
+          (keyword): keyword is string => Boolean(keyword)
+        ),
+        shortcut: index < 9 ? getProjectShortcutLabel?.(index) : undefined,
+        execute: () => onSwitchProject(project.id),
+        projectColor: project.color
+      })),
+      ...(onOpenCommandHistory
+        ? [
+            {
+              id: 'open-command-history',
+              category: 'tools' as const,
+              icon: <History aria-hidden="true" size={16} />,
+              label: 'Command History',
+              description: 'Review and reuse recent terminal commands',
+              keywords: ['history', 'recent', 'terminal', 'commands', 'shell'],
+              shortcut: getShortcutLabel?.('commandHistory'),
+              execute: onOpenCommandHistory
+            }
+          ]
+        : []),
+      ...(onOpenThemePicker
+        ? [
+            {
+              id: 'change-color-theme',
+              category: 'tools' as const,
+              icon: <Palette aria-hidden="true" size={16} />,
+              label: 'Change Color Theme',
+              description: 'Preview and apply a UI color theme',
+              keywords: ['theme', 'color', 'appearance', 'palette', 'dark', 'dracula', 'nord'],
+              shortcut: getShortcutLabel?.('colorThemePicker'),
+              execute: onOpenThemePicker
+            }
+          ]
+        : []),
+      // No shortcut menu is mounted on the mobile web shell (it lives in the
+      // desktop Rail footer only), so the command is hidden there as
+      // open-canvas is. Pinned and Recent derive from this list.
+      ...(onOpenShortcutMenu && !isMobile
+        ? [
+            {
+              id: 'open-shortcut-menu',
+              category: 'tools' as const,
+              icon: <Keyboard aria-hidden="true" size={16} />,
+              label: 'Open Shortcut Menu',
+              description: 'View and edit common keyboard shortcuts',
+              keywords: ['keyboard', 'shortcuts', 'hotkeys', 'keys'],
+              execute: onOpenShortcutMenu
+            }
+          ]
+        : []),
+      ...(onReportBug
+        ? [
+            {
+              id: 'report-bug',
+              category: 'tools' as const,
+              icon: <Bug aria-hidden="true" size={16} />,
+              label: 'Report a Bug',
+              description: 'File a GitHub issue with diagnostics and screenshots',
+              keywords: ['bug', 'report', 'issue', 'github', 'feedback', 'diagnostics'],
+              execute: onReportBug
+            }
+          ]
+        : []),
+      ...(isTauriContext() && onSSHConnect && sshProfiles
+        ? sshProfiles.map((profile) => ({
+            id: `ssh-${profile.id}`,
+            category: 'tools' as const,
+            icon: <Monitor aria-hidden="true" size={16} />,
+            label: `SSH: ${profile.name}`,
+            description: `${profile.username}@${profile.host}`,
+            keywords: ['ssh', 'remote', 'connect', profile.name, profile.host, profile.username],
+            execute: () => onSSHConnect(profile.id)
+          }))
+        : [])
+    ],
+    [
+      projects,
+      onSwitchProject,
+      onAddTerminal,
+      terminalProfiles,
+      onOpenTerminalProfile,
+      onShowAgentLauncher,
+      onLaunchAgent,
+      onSaveSnapshot,
+      onNewBrowserTab,
+      onOpenCanvas,
+      isMobile,
+      onNewProject,
+      onOpenProjectSettings,
+      onOpenAppPreferences,
+      onOpenCommandHistory,
+      onOpenShortcutMenu,
+      onOpenThemePicker,
+      onReportBug,
+      onSSHConnect,
+      sshProfiles,
+      getShortcutLabel,
+      getProjectShortcutLabel
+    ]
+  )
+
+  const { pinnedCommands, recentCommands, commandsByCategory } = useMemo(() => {
+    const commandById = new Map(commands.map((cmd) => [cmd.id, cmd]))
+
+    const pinned: CommandDef[] = []
+    for (const id of pinnedCommandIds) {
+      const cmd = commandById.get(id)
+      if (cmd) {
+        pinned.push(cmd)
+      }
+    }
+
+    const recent: CommandDef[] = []
+    const recentIds = new Set(recentCommandIds)
+
+    for (const cmd of commands) {
+      if (recentIds.has(cmd.id)) {
+        recent.push(cmd)
+      }
+    }
+
+    recent.sort((a, b) => recentCommandIds.indexOf(a.id) - recentCommandIds.indexOf(b.id))
+
+    const grouped = COMMAND_CATEGORY_ORDER.map((category) => ({
+      category,
+      commands: commands.filter((cmd) => cmd.category === category)
+    })).filter((group) => group.commands.length > 0)
+
+    return {
+      pinnedCommands: pinned,
+      recentCommands: recent,
+      commandsByCategory: grouped
+    }
+  }, [commands, pinnedCommandIds, recentCommandIds])
+
+  const pinnedIdSet = useMemo(() => new Set(pinnedCommandIds), [pinnedCommandIds])
+
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setQuery('')
+      // Explicitly blur active element first so terminal doesn't hold focus,
+      // then focus the command palette input after the overlay renders.
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+      }
+      setTimeout(() => inputRef.current?.focus(), 0)
+    }
+  }, [isOpen])
+
+  const executeCommand = useCallback(
+    async (cmd: CommandDef) => {
+      try {
+        await saveRecentCommand(cmd.id)
+      } catch (error) {
+        console.warn('Failed to save recent command', error)
+      }
+
+      onClose()
+      cmd.execute()
+    },
+    [saveRecentCommand, onClose]
+  )
+
+  const togglePin = useCallback(
+    async (commandId: string) => {
+      try {
+        await togglePinnedCommand(commandId)
+      } catch (error) {
+        console.warn('Failed to toggle pinned command', error)
+      }
+    },
+    [togglePinnedCommand]
+  )
+
+  // Handle Escape key - use capture phase to intercept before cmdk handles it
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
+  }, [isOpen, onClose])
+
+  const renderCommandItem = (cmd: CommandDef, keyPrefix?: string): React.JSX.Element => {
+    const isPinned = pinnedIdSet.has(cmd.id)
+    return (
+      <CommandItem
+        key={keyPrefix ? `${keyPrefix}:${cmd.id}` : cmd.id}
+        value={keyPrefix ? `${keyPrefix}:${getSearchableValue(cmd)}` : getSearchableValue(cmd)}
+        onSelect={() => executeCommand(cmd)}
+        className="group flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2.5 py-2 data-[selected='true']:bg-foreground/[0.06] data-[selected=true]:text-foreground"
+      >
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            className={cn(
+              'flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-foreground/[0.03]',
+              cmd.projectColor
+                ? getColorClasses(cmd.projectColor).text
+                : 'text-muted-foreground group-data-[selected=true]:text-foreground'
+            )}
+          >
+            {cmd.icon}
+          </span>
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-xs font-medium leading-5">{cmd.label}</span>
+            {cmd.description && (
+              <span className="truncate text-2xs leading-4 text-muted-foreground">
+                {cmd.description}
+              </span>
+            )}
+          </span>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {cmd.shortcut && <Kbd className="px-1.5 py-0.5 font-mono">{cmd.shortcut}</Kbd>}
+          <button
+            type="button"
+            aria-label={isPinned ? `Unpin ${cmd.label}` : `Pin ${cmd.label}`}
+            aria-pressed={isPinned}
+            title={isPinned ? 'Unpin' : 'Pin'}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              void togglePin(cmd.id)
+            }}
+            className={cn(
+              'flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-opacity hover:bg-foreground/[0.06] hover:text-foreground group-data-[selected=true]:text-foreground',
+              isPinned
+                ? 'text-foreground opacity-100'
+                : 'opacity-0 group-data-[selected=true]:opacity-100 group-hover:opacity-100'
+            )}
+          >
+            <Pin aria-hidden="true" size={13} className={cn(isPinned && 'fill-current')} />
+          </button>
+        </div>
+      </CommandItem>
+    )
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className={cn(
+            'fixed inset-0 z-[60] flex flex-col items-center bg-overlay/40 backdrop-blur-sm',
+            // Story 11 (QA F9): mobile anchor is the lower third (thumb
+            // zone) instead of the desktop pt-[7vh] top anchor, with the
+            // bottom safe-area inset honored.
+            isMobile ? 'justify-end pb-[max(2rem,env(safe-area-inset-bottom))] px-3' : 'pt-[7vh]'
+          )}
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97, y: isMobile ? 8 : -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: isMobile ? 8 : -8 }}
+            transition={{ duration: 0.15 }}
+            className="w-full max-w-[100vw] overflow-hidden rounded-xl border border-border bg-popover shadow-2xl md:max-w-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Command
+              className="[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+              shouldFilter={true}
+            >
+              <div className="relative">
+                <CommandInput
+                  ref={inputRef}
+                  placeholder="Search commands, projects, settings..."
+                  value={query}
+                  onValueChange={setQuery}
+                  className="h-12 py-2 text-sm"
+                />
+                {/* Story 11 (QA F5): visible touch-sized close — Escape is
+                    dead on phones and the backdrop tap target is not
+                    obvious while the OSK is up. 44px floor + hit-slop idiom. */}
+                {isMobile && (
+                  <button
+                    type="button"
+                    className="absolute right-1 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                    aria-label="Close command palette"
+                    title="Close command palette"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onClose()
+                    }}
+                  >
+                    <X aria-hidden="true" size={20} />
+                  </button>
+                )}
+              </div>
+              <CommandList className="max-h-[52vh] px-1 py-1">
+                <CommandEmpty>No commands found.</CommandEmpty>
+
+                {pinnedCommands.length > 0 && query === '' && (
+                  <CommandGroup heading="Pinned">
+                    {pinnedCommands.map((cmd) => renderCommandItem(cmd, 'pinned'))}
+                  </CommandGroup>
+                )}
+
+                {recentCommands.length > 0 && query === '' && (
+                  <CommandGroup heading="Recent">
+                    {recentCommands.map((cmd) => renderCommandItem(cmd, 'recent'))}
+                  </CommandGroup>
+                )}
+
+                {commandsByCategory.map(({ category, commands: categoryCommands }) => (
+                  <CommandGroup key={category} heading={COMMAND_CATEGORY_LABELS[category]}>
+                    {categoryCommands.map((cmd) => renderCommandItem(cmd))}
+                  </CommandGroup>
+                ))}
+              </CommandList>
+
+              {/* Story 11 (QA F9): ↑↓/↵/Esc kbd hints are dead affordances
+                  on touch (no hardware keyboard) — hide them on the mobile
+                  shell. Desktop keeps them byte-identical. */}
+              {!isMobile && (
+                <div className="flex h-9 items-center justify-end gap-3.5 border-t border-border px-3.5">
+                  <PaletteHint keys="↑↓" label="Move" />
+                  <PaletteHint keys="↵" label="Run" />
+                  <PaletteHint keys="Esc" label="Close" />
+                </div>
+              )}
+            </Command>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+/** Footer key hint: a hairline Kbd and a short muted label. */
+function PaletteHint({ keys, label }: { keys: string; label: string }): React.JSX.Element {
+  return (
+    <span className="flex items-center gap-1.5 text-2xs text-muted-foreground">
+      <Kbd className="px-1.5">{keys}</Kbd>
+      {label}
+    </span>
+  )
+}

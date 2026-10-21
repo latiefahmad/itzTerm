@@ -1,0 +1,210 @@
+import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { Keyboard } from '@/components/icons'
+import { ShortcutRecorder } from '@/components/ShortcutRecorder'
+import { RailTooltip } from '@/components/shell/rail-button'
+import { useResetShortcut, useUpdateShortcut } from '@/hooks/use-keyboard-shortcuts'
+import { isTauriContext } from '@/lib/tauri-runtime'
+import { useKeyboardShortcutsStore } from '@/stores/keyboard-shortcuts-store'
+import type { KeyboardShortcut } from '@/types/settings'
+
+// Quick shortcuts surfaced in the titlebar popover. `newBrowserTab` is
+// desktop-only (Tauri browser-tab panes — issue #843), so it is filtered out
+// of the web list rather than shown as a dead entry.
+const QUICK_SHORTCUT_IDS = [
+  'commandPalette',
+  'commandHistory',
+  'newTerminal',
+  'newBrowserTab',
+  'toggleFileExplorer',
+  'sidebarToggle',
+  'settings',
+  'zoomIn',
+  'zoomOut',
+  'zoomReset'
+] as const
+
+interface TitleBarShortcutsPopoverProps {
+  buttonClassName: string
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  /**
+   * After the popover has closed, return focus to its button when focus fell
+   * to the page body. Off by default (the classic rail keeps today's behavior).
+   */
+  restoreFocusOnClose?: boolean
+}
+
+export function TitleBarShortcutsPopover({
+  buttonClassName,
+  open,
+  onOpenChange,
+  restoreFocusOnClose = false
+}: TitleBarShortcutsPopoverProps): React.JSX.Element {
+  const [openFallback, setOpenFallback] = useState(false)
+  const isOpen = open ?? openFallback
+  const shortcuts = useKeyboardShortcutsStore((state) => state.shortcuts)
+  const updateShortcut = useUpdateShortcut()
+  const resetShortcut = useResetShortcut()
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  const quickShortcuts = QUICK_SHORTCUT_IDS.filter(
+    (id) => isTauriContext() || id !== 'newBrowserTab'
+  )
+    .map((id) => shortcuts[id])
+    .filter((shortcut): shortcut is KeyboardShortcut => Boolean(shortcut))
+
+  const setOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (onOpenChange) {
+        onOpenChange(nextOpen)
+        return
+      }
+
+      setOpenFallback(nextOpen)
+    },
+    [onOpenChange]
+  )
+
+  const handleExitComplete = useCallback(() => {
+    if (!restoreFocusOnClose) return
+    const active = document.activeElement
+    if (!active || active === document.body) triggerRef.current?.focus()
+  }, [restoreFocusOnClose])
+
+  const handleUpdate = (id: string, customKey: string): void => {
+    void updateShortcut(id, customKey).catch((error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to save shortcut')
+    })
+  }
+
+  const handleReset = (id: string): void => {
+    void resetShortcut(id).catch((error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to reset shortcut')
+    })
+  }
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur()
+    }
+    setTimeout(() => closeButtonRef.current?.focus(), 0)
+  }, [isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return
+
+      const activeElement = document.activeElement
+      if (
+        activeElement instanceof HTMLElement &&
+        activeElement.closest('[data-shortcut-recorder="true"]')
+      ) {
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+      setOpen(false)
+    }
+
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
+  }, [isOpen, setOpen])
+
+  return (
+    <>
+      <RailTooltip label="Keyboard shortcuts">
+        <button
+          ref={triggerRef}
+          type="button"
+          className={buttonClassName}
+          aria-label="Open keyboard shortcuts menu"
+          aria-expanded={isOpen}
+          onClick={(event) => {
+            event.stopPropagation()
+            setOpen(!isOpen)
+          }}
+        >
+          {/* The keyboard body sits low in its 24px box (a cable runs to the
+              top): 1px up lines it up with the Palette glyph beside it. */}
+          <Keyboard size={16} className="-translate-y-px" />
+        </button>
+      </RailTooltip>
+
+      <AnimatePresence onExitComplete={handleExitComplete}>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[110] flex flex-col items-center pt-[7vh] bg-overlay/40 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="shortcut-menu-title"
+              initial={{ opacity: 0, scale: 0.97, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: -8 }}
+              transition={{ duration: 0.15 }}
+              className="w-full max-w-lg overflow-hidden rounded-lg border border-border bg-card shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-3">
+                <div>
+                  <div
+                    id="shortcut-menu-title"
+                    className="flex items-center gap-2 text-sm font-semibold text-foreground"
+                  >
+                    <Keyboard aria-hidden="true" size={15} />
+                    Shortcut Menu
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    View and edit common workspace shortcuts.
+                  </p>
+                </div>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Esc
+                </button>
+              </div>
+
+              <div className="max-h-[52vh] overflow-y-auto px-2 py-2">
+                {quickShortcuts.length === 0 ? (
+                  <div className="px-2 py-6 text-center text-xs text-muted-foreground">
+                    No shortcuts available.
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {quickShortcuts.map((shortcut) => (
+                      <ShortcutRecorder
+                        key={shortcut.id}
+                        shortcut={shortcut}
+                        allShortcuts={shortcuts}
+                        onUpdate={handleUpdate}
+                        onReset={handleReset}
+                        variant="compact"
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}

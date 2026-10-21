@@ -1,0 +1,157 @@
+import { AnimatePresence, motion } from 'framer-motion'
+import { type KeyboardEvent, useCallback, useEffect, useId, useState } from 'react'
+import { X } from '@/components/icons'
+import { Button } from '@/components/ui/button'
+import { FIELD_FOCUS_CLASS } from '@/components/ui/panel-styles'
+import { useOverlayRegistration } from '@/stores/overlay-stack-store'
+
+interface CreateSnapshotModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onCreateSnapshot: (name: string, description?: string) => Promise<void> | void
+}
+
+export function CreateSnapshotModal({
+  isOpen,
+  onClose,
+  onCreateSnapshot
+}: CreateSnapshotModalProps): React.JSX.Element {
+  // Mobile web shell: system back closes this modal (inert on desktop).
+  const overlayId = `create-snapshot-modal:${useId()}`
+  useOverlayRegistration(overlayId, isOpen, onClose, { mobileShellOnly: true })
+
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
+
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setName('')
+      setDescription('')
+      setIsCreating(false)
+    }
+  }, [isOpen])
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleEscape = (e: globalThis.KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [isOpen, onClose])
+
+  const handleCreate = useCallback(async () => {
+    if (name.trim() && !isCreating) {
+      setIsCreating(true)
+      try {
+        await onCreateSnapshot(name.trim(), description.trim() || undefined)
+        onClose()
+      } catch (error) {
+        console.error('Failed to create snapshot:', error)
+        // Keep modal open on error so user can retry
+      } finally {
+        setIsCreating(false)
+      }
+    }
+  }, [name, description, isCreating, onCreateSnapshot, onClose])
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Enter' && name.trim() && !isCreating) {
+        e.preventDefault()
+        handleCreate()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+      }
+    },
+    [name, isCreating, handleCreate, onClose]
+  )
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-overlay/60 backdrop-blur-sm z-50 flex items-center justify-center"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="bg-card rounded-lg shadow-2xl w-[480px] border border-border overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={handleKeyDown}
+          >
+            {/* Header */}
+            <div className="px-4 py-3 border-b border-border flex justify-between items-center bg-secondary/50">
+              <h3 className="text-sm font-semibold text-foreground">Create Snapshot</h3>
+              <button
+                onClick={onClose}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Snapshot Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Pre-deployment state"
+                  className={`w-full bg-secondary border border-border rounded px-3 py-1.5 text-sm pointer-coarse:text-base text-foreground placeholder-muted-foreground ${FIELD_FOCUS_CLASS}`}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">
+                  Description (optional)
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe the state of your workspace..."
+                  rows={3}
+                  className={`w-full bg-secondary border border-border rounded px-3 py-1.5 text-sm pointer-coarse:text-base text-foreground placeholder-muted-foreground resize-none ${FIELD_FOCUS_CLASS}`}
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-4 py-3 bg-secondary/50 flex justify-end gap-2 border-t border-border">
+              <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={handleCreate}
+                disabled={!name.trim() || isCreating}
+              >
+                {isCreating ? 'Creating...' : 'Create'}
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}

@@ -1,0 +1,101 @@
+# termul Documentation Index
+
+**Type:** monolith
+**Primary Language:** TypeScript and Rust
+**Architecture:** Tauri desktop application with React renderer and Rust native runtime
+**Last Updated:** 2026-05-09
+
+## Project Overview
+
+Termul Manager is a project-aware desktop terminal workspace built with Tauri 2. It combines terminal management, project organization, snapshots, file exploration, editor panels, embedded browser tabs, and browser annotation workflows inside a single desktop shell.
+
+## Quick Reference
+
+- **Tech Stack:** Tauri 2, Rust, React 18, TypeScript, Zustand, xterm.js, Tailwind CSS, Radix UI/shadcn
+- **Entry Point:** `src/renderer/tauri-main.tsx` / `src-tauri/src/main.rs`
+- **Architecture Pattern:** Layered desktop application with renderer/runtime separation
+- **Repository Type:** Monolith
+- **Deployment:** GitHub Actions release pipeline with signed updater artifacts
+
+## Generated Documentation
+
+### Core Documentation
+
+- [Legacy Project Context](./project-context.md) - Historical AI-context snapshot; reference only, not current instructions
+- [Project Overview](./project-overview.md) - Executive summary and high-level architecture
+- [Architecture](./architecture.md) - Detailed technical architecture
+- [Source Tree Analysis](./source-tree-analysis.md) - Annotated directory structure
+- [Component Inventory](./component-inventory.md) - Catalog of major UI and workspace components
+- [Design system](../DESIGN.md) - Token and component rules for renderer UI (`docs/design/` for topics)
+- [Development Guide](./development-guide.md) - Local setup, commands, and developer workflows
+- [API Contracts](./api-contracts.md) - Internal Tauri IPC command/event contracts
+- [Deployment Guide](./deployment-guide.md) - Release, packaging, updater workflow, and running `termul-server` in Docker
+- [Contribution Guide](./contribution-guide.md) - Contribution process and coding conventions
+- [Native SSH](./ssh-native.md) - SSH sessions, host keys, credentials and the russh stack
+- [Canvas](./canvas.md) - The built-in figcraft design editor: documents, lifecycle, persistence, access control, agent gateway and the pinned bundle
+
+### Optional / Conditional Documentation
+
+- [Data Models](./data-models.md) _(To be generated)_
+
+## Existing Documentation
+
+- [README](../README.md) - User-facing overview, installation, usage, and tech stack summary
+- [Contributing](../CONTRIBUTING.md) - Contributor workflow and maintainer release notes
+- [Auto Update Release Verification](./auto-update-release-verification.md) - Operational updater and release verification notes
+- [Project Scan Analysis](./project-scan-analysis.json) - Prior scan artifact summarizing repository composition
+- [Claude Agent ACP](./claude-agent-acp.md) - Host install, prerequisites, auth, and headless administration
+- [In-Chat Agent Switch](./in-chat-agent-switch.md) - Mid-conversation agent switching with context handoff, busy behavior, and reopen resolution
+- [ADR-0004: Claude accounts use linked config directories](./adr/0004-claude-accounts-linked-config-dirs.md) - Per-account `CLAUDE_CONFIG_DIR` with shared history, settings, and skills; spike results
+- [QA Report 2026-09-15](./qa-report-2026-09-15.md) - termul-server e2e: protocol, ACP UI, persistence (auth/posture findings)
+- [QA Report 2026-09-16](./qa-report-2026-09-16-termul-server-e2e.md) - Combined e2e + mobile UX design audit: WebGL-DPR, editor-save, nav-trap, touch-target findings; merged fix plan
+- [PR Template](../.github/PULL_REQUEST_TEMPLATE.md) - Pull request guidance
+- [PR Validation Workflow](../.github/workflows/pr-validation.yml) - CI validation rules for pull requests
+- [Release Workflow](../.github/workflows/release.yml) - Release build and publish automation
+- [Publish AUR Workflow](../.github/workflows/publish-aur.yml) - Arch Linux AUR publishing automation
+- [Code Review Workflow](../.github/workflows/code-review.yml) - Automated review workflow for dev PRs
+- [Fork Monitor Workflow](../.github/workflows/fork-monitor.yml) - Repository monitoring workflow
+
+## Getting Started
+
+### Prerequisites
+
+- Bun 1.3+
+- Rust toolchain
+- Platform-specific Tauri dependencies from the README
+
+### Setup
+
+```bash
+bun install
+```
+
+### Run Locally
+
+```bash
+bun run dev
+```
+
+### Run Tests
+
+```bash
+bun run test
+```
+
+## For AI-Assisted Development
+
+This documentation is intended to help AI tools understand and safely extend the codebase.
+
+**Agent instructions:** [`../AGENTS.md`](../AGENTS.md)
+
+### When Planning New Features
+
+- **UI-only features:** Reference `architecture.md`, `component-inventory.md`, and `source-tree-analysis.md`
+- **Runtime/native features:** Reference `architecture.md`, `api-contracts.md`, and `source-tree-analysis.md`
+- **Terminal features:** Start with `architecture.md` and `api-contracts.md`
+- **Browser annotation features:** Start with `architecture.md`, `component-inventory.md`, and `api-contracts.md`
+- **Release/deployment changes:** Reference `deployment-guide.md` and `auto-update-release-verification.md`
+
+---
+
+_Documentation generated by BMAD Method `document-project` workflow_
