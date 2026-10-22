@@ -41,7 +41,8 @@ const DECLARED_SCOPES: Record<keyof typeof PersistenceKeys, KeyScope> = {
   mobileFileExplorerFolder: 'device',
   activeProject: 'device',
   workspace: 'device',
-  shellLayout: 'device'
+  shellLayout: 'device',
+  snippets: 'sharedLww'
 }
 
 /** The logical key an entry stands for; parametrized entries get sample ids. */
@@ -90,7 +91,7 @@ describe('PersistenceKeys', () => {
 describe('scopeOf', () => {
   it('classifies every shared-lww key', () => {
     for (const key of KEY_SCOPES.sharedLww) expect(scopeOf(key), key).toBe('sharedLww')
-    expect([...KEY_SCOPES.sharedLww]).toHaveLength(9)
+    expect([...KEY_SCOPES.sharedLww]).toHaveLength(10)
   })
 
   it('classifies ssh/profiles as shared-cas', () => {

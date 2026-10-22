@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { getEffectiveThemeId } from '@/lib/themes'
 import { useAppearanceMode, useColorTheme } from '@/stores/app-settings-store'
 import { useSettingsModalStore } from '@/stores/settings-modal-store'
+import { useSnippetsStore } from '@/stores/snippets-store'
 import { useThemePickerStore } from '@/stores/theme-picker-store'
 
 interface UseOverlayActionsOptions {
@@ -40,6 +41,11 @@ export function useOverlayActions({
     setIsCommandPaletteOpen(false)
     setIsCommandHistoryOpen(true)
   }, [setIsCommandPaletteOpen, setIsCommandHistoryOpen])
+
+  const handleOpenSnippets = useCallback(() => {
+    setIsCommandPaletteOpen(false)
+    useSnippetsStore.getState().setOpen(true)
+  }, [setIsCommandPaletteOpen])
 
   const handleOpenShortcutMenu = useCallback(() => {
     setIsCommandPaletteOpen(false)
@@ -83,6 +89,7 @@ export function useOverlayActions({
     handleOpenProjectSettings,
     handleOpenAppPreferences,
     handleOpenCommandHistory,
+    handleOpenSnippets,
     handleOpenShortcutMenu,
     handleToggleThemePicker,
     handleOpenThemePicker

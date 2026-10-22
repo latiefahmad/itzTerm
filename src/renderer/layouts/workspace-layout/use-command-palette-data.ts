@@ -9,6 +9,7 @@ import {
 import { usePinnedCommandsLoader } from '@/hooks/use-pinned-commands'
 import { useRecentCommandsLoader } from '@/hooks/use-recent-commands'
 import { useCreateSnapshot, useSnapshotLoader } from '@/hooks/use-snapshots'
+import { useSnippetsLoader } from '@/hooks/use-snippets'
 import { persistenceApi, terminalApi } from '@/lib/api'
 import { useCommandHistoryStore } from '@/stores/command-history-store'
 import { useActiveTerminal } from '@/stores/terminal-store'
@@ -27,6 +28,8 @@ export function useCommandPaletteData({ activeProjectId }: UseCommandPaletteData
   useRecentCommandsLoader()
   // Load pinned commands for command palette
   usePinnedCommandsLoader()
+  // Load the snippets library for the snippets picker
+  useSnippetsLoader()
   // Load command history for current project
   useCommandHistoryLoader(activeProjectId)
   const commandHistory = useCommandHistory(activeProjectId)

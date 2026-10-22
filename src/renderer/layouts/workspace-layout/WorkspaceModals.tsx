@@ -28,6 +28,9 @@ const CommandHistoryModal = lazy(() =>
 const CommandPalette = lazy(() =>
   import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette }))
 )
+const SnippetsModal = lazy(() =>
+  import('@/components/snippets/SnippetsModal').then((m) => ({ default: m.SnippetsModal }))
+)
 const ThemePicker = lazy(() =>
   import('@/components/ThemePicker').then((m) => ({ default: m.ThemePicker }))
 )
@@ -108,6 +111,7 @@ export function WorkspaceModals({
     handleOpenProjectSettings,
     handleOpenAppPreferences,
     handleOpenCommandHistory,
+    handleOpenSnippets,
     handleOpenShortcutMenu,
     handleOpenThemePicker
   } = overlayActions
@@ -164,6 +168,7 @@ export function WorkspaceModals({
             onOpenProjectSettings={handleOpenProjectSettings}
             onOpenAppPreferences={handleOpenAppPreferences}
             onOpenCommandHistory={activeProjectId ? handleOpenCommandHistory : undefined}
+            onOpenSnippets={handleOpenSnippets}
             onOpenShortcutMenu={handleOpenShortcutMenu}
             onOpenThemePicker={handleOpenThemePicker}
             onReportBug={() => useReportBugStore.getState().openReport()}
@@ -198,6 +203,10 @@ export function WorkspaceModals({
           />
         </Suspense>
       )}
+
+      <Suspense fallback={null}>
+        <SnippetsModal />
+      </Suspense>
 
       {settingsModalView === 'project' && (
         <Suspense fallback={null}>

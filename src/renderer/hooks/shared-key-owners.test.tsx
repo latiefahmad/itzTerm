@@ -6,6 +6,7 @@ import { useAppSettingsStore } from '@/stores/app-settings-store'
 import { useContextBarSettingsStore } from '@/stores/context-bar-settings-store'
 import { useKeyboardShortcutsStore } from '@/stores/keyboard-shortcuts-store'
 import { usePinnedCommandsStore } from '@/stores/pinned-commands-store'
+import { useSnippetsStore } from '@/stores/snippets-store'
 import { useTocSettingsStore } from '@/stores/toc-settings-store'
 import {
   DEFAULT_APP_SETTINGS,
@@ -17,6 +18,7 @@ import { useAppSettingsLoader } from './use-app-settings'
 import { useContextBarSettings } from './use-context-bar-settings'
 import { useKeyboardShortcutsLoader } from './use-keyboard-shortcuts'
 import { usePinnedCommandsLoader } from './use-pinned-commands'
+import { useSnippetsLoader } from './use-snippets'
 import { useTocSettings } from './use-toc-settings'
 
 vi.mock('@/lib/api', async () => ({
@@ -99,5 +101,20 @@ describe('shared settings keys reach their stores from another device', () => {
 
     expect(useTocSettingsStore.getState().settings).toMatchObject({ isVisible: false })
     expect(sharedFake.api.writeDebounced).not.toHaveBeenCalled()
+  })
+
+  it('snippets: a remote library is applied, a corrupt one is not', async () => {
+    useSnippetsStore.setState({ snippets: [] })
+    renderHook(() => useSnippetsLoader())
+    await waitFor(() => expect(sharedFake.api.read).toHaveBeenCalled())
+    const good = { snippets: [{ id: 's1', name: 'lint', content: 'bun run lint' }], updatedAt: '' }
+
+    sharedFake.remote(PersistenceKeys.snippets, good)
+    await waitFor(() => expect(useSnippetsStore.getState().snippets).toHaveLength(1))
+    expect(useSnippetsStore.getState().snippets[0]?.name).toBe('lint')
+
+    sharedFake.remote(PersistenceKeys.snippets, { snippets: [1, 2] })
+    expect(useSnippetsStore.getState().snippets).toHaveLength(1)
+    expect(sharedFake.api.write).not.toHaveBeenCalled()
   })
 })

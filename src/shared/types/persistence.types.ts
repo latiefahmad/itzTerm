@@ -97,6 +97,9 @@ export const PersistenceKeys = {
   acpMentionRecents: (partitionId: string): string => `acp/mention-recents/${partitionId}`,
   // SSH profile metadata of the web client (shared, whole-value compare-and-set).
   sshProfiles: 'ssh/profiles',
+  // Snippets library (shared, whole-list LWW): named, grouped insertable
+  // text/commands with {{var}} placeholders; see snippets.types.ts.
+  snippets: 'snippets/library',
   // The last crash-recovery session snapshot (device scope).
   sessionsAutoSave: 'sessions/auto-save',
   // Marker: the pre-fold-in `itzterm-sessions.json` entry was moved to
@@ -157,7 +160,8 @@ export const KEY_SCOPES = {
     'agents/custom',
     'acp/agents',
     'acp/auth-methods',
-    'acp/mcp-servers'
+    'acp/mcp-servers',
+    'snippets/library'
   ],
   sharedCas: [
     'ssh/profiles'

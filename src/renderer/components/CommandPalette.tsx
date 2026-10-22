@@ -59,6 +59,7 @@ interface CommandPaletteProps {
   onOpenProjectSettings?: () => void
   onOpenAppPreferences?: () => void
   onOpenCommandHistory?: () => void
+  onOpenSnippets?: () => void
   onOpenShortcutMenu?: () => void
   onOpenThemePicker?: () => void
   /** Opens the Report a Bug dialog (spec-bug-report-dialog). */
@@ -121,6 +122,7 @@ export function CommandPalette({
   onOpenProjectSettings,
   onOpenAppPreferences,
   onOpenCommandHistory,
+  onOpenSnippets,
   onOpenShortcutMenu,
   onOpenThemePicker,
   onReportBug,
@@ -287,6 +289,23 @@ export function CommandPalette({
         execute: () => onSwitchProject(project.id),
         projectColor: project.color
       })),
+      ...(onOpenCommandHistory || onOpenSnippets
+        ? [
+            {
+              id: 'open-snippets',
+              category: 'tools' as const,
+              icon: <Terminal aria-hidden="true" size={16} />,
+              label: 'Snippets',
+              description: 'Insert saved text or commands into the active terminal',
+              keywords: ['snippet', 'snippets', 'insert', 'template', 'quick', 'termius'],
+              execute:
+                onOpenSnippets ??
+                (() => {
+                  /* snippets unavailable on this surface */
+                })
+            }
+          ]
+        : []),
       ...(onOpenCommandHistory
         ? [
             {
@@ -372,6 +391,7 @@ export function CommandPalette({
       onOpenProjectSettings,
       onOpenAppPreferences,
       onOpenCommandHistory,
+      onOpenSnippets,
       onOpenShortcutMenu,
       onOpenThemePicker,
       onReportBug,
