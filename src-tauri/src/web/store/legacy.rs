@@ -33,6 +33,7 @@ pub const SHARED_LWW_KEYS: &[&str] = &[
     "acp/agents",
     "acp/auth-methods",
     "acp/mcp-servers",
+    "snippets/library",
 ];
 
 /// Logical keys that were shared across devices and are compare-and-set.
