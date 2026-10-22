@@ -1,8 +1,12 @@
 name: build
 
+# Build/release pipeline. Full 3-OS builds cost ~60-75 Actions minutes per
+# trigger on this private repo, so CI only spends them on real releases (v*
+# tags); main-line quality gates run locally via `bun run ci` and the cheap
+# push workflows (secret scan, actions security). Manual dispatch is kept for
+# smoke-testing the pipeline.
 on:
   push:
-    branches: [main]
     tags: ['v*']
   workflow_dispatch:
 
