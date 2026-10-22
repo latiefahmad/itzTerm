@@ -1,3 +1,11 @@
+# NOTE (latief, 2026-10-22): Analyse jobs will report failure on every push
+# while the repository stays private — the analyze/upload step requires
+# GitHub Advanced Security (paid) that only exists on public repos for free.
+# Nothing is wrong with the code; builds and releases are unaffected.
+# Options when this bugs us: make the repo public (CodeQL turns free + gives
+# Security-tab alerts) or buy GHAS, otherwise rename this to .disabled. The
+# latest run keeps failing with: "Code scanning is not enabled for this
+# repository." — see run 39715187838 for the exact log.
 name: CodeQL
 
 on:
