@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-22
+
+### Changes
+
+- fix(snippets): register snippets/library in the shared-LWW key table ([d5a07a6](https://github.com/latiefahmad/itzTerm/commit/d5a07a6b9fa27430ee4ed0aefde601dec660b925))
+- chore(release): brand release titles as itzTerm vX and bump to 1.1.0 ([3670267](https://github.com/latiefahmad/itzTerm/commit/3670267bae5da4ce13d020a7eba9a7be5bb6937c))
+- chore(icons): apply new itzTerm icon set everywhere ([d74437e](https://github.com/latiefahmad/itzTerm/commit/d74437e0a363fe52e186511751279a8602fd5801))
+- feat(snippets): Termius-style snippet library with {{var}} insert prompts ([63f782d](https://github.com/latiefahmad/itzTerm/commit/63f782d8e7305166002f628a071e1a64c0869b1d))
+- docs(changelog): release v1.0.0 [skip ci] ([4bc7d39](https://github.com/latiefahmad/itzTerm/commit/4bc7d392dccb177a7aec6cd19fec4599d4623ff3))
+
 ## [1.0.0] - 2026-10-21
 
 ### Changes
