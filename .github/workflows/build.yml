@@ -174,7 +174,19 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           VERSION="${TAG#v}"
           mapfile -t assets < <(find dist -maxdepth 1 -type f)
-          gh release create "$TAG" "${assets[@]}" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "itzTerm v$VERSION" \
-            --notes-file notes.md
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "itzTerm v$VERSION" \
+              --notes-file notes.md
+          else
+            echo "release $TAG already exists; uploading assets (--clobber)"
+            gh release upload "$TAG" "${assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          fi
+
+      - name: Mirror updater artifacts to Cloudflare R2
+        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        shell: bash
+        run: bun scripts/release/ship-release.mjs mirror
