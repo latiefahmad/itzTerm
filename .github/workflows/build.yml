@@ -176,5 +176,5 @@ jobs:
           mapfile -t assets < <(find dist -maxdepth 1 -type f)
           gh release create "$TAG" "${assets[@]}" \
             --repo "$GITHUB_REPOSITORY" \
-            --title "$VERSION" \
+            --title "itzTerm v$VERSION" \
             --notes-file notes.md
