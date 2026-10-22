@@ -13,9 +13,12 @@ The app is bundled through Tauri with updater artifacts enabled by `createUpdate
 - `src-tauri/tauri.conf.json`
 - `src-tauri/tauri.conf.prod.json`
 
-The stable updater endpoint is:
+The stable updater endpoints are:
 
-- `https://github.com/latiefahmad/itzTerm/releases/latest/download/latest.json`
+- `https://pub-404bf7945b8140e4971df5b72fe32609.r2.dev/latest.json` (primary; public Cloudflare R2 mirror so the private repo is never fetched by the updater)
+- `https://github.com/latiefahmad/itzTerm/releases/latest/download/latest.json` (fallback)
+
+Each tagged release runs `bun scripts/release/ship-release.mjs mirror` after the GitHub release step: it rewrites every `latest.json` platform URL from github.com to the R2 mirror and uploads all bundle artifacts + signatures under `releases/<tag>/` (plus `latest.json` at the bucket root). The bucket is `itzterm-updates`; a custom domain instead of the r2.dev alias can be injected via the `R2_MIRROR_BASE_URL` env or the workflow's secret set only.
 
 The desktop release build also creates `dist-web/` before compiling so the embedded browser client is present in both desktop binaries and the standalone Linux server.
 
