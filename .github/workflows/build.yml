@@ -187,6 +187,13 @@ jobs:
           fi
 
       - name: Mirror updater artifacts to Cloudflare R2
-        if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
         shell: bash
-        run: bun scripts/release/ship-release.mjs mirror
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "Cloudflare secrets not set; skipping R2 mirror"
+            exit 0
+          fi
+          bun scripts/release/ship-release.mjs mirror
