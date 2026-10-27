@@ -66,8 +66,8 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
-		"publisher": "Latief Ahmad",
-		"copyright": "Copyright © 2026 Latief Ahmad",
+		"publisher": "latiefahmad",
+		"copyright": "Copyright © 2026 latiefahmad",
 		"category": "Productivity",
 		"shortDescription": "itzTerm - Project-aware terminal manager",
 		"longDescription": "itzTerm is a desktop application built with Tauri for enhanced productivity. Organize terminals by project with persistent sessions and snapshots.",
