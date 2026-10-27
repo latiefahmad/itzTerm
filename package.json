@@ -3,7 +3,7 @@
   "productName": "itzTerm",
   "version": "1.1.0",
   "description": "Project-aware terminal that treats workspaces as first-class citizens",
-  "author": "gnoviawan",
+  "author": "Latief Ahmad",
   "contributors": [
     "mannnrachman (Tauri port)"
   ],

@@ -414,7 +414,7 @@ Design and decisions: [`docs/ssh-native.md`](docs/ssh-native.md).
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/chart?repos=latiefahmad/itzTerm&type=date&legend=top-left)](https://www.star-history.com/?type=date&repos=gnoviawan%2Fitzterm)
+[![Star History Chart](https://api.star-history.com/chart?repos=latiefahmad/itzTerm&type=date&legend=top-left)](https://www.star-history.com/?type=date&repos=latiefahmad%2FitzTerm)
 
 ## 🤝 Contributing
 
@@ -438,6 +438,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 <div align="center">
 
-Built with ❤️ by [gnoviawan](https://github.com/gnoviawan)
+Built with ❤️ by [Latief Ahmad](https://github.com/latiefahmad)
 
 </div>

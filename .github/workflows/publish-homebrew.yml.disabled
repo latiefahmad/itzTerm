@@ -188,7 +188,7 @@ jobs:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           gh auth setup-git
-          gh repo clone gnoviawan/homebrew-itzterm tap -- --depth 1
+          gh repo clone latiefahmad/homebrew-itzterm tap -- --depth 1
 
       - name: Configure Git
         working-directory: tap

@@ -43,7 +43,7 @@ The macOS jobs check these categories immediately after checkout, before depende
 
 Stable Homebrew publication additionally requires:
 
-- `HOMEBREW_TAP_TOKEN` — write access to `gnoviawan/homebrew-itzterm`
+- `HOMEBREW_TAP_TOKEN` — write access to `latiefahmad/homebrew-itzterm`
 
 The reusable Homebrew workflow resolves authoritative GitHub release metadata before this token is checked. Prereleases therefore still receive `SHA256SUMS.txt`, skip the tap update, and do not require the tap token.
 

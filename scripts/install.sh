@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OWNER="gnoviawan"
+OWNER="latiefahmad"
 REPO="itzterm"
 BASE_URL="https://github.com/${OWNER}/${REPO}"
 
