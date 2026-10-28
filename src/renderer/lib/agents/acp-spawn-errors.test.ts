@@ -59,6 +59,25 @@ describe('formatAcpSpawnError', () => {
     )
   })
 
+  // Windows ERROR_BAD_EXE_FORMAT: the spawned path exists but is not a PE
+  // image (npm ships an extensionless `#!/bin/sh` script beside its `.cmd`
+  // shims). Reported by the ACP crate with the JSON data block below.
+  it('classifies Windows os error 193 as a spawn failure with actionable copy', () => {
+    const raw =
+      'agent failed to start: Internal error: { "spawned_at": ' +
+      '"C:\\\\Users\\\\me\\\\.cargo\\\\registry\\\\src\\\\acp\\\\src\\\\jsonrpc.rs:1524:39", ' +
+      '"data": "%1 is not a valid Win32 application. (os error 193)" }'
+
+    const result = classifySetupError(raw, { command: 'npx' })
+    expect(result).toMatchObject({ category: 'spawn', label: 'Agent unavailable' })
+    expect(result.detail).toContain('"npx"')
+    expect(result.detail).toContain('Node.js')
+    expect(result.detail).not.toContain('os error 193')
+
+    expect(formatAcpSpawnError(raw, { command: 'uvx' })).toContain('uv')
+    expect(formatAcpSpawnError(raw)).toContain('The agent')
+  })
+
   it('explains an npx package executable missing after npx itself launched (exit 127)', () => {
     // JSON data escapes its newline; the appended stderr tail uses real newlines.
     const raw =

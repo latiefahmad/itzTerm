@@ -10,8 +10,14 @@ import { DEFINITE_SPAWN_REJECTIONS } from '@/lib/acp-transport/tauri-verdicts'
 // "not found" / "cannot find" are intentionally excluded so messages about a
 // missing API key, credential, or session are not misclassified as a spawn
 // error (and rewritten by `formatAcpSpawnError` into spawn guidance).
+//
+// `os error 193` is Windows' ERROR_BAD_EXE_FORMAT: `CreateProcessW` was handed
+// a path that exists but is not a PE image. npm installs an extensionless
+// `#!/bin/sh` script beside every `.cmd`/`.ps1` shim, so a bare-name spawn of
+// `npx`/`codex` can land on that script and fail this way. It is a spawn
+// failure even though the process "started" far enough to report an OS code.
 const ENOENT_PATTERN =
-  /enoent|no such file|program not found|command not found|spawn.*fail|failed to spawn/i
+  /enoent|no such file|program not found|command not found|spawn.*fail|failed to spawn|not a valid win32 application|os error 193/i
 
 // The Rust resolver's own wording (`pty/manager/resolve.rs`): `program not
 // found or not executable: <path>`, `program not found on PATH: <name>`, and
@@ -58,6 +64,18 @@ export function formatAcpSpawnError(raw: unknown, config?: Pick<AgentConfig, 'co
   // The desktop host's `ACP_AGENT_UNAVAILABLE:` / `ACP_INVALID_AGENT_CONFIG:`
   // transport prefixes are not user-visible text.
   const message = definiteSpawnRejectionMessage(raw)
+
+  // Windows ERROR_BAD_EXE_FORMAT: the resolved path is not an executable image.
+  // Naming the fix beats the raw "os error 193" string, which reads like a bug.
+  if (/not a valid win32 application|os error 193/i.test(message)) {
+    const named = config?.command ? `"${config.command}"` : 'The agent'
+    return (
+      `${named} could not be launched: Windows resolved it to a file that is not an executable. ` +
+      'This usually means the launcher is missing or only a Unix script is installed. ' +
+      'Reinstall its runtime (Node.js for npx-based agents, uv for uvx-based ones), then restart itzTerm.'
+    )
+  }
+
   if (!ENOENT_PATTERN.test(message)) return message
 
   // npx itself can start successfully while a cached package's executable is

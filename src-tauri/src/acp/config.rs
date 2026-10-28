@@ -292,8 +292,14 @@ impl AgentConfig {
         // cannot launch (os error 193). Reuse the PTY launcher's shim-aware
         // resolver (ADR-004.2): it rewrites e.g. `gemini.cmd` to
         // `node.exe <script>`, prepending the script ahead of the user args.
-        // A resolution failure falls back to the legacy PATH/PATHEXT lookup so
-        // any real spawn error stays observable.
+        //
+        // A resolution failure must not be silent: the legacy fallback below
+        // hands `CreateProcessW` a bare name, which on Windows surfaces as
+        // "os error 193 (%1 is not a valid Win32 application)" when a
+        // non-PE file of that name exists on PATH (npm installs an
+        // extensionless `#!/bin/sh` script beside every `.cmd` shim). Log the
+        // command so the real cause — a missing launcher like `npx`/`uvx` — is
+        // visible instead of a cryptic spawn failure.
         let (command, args): (String, Vec<String>) =
             match crate::pty::manager::resolve_spawn_program(&self.command) {
                 Ok(resolved) => {
@@ -301,10 +307,17 @@ impl AgentConfig {
                     args.extend(self.args.iter().cloned());
                     (resolved.program, args)
                 }
-                Err(_) => (
-                    crate::trackers::git_tracker::resolve_executable(&self.command),
-                    self.args.clone(),
-                ),
+                Err(error) => {
+                    log::warn!(
+                        "[acp] could not resolve agent command {:?} ({}); falling back to a bare-name spawn",
+                        self.command,
+                        error
+                    );
+                    (
+                        crate::trackers::git_tracker::resolve_executable(&self.command),
+                        self.args.clone(),
+                    )
+                }
             };
 
         // On non-Windows `resolve_spawn_program` returns a bare command name
