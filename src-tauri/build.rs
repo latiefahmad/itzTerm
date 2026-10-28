@@ -93,5 +93,39 @@ fn main() {
         println!("cargo:rustc-cfg={RELEASE_WITHOUT_CUSTOM_PROTOCOL_CFG}");
     }
 
+    // Windows: embed the Common-Controls v6 manifest into every cargo
+    // artifact, including the lib unit-test harness. App binaries get their
+    // manifest from tauri-build's generated resource.lib (linked into bins
+    // only), and cargo's `link-arg-tests` directive reaches integration-test
+    // targets but NOT the lib test harness, so out of the box only the lib
+    // harness shipped rustc's default manifest WITHOUT the Common-Controls
+    // dependency. The loader then resolved comctl32 5.82, which lacks the
+    // v6-only entry points the library imports (TaskDialogIndirect, window
+    // subclassing helpers) and every test run died at load with 0xC0000139
+    // STATUS_ENTRYPOINT_NOT_FOUND.
+    // /MANIFESTINPUT is only valid together with /MANIFEST:EMBED (LNK1220),
+    // so both go through `rustc-link-arg`, which reaches every target.
+    // MSVC-only flags: guard on the target OS triple's env, not just OS, so
+    // a hypothetical GNU toolchain target never sees them.
+    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows")
+        && std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc")
+    {
+        let manifest = Path::new(env!("CARGO_MANIFEST_DIR")).join("manifest/tests.xml");
+        println!("cargo:rerun-if-changed=manifest/tests.xml");
+        println!("cargo:rustc-link-arg=/MANIFEST:EMBED");
+        println!(
+            "cargo:rustc-link-arg=/MANIFESTINPUT:{}",
+            manifest.display()
+        );
+        // Bins already carry their manifest as an NT resource from
+        // tauri-build's generated resource.lib (RT_MANIFEST id 1) — letting
+        // the linker also generate one duplicates that resource and fails
+        // with CVT1100. /MANIFEST:NO runs after /MANIFEST:EMBED on bin
+        // targets, so the linker skips manifest generation there and the
+        // resource.lib manifest (which includes Common-Controls) stays the
+        // only one, exactly matching the pre-workaround link behavior.
+        println!("cargo:rustc-link-arg-bins=/MANIFEST:NO");
+    }
+
     tauri_build::build()
 }

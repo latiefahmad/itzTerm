@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <!--
+    Manifest for cargo test binaries (not shipped in app builds).
+    The library links comctl32 v6-only entry points (TaskDialogIndirect,
+    SetWindowSubclass via shell comctl helpers), so test executables must
+    declare the Common-Controls assembly or Windows loader resolves
+    comctl32 5.82 and fails with 0xC0000139 STATUS_ENTRYPOINT_NOT_FOUND.
+    Linked into tests from build.rs via /MANIFESTINPUT.
+  -->
+  <dependency>
+    <dependentAssembly>
+      <assemblyIdentity
+        type="win32"
+        name="Microsoft.Windows.Common-Controls"
+        version="6.0.0.0"
+        processorArchitecture="*"
+        publicKeyToken="6595b64144ccf1df"
+        language="*"
+      />
+    </dependentAssembly>
+  </dependency>
+</assembly>
