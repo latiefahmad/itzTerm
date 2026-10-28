@@ -1,7 +1,17 @@
 import type { SSHProfile } from '@shared/types/ssh.types'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Download, Eye, EyeOff, Plus, Search, Server, X } from '@/components/icons'
+import {
+  Archive,
+  ArchiveRestore,
+  Download,
+  Eye,
+  EyeOff,
+  Plus,
+  Search,
+  Server,
+  X
+} from '@/components/icons'
 import { Button } from '@/components/ui/button'
 import { Kbd } from '@/components/ui/kbd'
 import {
@@ -13,6 +23,7 @@ import { isTauriContext } from '@/lib/tauri-runtime'
 import { cn } from '@/lib/utils'
 import { type SSHSession, useSSHActions, useSSHShowAddresses } from '@/stores/ssh-store'
 import { type SSHHostActions, SSHHostRow } from './SSHHostRow'
+import { SSHVaultDialog, type VaultDialogMode } from './SSHVaultDialog'
 import { resolveSSHHostState } from './ssh-host-status'
 
 interface SSHHostsViewProps {
@@ -82,6 +93,7 @@ export function SSHHostsView({
   onImport
 }: SSHHostsViewProps): React.JSX.Element {
   const [query, setQuery] = useState('')
+  const [vaultMode, setVaultMode] = useState<VaultDialogMode | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const desktop = isTauriContext()
@@ -122,32 +134,52 @@ export function SSHHostsView({
 
   if (profiles.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center p-6" data-testid="ssh-hosts-empty">
-        <div className="flex max-w-sm flex-col items-center gap-4 text-center">
-          <span className="flex size-12 items-center justify-center rounded-xl bg-foreground/[0.06] text-muted-foreground">
-            <Server size={22} aria-hidden="true" />
-          </span>
-          <div className="space-y-1.5">
-            <h2 className="text-base font-semibold text-foreground">No hosts yet</h2>
-            <p className="text-sm text-muted-foreground">
-              Add a server to open a terminal on it from itzTerm, or import the hosts in your
-              ~/.ssh/config.
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button type="button" size="sm" onClick={onNewHost}>
-              <Plus />
-              New host
-            </Button>
-            {desktop && (
-              <Button type="button" size="sm" variant="outline" onClick={onImport}>
-                <Download />
-                Import ~/.ssh/config
+      <>
+        <div className="flex h-full items-center justify-center p-6" data-testid="ssh-hosts-empty">
+          <div className="flex max-w-sm flex-col items-center gap-4 text-center">
+            <span className="flex size-12 items-center justify-center rounded-xl bg-foreground/[0.06] text-muted-foreground">
+              <Server size={22} aria-hidden="true" />
+            </span>
+            <div className="space-y-1.5">
+              <h2 className="text-base font-semibold text-foreground">No hosts yet</h2>
+              <p className="text-sm text-muted-foreground">
+                Add a server to open a terminal on it from itzTerm, or import the hosts in your
+                ~/.ssh/config.
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button type="button" size="sm" onClick={onNewHost}>
+                <Plus />
+                New host
               </Button>
-            )}
+              {desktop && (
+                <Button type="button" size="sm" variant="outline" onClick={onImport}>
+                  <Download />
+                  Import ~/.ssh/config
+                </Button>
+              )}
+              {desktop && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setVaultMode('import')}
+                >
+                  <ArchiveRestore />
+                  Restore backup
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+        <SSHVaultDialog
+          open={vaultMode !== null}
+          mode={vaultMode ?? 'export'}
+          onOpenChange={(open) => {
+            if (!open) setVaultMode(null)
+          }}
+        />
+      </>
     )
   }
 
@@ -219,6 +251,30 @@ export function SSHHostsView({
               Import
             </Button>
           )}
+          {desktop && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setVaultMode('export')}
+              title="Back up hosts and their saved credentials to an encrypted file"
+            >
+              <Archive />
+              Back up
+            </Button>
+          )}
+          {desktop && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setVaultMode('import')}
+              title="Restore hosts and their saved credentials from a backup file"
+            >
+              <ArchiveRestore />
+              Restore
+            </Button>
+          )}
           <Button type="button" size="sm" onClick={onNewHost}>
             <Plus />
             New host
@@ -275,6 +331,14 @@ export function SSHHostsView({
           )}
         </div>
       </div>
+
+      <SSHVaultDialog
+        open={vaultMode !== null}
+        mode={vaultMode ?? 'export'}
+        onOpenChange={(open) => {
+          if (!open) setVaultMode(null)
+        }}
+      />
     </div>
   )
 }

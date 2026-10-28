@@ -214,6 +214,8 @@ describe('sshApi (web branch)', () => {
       api.inspectKey('/k'),
       api.listKeys(),
       api.duplicateProfile('profile-1'),
+      api.exportVault({ path: '/tmp/vault', passphrase: 'hunter2hunter2' }),
+      api.importVault({ path: '/tmp/vault', passphrase: 'hunter2hunter2' }),
       api.sftpRealpath('s', '.')
     ])
 

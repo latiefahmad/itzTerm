@@ -1877,6 +1877,8 @@ pub fn run() {
             commands::ssh_save_profile,
             commands::ssh_delete_profile,
             commands::ssh_import_config,
+            commands::ssh_export_vault,
+            commands::ssh_import_vault,
             commands::ssh_port_forward_start,
             commands::ssh_port_forward_stop,
             commands::sftp_list_dir,

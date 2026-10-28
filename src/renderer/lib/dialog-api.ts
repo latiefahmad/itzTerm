@@ -102,12 +102,20 @@ function createTauriDialogApi(): DialogApi {
       }
     },
 
-    async saveFile(options?: { title?: string; defaultPath?: string }): Promise<IpcResult<string>> {
+    async saveFile(options?: {
+      title?: string
+      defaultPath?: string
+      filters?: Array<{ name: string; extensions: string[] }>
+    }): Promise<IpcResult<string>> {
       if (!isTauriContext()) {
         return { success: false, error: 'No location selected', code: 'CANCELLED' }
       }
       try {
-        const selected = await save({ title: options?.title, defaultPath: options?.defaultPath })
+        const selected = await save({
+          title: options?.title,
+          defaultPath: options?.defaultPath,
+          filters: options?.filters
+        })
         if (!selected) {
           return { success: false, error: 'No location selected', code: 'CANCELLED' }
         }

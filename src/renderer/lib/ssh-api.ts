@@ -7,7 +7,9 @@ import type {
   SFTPEntry,
   SFTPTransferProgress,
   SSHApi,
+  SSHExportVaultRequest,
   SSHHostKeyPrompt,
+  SSHImportVaultRequest,
   SSHKeyFileInfo,
   SSHLiveSession,
   SSHProfile,
@@ -15,6 +17,8 @@ import type {
   SSHSessionOpened,
   SSHSessionOpenRequest,
   SSHSessionProgressEvent,
+  SSHVaultExportSummary,
+  SSHVaultImportSummary,
   TransferProgressCallback
 } from '@shared/types/ssh.types'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
@@ -91,7 +95,9 @@ const SSH_COMMANDS = {
   SESSION_LIST: 'ssh_session_list',
   DUPLICATE_PROFILE: 'ssh_duplicate_profile',
   INSPECT_KEY: 'ssh_inspect_key',
-  LIST_KEYS: 'ssh_list_keys'
+  LIST_KEYS: 'ssh_list_keys',
+  EXPORT_VAULT: 'ssh_export_vault',
+  IMPORT_VAULT: 'ssh_import_vault'
 } as const
 
 async function invokeIpc<T>(
@@ -317,6 +323,14 @@ export function createSSHApi(): SSHApi {
 
     async listKeys(): Promise<IpcResult<SSHKeyFileInfo[]>> {
       return invokeIpc<SSHKeyFileInfo[]>(SSH_COMMANDS.LIST_KEYS)
+    },
+
+    async exportVault(request: SSHExportVaultRequest): Promise<IpcResult<SSHVaultExportSummary>> {
+      return invokeIpc<SSHVaultExportSummary>(SSH_COMMANDS.EXPORT_VAULT, { request })
+    },
+
+    async importVault(request: SSHImportVaultRequest): Promise<IpcResult<SSHVaultImportSummary>> {
+      return invokeIpc<SSHVaultImportSummary>(SSH_COMMANDS.IMPORT_VAULT, { request })
     },
 
     // Event listeners

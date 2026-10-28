@@ -510,7 +510,11 @@ export interface DialogApi {
   /** Pick one or more files (desktop only; CANCELLED elsewhere). */
   selectFiles: (options?: { title?: string }) => Promise<IpcResult<string[]>>
   /** Choose where to save a file; the OS dialog asks before overwriting (desktop only). */
-  saveFile: (options?: { title?: string; defaultPath?: string }) => Promise<IpcResult<string>>
+  saveFile: (options?: {
+    title?: string
+    defaultPath?: string
+    filters?: Array<{ name: string; extensions: string[] }>
+  }) => Promise<IpcResult<string>>
 }
 
 // Shell detection types

@@ -152,6 +152,51 @@ pub async fn ssh_list_keys() -> Result<IpcResult<Vec<KeyFileInfo>>, String> {
 }
 
 // ---------------------------------------------------------------------------
+// Encrypted host vault (desktop only)
+// ---------------------------------------------------------------------------
+
+use crate::ssh::vault::{
+    self, ExportVaultRequest, ExportVaultSummary, ImportVaultRequest, ImportVaultSummary,
+};
+
+/// Export saved hosts and their keychain credentials to a passphrase-sealed
+/// file. `dryRun` returns the same summary without writing anything.
+#[tauri::command]
+pub async fn ssh_export_vault(
+    request: ExportVaultRequest,
+    ssh_manager: State<'_, Arc<SSHManager>>,
+) -> Result<IpcResult<ExportVaultSummary>, String> {
+    let manager = ssh_manager.profiles.clone();
+    // Argon2id is deliberately expensive; keep it off the async workers.
+    let outcome = tokio::task::spawn_blocking(move || vault::export(&manager, &request))
+        .await
+        .map_err(|e| format!("Vault export task failed: {}", e))?;
+
+    Ok(match outcome {
+        Ok(summary) => IpcResult::success(summary),
+        Err((message, code)) => IpcResult::error(message, code),
+    })
+}
+
+/// Restore a vault: decrypt it, then create, update, skip or (in replace mode)
+/// delete hosts so the result matches the file.
+#[tauri::command]
+pub async fn ssh_import_vault(
+    request: ImportVaultRequest,
+    ssh_manager: State<'_, Arc<SSHManager>>,
+) -> Result<IpcResult<ImportVaultSummary>, String> {
+    let manager = ssh_manager.inner().clone();
+    let outcome = tokio::task::spawn_blocking(move || vault::import(&manager, &request))
+        .await
+        .map_err(|e| format!("Vault import task failed: {}", e))?;
+
+    Ok(match outcome {
+        Ok(summary) => IpcResult::success(summary),
+        Err((message, code)) => IpcResult::error(message, code),
+    })
+}
+
+// ---------------------------------------------------------------------------
 // Interactive sessions
 // ---------------------------------------------------------------------------
 

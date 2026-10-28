@@ -5,6 +5,7 @@
 //! via the credential_store module — they are never written to disk.
 
 use super::credential_store;
+use super::vault::ImportPlan;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::AppHandle;
@@ -12,6 +13,59 @@ use tauri_plugin_store::StoreExt;
 
 const STORE_FILE: &str = "ssh-profiles.json";
 const STORE_KEY: &str = "profiles";
+
+/// Store or clear the keychain secret matching the profile's auth method.
+///
+/// The single source of truth for "which secret type belongs to which auth
+/// method", shared by `save` (one profile) and `apply_import` (a batch). It
+/// moves `profile.password` / `profile.passphrase` into the keychain and
+/// promotes the secrets into `has_stored_*` flags; callers still clear the
+/// transient fields afterwards.
+///
+/// Mismatched secret types are removed rather than left behind: switching a
+/// host from password to key auth must not keep an orphaned password entry.
+fn reconcile_credentials(profile: &mut SSHProfile) -> Result<(), String> {
+    match profile.auth_method.as_str() {
+        "password" => {
+            if let Some(ref password) = profile.password {
+                if !password.is_empty() {
+                    credential_store::store_password(&profile.id, password)?;
+                    profile.has_stored_password = true;
+                }
+            }
+            // Clear passphrase if any (not used for password auth)
+            if profile.has_stored_passphrase {
+                credential_store::delete_passphrase(&profile.id).ok();
+                profile.has_stored_passphrase = false;
+            }
+        }
+        "key" => {
+            if let Some(ref passphrase) = profile.passphrase {
+                if !passphrase.is_empty() {
+                    credential_store::store_passphrase(&profile.id, passphrase)?;
+                    profile.has_stored_passphrase = true;
+                }
+            }
+            // Clear password if any (not used for key auth)
+            if profile.has_stored_password {
+                credential_store::delete_password(&profile.id).ok();
+                profile.has_stored_password = false;
+            }
+        }
+        _ => {
+            // Agent or other methods - wipe both
+            if profile.has_stored_password {
+                credential_store::delete_password(&profile.id).ok();
+                profile.has_stored_password = false;
+            }
+            if profile.has_stored_passphrase {
+                credential_store::delete_passphrase(&profile.id).ok();
+                profile.has_stored_passphrase = false;
+            }
+        }
+    }
+    Ok(())
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -279,46 +333,7 @@ impl ProfileManager {
     /// Save (create or update) a profile.
     /// If password/passphrase are provided, they are stored in the OS keychain.
     pub fn save(&self, mut profile: SSHProfile) -> Result<(), String> {
-        // Only store credentials under the matching auth method
-        match profile.auth_method.as_str() {
-            "password" => {
-                if let Some(ref password) = profile.password {
-                    if !password.is_empty() {
-                        credential_store::store_password(&profile.id, password)?;
-                        profile.has_stored_password = true;
-                    }
-                }
-                // Clear passphrase if any (not used for password auth)
-                if profile.has_stored_passphrase {
-                    credential_store::delete_passphrase(&profile.id).ok();
-                    profile.has_stored_passphrase = false;
-                }
-            }
-            "key" => {
-                if let Some(ref passphrase) = profile.passphrase {
-                    if !passphrase.is_empty() {
-                        credential_store::store_passphrase(&profile.id, passphrase)?;
-                        profile.has_stored_passphrase = true;
-                    }
-                }
-                // Clear password if any (not used for key auth)
-                if profile.has_stored_password {
-                    credential_store::delete_password(&profile.id).ok();
-                    profile.has_stored_password = false;
-                }
-            }
-            _ => {
-                // Agent or other methods - wipe both
-                if profile.has_stored_password {
-                    credential_store::delete_password(&profile.id).ok();
-                    profile.has_stored_password = false;
-                }
-                if profile.has_stored_passphrase {
-                    credential_store::delete_passphrase(&profile.id).ok();
-                    profile.has_stored_passphrase = false;
-                }
-            }
-        }
+        reconcile_credentials(&mut profile)?;
 
         // Clear transient secrets before caching (they live only in keychain)
         profile.password = None;
@@ -332,6 +347,76 @@ impl ProfileManager {
             *existing = profile;
         } else {
             profiles.push(profile);
+        }
+
+        self.save_to_store(&profiles)?;
+        *cache = Some(profiles);
+
+        Ok(())
+    }
+
+    /// Apply an import plan: keychain credentials, then one store write.
+    ///
+    /// Looping `save()` would rewrite the whole store once per profile and
+    /// re-enter the cache lock; a vault import is a batch by nature, so it gets
+    /// a batch path. Secret bookkeeping still goes through
+    /// [`reconcile_credentials`], the same function `save` uses.
+    ///
+    /// A vault profile that carries no secret must end up with `has_stored_*`
+    /// cleared, otherwise the host editor promises a saved credential that does
+    /// not exist on this machine.
+    pub fn apply_import(&self, plan: &ImportPlan) -> Result<(), String> {
+        let mut cache = self.cache.lock().map_err(|_| "Cache lock poisoned")?;
+        let mut profiles = self.load_from_store()?;
+
+        for vault_profile in plan.to_create.iter().chain(plan.to_update.iter()) {
+            let id = vault_profile.id.clone();
+
+            let mut profile = SSHProfile {
+                id: id.clone(),
+                name: vault_profile.name.clone(),
+                host: vault_profile.host.clone(),
+                port: vault_profile.port,
+                username: vault_profile.username.clone(),
+                auth_method: vault_profile.auth_method.clone(),
+                private_key_path: vault_profile.private_key_path.clone(),
+                password: vault_profile.password.clone(),
+                passphrase: vault_profile.passphrase.clone(),
+                jump_host_id: vault_profile.jump_host_id.clone(),
+                port_forwards: vault_profile
+                    .port_forwards
+                    .iter()
+                    .filter_map(|v| serde_json::from_value(v.clone()).ok())
+                    .collect(),
+                tags: vault_profile.tags.clone(),
+                group: vault_profile.group.clone(),
+                favorite: vault_profile.favorite,
+                last_connected: vault_profile.last_connected.clone(),
+                imported_from: vault_profile.imported_from.clone(),
+                has_stored_password: false,
+                has_stored_passphrase: false,
+            };
+
+            reconcile_credentials(&mut profile)?;
+            profile.password = None;
+            profile.passphrase = None;
+
+            if let Some(existing) = profiles.iter_mut().find(|p| p.id == id) {
+                *existing = profile;
+            } else {
+                profiles.push(profile);
+            }
+        }
+
+        for id in &plan.to_delete {
+            profiles.retain(|p| p.id != *id);
+            if let Err(e) = credential_store::delete_credentials(id) {
+                log::warn!(
+                    "[SSH] Failed to delete credentials for removed profile {}: {}",
+                    id,
+                    e
+                );
+            }
         }
 
         self.save_to_store(&profiles)?;

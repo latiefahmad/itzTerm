@@ -145,6 +145,64 @@ export interface SSHKeyFileInfo {
 }
 
 // ============================================================================
+// Host vault (desktop only)
+// ============================================================================
+
+/**
+ * A private key that will not resolve on this machine. The vault carries key
+ * *paths*, not key material, so the user has to bring the key itself.
+ */
+export interface SSHVaultKeyWarning {
+  profileId: string
+  name: string
+  path: string
+  status: 'notFound' | 'unreadable' | 'notPrivateKey'
+}
+
+export interface SSHExportVaultRequest {
+  /** Destination chosen in a save dialog. */
+  path: string
+  passphrase: string
+  /** Omit to export every host. */
+  profileIds?: string[]
+  /** Return the summary without writing the file. */
+  dryRun?: boolean
+}
+
+export interface SSHVaultExportSummary {
+  profileCount: number
+  withPassword: number
+  withPassphrase: number
+  /** Hosts whose private key file travelled inside the backup. */
+  withKeyMaterial: number
+  missingKeys: SSHVaultKeyWarning[]
+  /** Hosts whose keychain secret could not be read; exported without it. */
+  unreadableSecrets: string[]
+  /** Null on a dry run. */
+  bytesWritten: number | null
+}
+
+/** `merge` keeps hosts the vault does not mention; `replace` deletes them. */
+export type SSHVaultImportMode = 'merge' | 'replace'
+
+export interface SSHImportVaultRequest {
+  path: string
+  passphrase: string
+  mode?: SSHVaultImportMode
+}
+
+export interface SSHVaultImportSummary {
+  created: number
+  updated: number
+  skipped: number
+  deleted: number
+  credentialsRestored: number
+  /** Hosts whose private key was written to this machine's managed key dir. */
+  keysRestored: number
+  missingKeys: SSHVaultKeyWarning[]
+}
+
+// ============================================================================
 // SFTP Types
 // ============================================================================
 
@@ -195,6 +253,10 @@ export interface SSHApi {
   duplicateProfile: (profileId: string) => Promise<IpcResult<SSHProfile>>
   inspectKey: (path: string) => Promise<IpcResult<SSHKeyFileInfo>>
   listKeys: () => Promise<IpcResult<SSHKeyFileInfo[]>>
+
+  // Host vault (desktop only; returns WEB_UNSUPPORTED elsewhere)
+  exportVault: (request: SSHExportVaultRequest) => Promise<IpcResult<SSHVaultExportSummary>>
+  importVault: (request: SSHImportVaultRequest) => Promise<IpcResult<SSHVaultImportSummary>>
 
   // Port forwarding over a live session's connection (`sessionId` = attempt id)
   startPortForward: (

@@ -1,10 +1,14 @@
 import { PersistenceKeys } from '@shared/types/persistence.types'
 import type {
   SFTPTransferProgress,
+  SSHExportVaultRequest,
   SSHHostKeyPrompt,
+  SSHImportVaultRequest,
   SSHProfile,
   SSHSessionEndReason,
-  SSHSessionStage
+  SSHSessionStage,
+  SSHVaultExportSummary,
+  SSHVaultImportSummary
 } from '@shared/types/ssh.types'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/shallow'
@@ -86,6 +90,8 @@ export interface SSHState {
   duplicateProfile: (profileId: string) => Promise<SSHProfile | null>
   toggleFavorite: (profileId: string) => Promise<boolean>
   importConfig: () => Promise<SSHProfile[]>
+  exportVault: (request: SSHExportVaultRequest) => Promise<SSHVaultExportSummary | null>
+  importVault: (request: SSHImportVaultRequest) => Promise<SSHVaultImportSummary | null>
 
   // Workspace: open/closed, active tab, highlighted host
   workspaceOpen: boolean
@@ -236,6 +242,21 @@ export const useSSHStore = create<SSHState>((set, get) => ({
     return []
   },
 
+  exportVault: async (request) => {
+    const result = await sshApi.exportVault(request)
+    return result.success ? result.data : null
+  },
+
+  importVault: async (request) => {
+    const result = await sshApi.importVault(request)
+    if (!result.success) return null
+    // Re-read rather than merging client-side: the backend decided which hosts
+    // were created, updated, skipped or deleted, and it also reconciled the
+    // keychain. Rebuilding the list locally could disagree with it.
+    await get().loadProfiles()
+    return result.data
+  },
+
   selectProfile: (profileId: string | null) => {
     if (profileId === null) {
       set({ workspaceOpen: false })
@@ -359,6 +380,8 @@ export const useSSHActions = () =>
       duplicateProfile: state.duplicateProfile,
       toggleFavorite: state.toggleFavorite,
       importConfig: state.importConfig,
+      exportVault: state.exportVault,
+      importVault: state.importVault,
       clearCompletedTransfers: state.clearCompletedTransfers,
       selectProfile: state.selectProfile,
       openWorkspace: state.openWorkspace,

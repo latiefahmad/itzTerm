@@ -1,6 +1,6 @@
 [package]
 name = "itzterm-manager"
-version = "1.1.0"
+version = "1.1.1"
 description = "Project-aware terminal that treats workspaces as first-class citizens"
 authors = ["latiefahmad (itzTerm)", "gnoviawan (upstream Termul)", "mannnrachman (Tauri port)"]
 edition = "2021"
@@ -182,6 +182,17 @@ getrandom = "0.2"
 # digest-only storage of issued credentials + constant-time comparison.
 sha2 = "0.10"
 subtle = "2"
+
+# Passphrase-encrypted SSH host vault (export/import of saved hosts and their
+# keychain credentials across machines). All three are already compiled into
+# the dependency tree via russh/ssh-key/ssh-cipher, so declaring them adds no
+# build weight:
+#   argon2  <- ssh-key's encrypted OpenSSH key support
+#   aes-gcm <- ssh-cipher
+#   zeroize <- aes-gcm, ssh-key, ed25519-dalek
+argon2 = { version = "0.6", features = ["zeroize"] }
+aes-gcm = { version = "0.11", features = ["zeroize"] }
+zeroize = "1"
 
 # Structured logging for remote server
 tracing = "0.1"

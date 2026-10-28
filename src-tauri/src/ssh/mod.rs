@@ -15,6 +15,7 @@ pub mod profile_manager;
 pub mod session;
 pub mod sftp;
 pub mod shell;
+pub mod vault;
 
 use profile_manager::ProfileManager;
 use session::SshSessionManager;

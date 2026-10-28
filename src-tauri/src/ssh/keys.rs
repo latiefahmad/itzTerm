@@ -169,6 +169,28 @@ pub fn inspect(path: &str) -> KeyFileInfo {
     }
 }
 
+/// Read a private key's bytes for inclusion in a host backup.
+///
+/// Returns `None` when [`inspect`] would not report `Ok` — a missing,
+/// unreadable or non-key file — so the backup never carries garbage that would
+/// fail on import. PuTTY `.ppk` files are refused for the same reason: itzTerm
+/// cannot load them, so carrying one would just move the failure.
+///
+/// The bytes are key material: they go straight into the encrypted payload and
+/// are never logged.
+pub(crate) fn read_material(path: &str) -> Option<String> {
+    let info = inspect(path);
+    if info.status != KeyFileStatus::Ok {
+        return None;
+    }
+    let bytes = std::fs::read(Path::new(&info.path)).ok()?;
+    let text = String::from_utf8(bytes).ok()?;
+    if text.trim().is_empty() {
+        return None;
+    }
+    Some(text)
+}
+
 /// Private keys found in `~/.ssh`, sorted by file name.
 pub fn discover() -> Vec<KeyFileInfo> {
     let Some(dir) = ssh_dir() else {
