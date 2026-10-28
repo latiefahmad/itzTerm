@@ -16,7 +16,7 @@ itzTerm treats workspaces as first-class citizens, allowing you to organize term
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 
-[Getting Started](#-getting-started) · [Features](#-features) · [Documentation](#-documentation) · [Contributing](CONTRIBUTING.md) · [Report Bug](https://github.com/latiefahmad/itzTerm/issues/new?template=bug_report.md) · [Request Feature](https://github.com/latiefahmad/itzTerm/issues/new?template=feature_request.md)
+[Getting Started](#-getting-started) · [Features](#-features) · [Website](https://latiefahmad.github.io/itzTerm/) · [Documentation](#-documentation) · [Contributing](CONTRIBUTING.md) · [Report Bug](https://github.com/latiefahmad/itzTerm/issues/new?template=bug_report.md) · [Request Feature](https://github.com/latiefahmad/itzTerm/issues/new?template=feature_request.md)
 
 </div>
 
@@ -256,7 +256,26 @@ bun run dev
 
 ### Landing Page
 
-This repository also includes a standalone Vite landing page under `landing/`.
+There are two landing pages in this repository.
+
+**`site/`** — the project site, served by GitHub Pages at <https://latiefahmad.github.io/itzTerm/>.
+It is a single self-contained `index.html` with no build step: download buttons that match the
+visitor's OS plus a feature and shortcut summary. Edit the file and refresh — there is nothing
+to compile.
+
+```bash
+# Preview locally (any static server works)
+bunx serve site
+
+# Publish: push to main (only site/ changes trigger the workflow)
+git add site && git commit -m "docs(site): ..." && git push
+```
+
+The deploy workflow is `.github/workflows/deploy-site.yml`. GitHub Pages must be set to
+**Source: GitHub Actions** in the repository settings; nothing is committed as build output.
+
+**`landing/`** — the Cloudflare Pages marketing site (`itzterm.dev`), a Vite + React app with
+prerendering and D1/R2-backed testimonials.
 
 ```bash
 # Install landing page dependencies (from landing/)

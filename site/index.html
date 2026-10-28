@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>itzTerm — a project-aware terminal</title>
+    <meta
+      name="description"
+      content="itzTerm is a modern, project-aware terminal manager built with Tauri. Organize terminals by project, chat with ACP agents, review Git, SSH into servers, and reach it from your phone."
+    />
+    <meta name="theme-color" content="#0c0c0c" />
+    <meta property="og:title" content="itzTerm — a project-aware terminal" />
+    <meta
+      property="og:description"
+      content="Organize terminals by project with persistent sessions, ACP agent chats, Git and worktree tools, SSH, and remote access from your phone."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230c0c0c'/%3E%3Cpath d='M8 12l4 4-4 4' stroke='%234ade80' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M16 20h8' stroke='%23e4e4e7' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        --bg: #0c0c0c;
+        --bg-raised: #111111;
+        --bg-panel: #161616;
+        --bg-hover: #1e1e1e;
+        --border: #262626;
+        --border-strong: #333333;
+        --fg: #e4e4e7;
+        --fg-muted: #a1a1aa;
+        --fg-dim: #71717a;
+        --accent: #4ade80;
+        --accent-dim: #22c55e;
+        --amber: #fbbf24;
+        --blue: #60a5fa;
+        --magenta: #c084fc;
+        --red: #f87171;
+        --mono: ui-monospace, "SF Mono", "Cascadia Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+        --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        --radius: 10px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .wrap {
+        width: min(1080px, calc(100% - 40px));
+        margin-inline: auto;
+      }
+
+      /* ---------- Top bar ---------- */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        border-bottom: 1px solid var(--border);
+        background: rgba(12, 12, 12, 0.82);
+        backdrop-filter: blur(12px);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        height: 56px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--mono);
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--fg);
+        letter-spacing: -0.01em;
+      }
+
+      .brand:hover {
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        border: 1px solid var(--border-strong);
+        border-radius: 7px;
+        background: var(--bg-panel);
+        color: var(--accent);
+        font-size: 13px;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        font-family: var(--mono);
+        font-size: 13px;
+      }
+
+      .nav a {
+        color: var(--fg-muted);
+      }
+
+      .nav a:hover {
+        color: var(--fg);
+        text-decoration: none;
+      }
+
+      @media (max-width: 720px) {
+        .nav {
+          display: none;
+        }
+      }
+
+      /* ---------- Terminal window chrome ---------- */
+      .window {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg-raised);
+        overflow: hidden;
+        box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
+      }
+
+      .window-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg-panel);
+      }
+
+      .dots {
+        display: flex;
+        gap: 6px;
+      }
+
+      .dots i {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--border-strong);
+      }
+
+      .dots i:nth-child(1) {
+        background: #ef4444;
+      }
+      .dots i:nth-child(2) {
+        background: #f59e0b;
+      }
+      .dots i:nth-child(3) {
+        background: #22c55e;
+      }
+
+      .window-title {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--fg-dim);
+      }
+
+      .window-body {
+        padding: 18px 20px;
+        font-family: var(--mono);
+        font-size: 13.5px;
+        line-height: 1.85;
+        overflow-x: auto;
+      }
+
+      .prompt {
+        color: var(--accent);
+      }
+
+      .comment {
+        color: var(--fg-dim);
+      }
+
+      .out {
+        color: var(--fg-muted);
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 7px;
+        height: 15px;
+        margin-left: 2px;
+        vertical-align: -3px;
+        background: var(--accent);
+        animation: blink 1.1s steps(2, start) infinite;
+      }
+
+      @keyframes blink {
+        to {
+          visibility: hidden;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .cursor {
+          animation: none;
+        }
+      }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        padding: 64px 0 48px;
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 44px;
+        align-items: center;
+      }
+
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 34px;
+          padding-top: 42px;
+        }
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--bg-panel);
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--fg-muted);
+      }
+
+      .eyebrow b {
+        color: var(--accent);
+        font-weight: 600;
+      }
+
+      h1 {
+        margin: 18px 0 14px;
+        font-family: var(--mono);
+        font-size: clamp(30px, 4.4vw, 46px);
+        line-height: 1.14;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+
+      h1 .dim {
+        color: var(--fg-dim);
+      }
+
+      .lede {
+        margin: 0 0 26px;
+        max-width: 46ch;
+        color: var(--fg-muted);
+        font-size: 16.5px;
+      }
+
+      /* ---------- Download ---------- */
+      .downloads {
+        display: grid;
+        gap: 12px;
+      }
+
+      .dl-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 16px;
+        border: 1px solid var(--accent-dim);
+        border-radius: var(--radius);
+        background: linear-gradient(180deg, rgba(74, 222, 128, 0.1), rgba(74, 222, 128, 0.03));
+      }
+
+      .dl-main-label {
+        font-family: var(--mono);
+        font-size: 14px;
+        color: var(--fg);
+      }
+
+      .dl-main-sub {
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--fg-dim);
+        margin-top: 2px;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border: 1px solid var(--border-strong);
+        border-radius: 8px;
+        background: var(--bg-panel);
+        color: var(--fg);
+        font-family: var(--mono);
+        font-size: 12.5px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
+
+      .btn:hover {
+        background: var(--bg-hover);
+        border-color: #4a4a4a;
+        text-decoration: none;
+      }
+
+      .btn-primary {
+        border-color: var(--accent-dim);
+        background: var(--accent);
+        color: #06210f;
+        font-weight: 600;
+      }
+
+      .btn-primary:hover {
+        background: #5ee98f;
+        border-color: var(--accent);
+      }
+
+      .dl-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      @media (max-width: 520px) {
+        .dl-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .dl-item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 10px 13px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-raised);
+        color: var(--fg-muted);
+        font-family: var(--mono);
+        font-size: 12.5px;
+        transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+      }
+
+      .dl-item:hover {
+        border-color: var(--border-strong);
+        background: var(--bg-panel);
+        color: var(--fg);
+        text-decoration: none;
+      }
+
+      .dl-item svg {
+        flex: none;
+        color: var(--fg-dim);
+      }
+
+      .dl-item:hover svg {
+        color: var(--accent);
+      }
+
+      .dl-item small {
+        display: block;
+        font-size: 10.5px;
+        color: var(--fg-dim);
+        line-height: 1.4;
+      }
+
+      .dl-item.is-current {
+        border-color: var(--accent-dim);
+      }
+
+      .alt-install {
+        margin-top: 4px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--bg-raised);
+        padding: 11px 13px;
+      }
+
+      .alt-install summary {
+        cursor: pointer;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--fg-muted);
+        list-style: none;
+      }
+
+      .alt-install summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .alt-install summary::before {
+        content: "$ ";
+        color: var(--accent);
+      }
+
+      .alt-install[open] summary {
+        margin-bottom: 9px;
+        color: var(--fg);
+      }
+
+      .code-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 7px;
+      }
+
+      .code-row code {
+        flex: 1;
+        min-width: 0;
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--fg-muted);
+        word-break: break-all;
+        line-height: 1.6;
+      }
+
+      .copy {
+        flex: none;
+        padding: 2px 7px;
+        border: 1px solid var(--border-strong);
+        border-radius: 5px;
+        background: transparent;
+        color: var(--fg-dim);
+        font-family: var(--mono);
+        font-size: 10px;
+        cursor: pointer;
+      }
+
+      .copy:hover {
+        color: var(--fg);
+        border-color: #4a4a4a;
+      }
+
+      /* ---------- Sections ---------- */
+      section {
+        padding: 56px 0;
+        border-top: 1px solid var(--border);
+      }
+
+      .section-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 8px;
+      }
+
+      h2 {
+        margin: 0;
+        font-family: var(--mono);
+        font-size: 20px;
+        letter-spacing: -0.02em;
+        font-weight: 650;
+      }
+
+      h2::before {
+        content: "## ";
+        color: var(--accent);
+        opacity: 0.7;
+      }
+
+      .section-sub {
+        margin: 0 0 30px;
+        max-width: 62ch;
+        color: var(--fg-muted);
+        font-size: 15px;
+      }
+
+      /* ---------- Feature grid ---------- */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+
+      @media (max-width: 900px) {
+        .cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      @media (max-width: 600px) {
+        .cards {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        padding: 18px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg-raised);
+        transition: border-color 0.16s ease, background 0.16s ease;
+      }
+
+      .card:hover {
+        border-color: var(--border-strong);
+        background: var(--bg-panel);
+      }
+
+      .card-icon {
+        display: grid;
+        place-items: center;
+        width: 30px;
+        height: 30px;
+        margin-bottom: 11px;
+        border: 1px solid var(--border-strong);
+        border-radius: 7px;
+        background: var(--bg-panel);
+        color: var(--accent);
+      }
+
+      .card h3 {
+        margin: 0 0 6px;
+        font-family: var(--mono);
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      .card p {
+        margin: 0;
+        font-size: 13.5px;
+        color: var(--fg-muted);
+        line-height: 1.6;
+      }
+
+      /* ---------- Table ---------- */
+      .table-wrap {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13.5px;
+      }
+
+      th {
+        text-align: left;
+        padding: 10px 14px;
+        background: var(--bg-panel);
+        border-bottom: 1px solid var(--border);
+        font-family: var(--mono);
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--fg-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        color: var(--fg-muted);
+        vertical-align: top;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      td:first-child {
+        color: var(--fg);
+        font-family: var(--mono);
+        font-size: 12.5px;
+        white-space: nowrap;
+      }
+
+      kbd {
+        display: inline-block;
+        padding: 1px 6px;
+        border: 1px solid var(--border-strong);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        background: var(--bg-panel);
+        font-family: var(--mono);
+        font-size: 11.5px;
+        color: var(--fg);
+      }
+
+      /* ---------- Footer ---------- */
+      footer {
+        padding: 40px 0 56px;
+        border-top: 1px solid var(--border);
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        flex-wrap: wrap;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--fg-dim);
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+
+      .footer-links a {
+        color: var(--fg-muted);
+      }
+
+      .note {
+        margin-top: 14px;
+        font-size: 12px;
+        color: var(--fg-dim);
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <a class="brand" href="#top">
+          <span class="brand-mark">&gt;_</span>
+          itzTerm
+        </a>
+        <nav class="nav">
+          <a href="#download">download</a>
+          <a href="#features">features</a>
+          <a href="#shortcuts">shortcuts</a>
+          <a href="https://github.com/latiefahmad/itzTerm">github&nbsp;↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <div class="wrap">
+        <div class="hero">
+          <div>
+            <span class="eyebrow">v<span data-version>1.1.1</span> · <b>Tauri 2</b> · MIT</span>
+            <h1>A terminal that knows<br /><span class="dim">which project you're in.</span></h1>
+            <p class="lede">
+              itzTerm treats workspaces as first-class citizens: organize terminals by project with
+              persistent sessions, chat with ACP agents, review Git, SSH into servers — and drive it
+              all from your phone.
+            </p>
+
+            <div class="downloads" id="download">
+              <div class="dl-main">
+                <div>
+                  <div class="dl-main-label">Download for <span data-os-label>your platform</span></div>
+                  <div class="dl-main-sub" data-os-file>detecting…</div>
+                </div>
+                <a class="btn btn-primary" data-primary-download href="https://github.com/latiefahmad/itzTerm/releases/latest">
+                  Download
+                </a>
+              </div>
+
+              <div class="dl-grid">
+                <a class="dl-item" data-platform="windows" href="https://github.com/latiefahmad/itzTerm/releases/download/v1.1.1/itzTerm_1.1.1_x64-setup.exe">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M3 5.5 10.2 4.5v7.1H3zM11.4 4.3 21 3v8.6h-9.6zM3 12.9h7.2V20L3 19zM11.4 12.9H21V21l-9.6-1.3z" />
+                  </svg>
+                  <span>Windows<small>.exe · x64</small></span>
+                </a>
+
+                <a class="dl-item" data-platform="macos" href="https://github.com/latiefahmad/itzTerm/releases/download/v1.1.1/itzTerm_1.1.1_aarch64.dmg">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.9-3-.9c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.2 1.1 0 1.6-.7 3-.7s1.8.7 3 .7 2-1.1 2.8-2.2c.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.4zM14.1 5.6c.6-.8 1.1-1.9 1-3-.9 0-2.1.6-2.8 1.4-.6.7-1.1 1.9-1 3 1.1.1 2.1-.6 2.8-1.4z" />
+                  </svg>
+                  <span>macOS<small>.dmg · Apple Silicon</small></span>
+                </a>
+
+                <a class="dl-item" data-platform="linux" href="https://github.com/latiefahmad/itzTerm/releases/download/v1.1.1/itzTerm_1.1.1_amd64.AppImage">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2c-1.7 0-3 1.4-3 3.2 0 1.1.5 1.9.9 2.6.4.7.6 1.3.5 2-.2 1-1 1.6-2 2.2-1.4.8-2.9 1.7-3.7 3.2-.6 1.1-.8 2.4-.4 3.6.5 1.5 2 2.2 3.5 2.2h2c.4 0 .8.2 1 .5.3.3.7.5 1.2.5s.9-.2 1.2-.5c.2-.3.6-.5 1-.5h2c1.5 0 3-.7 3.5-2.2.4-1.2.2-2.5-.4-3.6-.8-1.5-2.3-2.4-3.7-3.2-1-.6-1.8-1.2-2-2.2-.1-.7.1-1.3.5-2 .4-.7.9-1.5.9-2.6C15 3.4 13.7 2 12 2zm-2.1 4c.4 0 .7.4.7.9s-.3.9-.7.9-.7-.4-.7-.9.3-.9.7-.9zm4.2 0c.4 0 .7.4.7.9s-.3.9-.7.9-.7-.4-.7-.9.3-.9.7-.9z" />
+                  </svg>
+                  <span>Linux<small>.AppImage · x86_64</small></span>
+                </a>
+
+                <a class="dl-item" href="https://github.com/latiefahmad/itzTerm/releases/download/v1.1.1/itzTerm_1.1.1_amd64.deb">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <span>Debian / Ubuntu<small>.deb · amd64</small></span>
+                </a>
+
+                <a class="dl-item" href="https://github.com/latiefahmad/itzTerm/releases/download/v1.1.1/itzTerm-1.1.1-1.x86_64.rpm">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <span>Fedora / RHEL<small>.rpm · x86_64</small></span>
+                </a>
+
+                <a class="dl-item" href="https://github.com/latiefahmad/itzTerm/releases/latest">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                    <path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" stroke-linecap="round" />
+                  </svg>
+                  <span>All downloads<small>releases page ↗</small></span>
+                </a>
+              </div>
+
+              <details class="alt-install">
+                <summary>install from the shell</summary>
+                <div class="code-row">
+                  <code>brew tap latiefahmad/itzTerm &amp;&amp; brew install --cask itzterm</code>
+                  <button class="copy" type="button" data-copy>copy</button>
+                </div>
+                <div class="code-row">
+                  <code>curl -fsSL https://raw.githubusercontent.com/latiefahmad/itzTerm/main/scripts/install.sh | bash</code>
+                  <button class="copy" type="button" data-copy>copy</button>
+                </div>
+                <p class="note">
+                  macOS builds are Apple Silicon only. Intel Macs can build from source. Manual DMG
+                  downloads may hit Gatekeeper — prefer Homebrew or curl.
+                </p>
+              </details>
+            </div>
+          </div>
+
+          <div class="window" aria-hidden="true">
+            <div class="window-bar">
+              <span class="dots"><i></i><i></i><i></i></span>
+              <span class="window-title">itzTerm — ~/projects/api-gateway</span>
+            </div>
+            <div class="window-body">
+              <div><span class="comment"># one workspace per project, sessions persist</span></div>
+              <div><span class="prompt">~/projects/api-gateway</span> <span class="out">$</span> bun run dev</div>
+              <div class="out">  ready in 312ms · listening on :3000</div>
+              <div>&nbsp;</div>
+              <div><span class="prompt">~/projects/api-gateway</span> <span class="out">$</span> itzterm agent</div>
+              <div class="out">  ✓ claude-agent connected</div>
+              <div class="out">  ✓ worktree feat/rate-limit created</div>
+              <div class="out">  ✓ 12 files staged · diff ready</div>
+              <div>&nbsp;</div>
+              <div><span class="prompt">~/projects/api-gateway</span> <span class="out">$</span> ssh prod-eu-1</div>
+              <div class="out">  host key SHA256:9f3c…a71 verified</div>
+              <div><span class="prompt">prod-eu-1</span> <span class="out">$</span> <span class="cursor"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section id="features">
+        <div class="wrap">
+          <div class="section-head"><h2>features</h2></div>
+          <p class="section-sub">
+            Everything here ships in the desktop app — no plugins, no separate window.
+          </p>
+
+          <div class="cards">
+            <article class="card">
+              <div class="card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9h18M9 9v11" />
+                </svg>
+              </div>
+              <h3>Project workspaces</h3>
+              <p>
+                Terminals grouped by project with their own directories and state. Split panes, a
+                Windows Terminal-style tab bar, drag-and-drop reordering.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke-linecap="round" />
+                  <circle cx="12" cy="12" r="3.2" />
+                </svg>
+              </div>
+              <h3>ACP agent chat</h3>
+              <p>
+                Claude Agent, Codex, Gemini CLI, Cursor, OpenCode — in any pane, with model picker,
+                slash commands, <code>@</code> file mentions and permission prompts.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <circle cx="7" cy="6" r="2.4" /><circle cx="7" cy="18" r="2.4" /><circle cx="17" cy="12" r="2.4" />
+                  <path d="M7 8.4v7.2M9.2 6.8 14.8 11M9.2 17.2 14.8 13" stroke-linecap="round" />
+                </svg>
+              </div>
+              <h3>Git &amp; worktrees</h3>
+              <p>
+                Stage hunks, inline or side-by-side diffs, history graph, branches, stash. Create a
+                worktree from any base and switch between them.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <rect x="3" y="10" width="18" height="10" rx="2" /><path d="M7 10V7a5 5 0 0 1 10 0v3" />
+                </svg>
+              </div>
+              <h3>SSH &amp; SFTP</h3>
+              <p>
+                Native SSH on russh — no system <code>ssh</code> needed. Saved hosts, host-key
+                verification by fingerprint, an SFTP browser and in-place editor.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <rect x="7" y="2.5" width="10" height="19" rx="2.2" /><path d="M10.5 5.4h3" stroke-linecap="round" />
+                </svg>
+              </div>
+              <h3>Remote &amp; mobile</h3>
+              <p>
+                Turn on remote access for a cloudflared tunnel, scan the QR code, and drive your
+                live agent chats from a phone. Installable as a PWA.
+              </p>
+            </article>
+
+            <article class="card">
+              <div class="card-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                  <path d="m4 17 5.5-5.5 3.5 3.5L20 8" stroke-linecap="round" stroke-linejoin="round" /><path d="M15 8h5v5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3>Editor, browser, tools</h3>
+              <p>
+                Code and markdown editors with Mermaid, an embedded browser with a page-annotation
+                toolbar, ripgrep project search and live file watching.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="shortcuts">
+        <div class="wrap">
+          <div class="section-head"><h2>keyboard first</h2></div>
+          <p class="section-sub">Defaults on Windows and Linux; use <kbd>Cmd</kbd> in place of <kbd>Ctrl</kbd> on macOS.</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Action</th><th>Shortcut</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Agent launcher</td><td><kbd>Ctrl</kbd> + <kbd>T</kbd></td></tr>
+                <tr><td>New project</td><td><kbd>Ctrl</kbd> + <kbd>N</kbd></td></tr>
+                <tr><td>Command history</td><td><kbd>Ctrl</kbd> + <kbd>R</kbd></td></tr>
+                <tr><td>Command palette</td><td><kbd>Ctrl</kbd> + <kbd>K</kbd> or <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd></td></tr>
+                <tr><td>Next / previous tab</td><td><kbd>Ctrl</kbd> + <kbd>PageDown</kbd> / <kbd>PageUp</kbd></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="note">Every shortcut is rebindable in Settings.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap footer-inner">
+        <span>© <span data-year>2026</span> itzTerm · MIT licensed</span>
+        <span class="footer-links">
+          <a href="https://github.com/latiefahmad/itzTerm">source</a>
+          <a href="https://github.com/latiefahmad/itzTerm/issues">issues</a>
+          <a href="https://github.com/latiefahmad/itzTerm/blob/main/CONTRIBUTING.md">contributing</a>
+          <a href="https://github.com/latiefahmad/itzTerm/releases">releases</a>
+        </span>
+      </div>
+    </footer>
+
+    <script>
+      (() => {
+        const VERSION = '1.1.1'
+        const BASE = `https://github.com/latiefahmad/itzTerm/releases/download/v${VERSION}/`
+
+        const PLATFORMS = {
+          windows: { label: 'Windows', file: `itzTerm_${VERSION}_x64-setup.exe`, note: '.exe · x64' },
+          macos: { label: 'macOS', file: `itzTerm_${VERSION}_aarch64.dmg`, note: '.dmg · Apple Silicon' },
+          linux: { label: 'Linux', file: `itzTerm_${VERSION}_amd64.AppImage`, note: '.AppImage · x86_64' }
+        }
+
+        function detect() {
+          const ua = navigator.userAgent
+          const platform = navigator.platform || ''
+
+          // iPadOS 13+ reports a desktop UA; treat touch Macs as mobile-unsupported.
+          const isIPad = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1
+
+          if (/Win/i.test(platform) || /Windows/i.test(ua)) return 'windows'
+          if (/Mac/i.test(platform) || /Mac OS X/i.test(ua)) return isIPad ? null : 'macos'
+          if (/Linux|X11|CrOS/i.test(platform) || /Linux/i.test(ua)) {
+            // Android reports Linux; it is not a supported desktop target.
+            if (/Android/i.test(ua)) return null
+            return 'linux'
+          }
+          return null
+        }
+
+        function apply(key) {
+          const label = document.querySelector('[data-os-label]')
+          const fileEl = document.querySelector('[data-os-file]')
+          const primary = document.querySelector('[data-primary-download]')
+
+          const target = key && PLATFORMS[key]
+          if (!target) {
+            label.textContent = 'desktop'
+            fileEl.textContent = 'Windows, macOS (Apple Silicon) or Linux'
+            primary.textContent = 'See all downloads'
+            primary.href = 'https://github.com/latiefahmad/itzTerm/releases/latest'
+            return
+          }
+
+          label.textContent = target.label
+          fileEl.textContent = target.note
+          primary.textContent = `Download for ${target.label}`
+          primary.href = BASE + target.file
+
+          const tile = document.querySelector(`[data-platform="${key}"]`)
+          if (tile) tile.classList.add('is-current')
+        }
+
+        apply(detect())
+
+        document.querySelectorAll('[data-copy]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const code = button.parentElement.querySelector('code')
+            if (!code) return
+            const text = code.textContent
+            const done = () => {
+              const original = button.textContent
+              button.textContent = 'copied'
+              setTimeout(() => {
+                button.textContent = original
+              }, 1400)
+            }
+            if (navigator.clipboard?.writeText) {
+              navigator.clipboard.writeText(text).then(done, () => {})
+            } else {
+              const area = document.createElement('textarea')
+              area.value = text
+              document.body.appendChild(area)
+              area.select()
+              try {
+                document.execCommand('copy')
+                done()
+              } catch {
+                // Clipboard API unavailable in insecure contexts; leave the text selected.
+              }
+              document.body.removeChild(area)
+            }
+          })
+        })
+
+        document.querySelectorAll('[data-version]').forEach((el) => {
+          el.textContent = VERSION
+        })
+        const year = document.querySelector('[data-year]')
+        if (year) year.textContent = String(new Date().getFullYear())
+      })()
+    </script>
+  </body>
+</html>
