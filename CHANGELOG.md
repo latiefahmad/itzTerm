@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-10-28
+
+### Changes
+
+- chore(release): v1.1.1 ([0bb4aee](https://github.com/latiefahmad/itzTerm/commit/0bb4aee0ebd95c7c32a2a2d4e402c8132f19837c))
+- feat(ssh): export/import saved hosts as passphrase-encrypted vault (.itzterm-backup) ([295b4cf](https://github.com/latiefahmad/itzTerm/commit/295b4cf97c8fff44da01c9db8f6b6c851c78d215))
+- fix(build): embed Common-Controls v6 manifest into cargo test binaries ([d9df9aa](https://github.com/latiefahmad/itzTerm/commit/d9df9aaf36666300979e8f8ba47a371f40752cfc))
+- chore(brand): publisher/author/copyright -> latiefahmad (keep upstream contributor attribution) ([b8863c2](https://github.com/latiefahmad/itzTerm/commit/b8863c21cbb12b67fdc521a702cf0e2d12f2f3fd))
+- chore(brand): publisher/author/copyright -> Latief Ahmad; point meta to latiefahmad/itzTerm ([aa915e1](https://github.com/latiefahmad/itzTerm/commit/aa915e1c1e90d8531b8527d812aba57254408916))
+- ci: budget Actions minutes (release-tag-only builds, disable codeql/scorecard/star-history/daily e2e) ([1515cf7](https://github.com/latiefahmad/itzTerm/commit/1515cf7fb81a2d4e15c972fee922d01839db9280))
+- feat(updater): adopt updates.latief.id custom domain (r2.dev retired) ([c5e16e8](https://github.com/latiefahmad/itzTerm/commit/c5e16e8b2b46d6436f18a62633bb0fff4069cdd2))
+- fix(ci): R2 mirror step checks secrets at runtime instead of step-if ([9409974](https://github.com/latiefahmad/itzTerm/commit/94099748874bc44505563d1d41e2b6ef57582d7f))
+- feat(updater): point stable endpoint at public R2 mirror with GitHub fallback ([16e42a0](https://github.com/latiefahmad/itzTerm/commit/16e42a08f17fa4f2860209bf196e111801670048))
+- feat(updater): mirror release artifacts to public Cloudflare R2 (repo stays private) ([dabef5f](https://github.com/latiefahmad/itzTerm/commit/dabef5fc6b8763e275d3f2913a8275a647111517))
+- fix(brand): replace remaining legacy mark across renderer, landing, docs, and tauri assets ([267eac2](https://github.com/latiefahmad/itzTerm/commit/267eac240486e938b62560dad777708203c597b8))
+- docs(ci): note why CodeQL uploads fail on private repo ([3a48a1b](https://github.com/latiefahmad/itzTerm/commit/3a48a1b562141dae1902be635e1b92a15280d6fc))
+- docs(changelog): release v1.1.0 [skip ci] ([362c0a5](https://github.com/latiefahmad/itzTerm/commit/362c0a568d43866b9e1a89a6eb4102d6035ce6aa))
+
 ## [1.1.0] - 2026-10-22
 
 ### Changes
