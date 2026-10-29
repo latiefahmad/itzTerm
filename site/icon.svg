@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="itzTerm iT logo">
+  <rect x="10" y="10" width="1004" height="1004" rx="215" fill="#101418"/>
+  <rect x="126" y="126" width="772" height="772" rx="176" fill="none" stroke="#22E58B" stroke-width="32"/>
+  <circle cx="355" cy="355" r="54" fill="#22E58B"/>
+  <path d="M324 454 H362 Q396 454 396 488 V735 H352 C315 735 290 708 290 669 V488 Q290 454 324 454 Z" fill="#F6F8FA"/>
+  <path d="M453 311 H749 Q781 311 781 340 V386 Q781 416 749 416 H654 V711 Q654 736 629 736 H577 Q552 736 552 711 V416 H453 Q425 416 425 390 V339 Q425 311 453 311 Z" fill="#22E58B"/>
+</svg>
