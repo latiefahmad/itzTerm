@@ -269,6 +269,23 @@ pub(super) fn run_agent(
     }
 }
 
+/// What a repeated call looks like to a user: the tool kind plus the label the
+/// agent gave it. Two `edit` calls on different files share a kind term but not
+/// a title, so only a genuine repeat matches.
+fn tool_call_signature(
+    kind: Option<agent_client_protocol::schema::v1::ToolKind>,
+    title: Option<&str>,
+) -> String {
+    let kind = kind.map_or_else(
+        || "other".to_string(),
+        |kind| format!("{kind:?}").to_lowercase(),
+    );
+    match title {
+        Some(title) if !title.trim().is_empty() => format!("{kind}:{}", title.trim()),
+        _ => kind,
+    }
+}
+
 /// Handle an inbound `session/update` notification from the agent: drop a
 /// repeated command list, nudge the active turn's idle deadline, apply the
 /// story-3 replay-window suppression, bind tool calls, apply the AD-8 title
@@ -314,18 +331,37 @@ pub(super) async fn handle_session_notification(
         return Ok(());
     }
     let tool_call_id = match &notification.update {
-        agent_client_protocol::schema::v1::SessionUpdate::ToolCall(tool_call) => {
-            Some(tool_call.tool_call_id.0.to_string())
-        }
-        agent_client_protocol::schema::v1::SessionUpdate::ToolCallUpdate(update) => {
-            Some(update.tool_call_id.0.to_string())
-        }
+        agent_client_protocol::schema::v1::SessionUpdate::ToolCall(tool_call) => Some((
+            tool_call.tool_call_id.0.to_string(),
+            tool_call_signature(Some(tool_call.kind), Some(&tool_call.title)),
+        )),
+        agent_client_protocol::schema::v1::SessionUpdate::ToolCallUpdate(update) => Some((
+            update.tool_call_id.0.to_string(),
+            tool_call_signature(update.fields.kind, update.fields.title.as_deref()),
+        )),
         _ => None,
     };
-    if let Some(tool_call_id) = tool_call_id {
-        state
-            .lock()
-            .bind_tool_call(tool_call_id, session_id.clone());
+    if let Some((tool_call_id, signature)) = tool_call_id {
+        let mut guard = state.lock();
+        guard.bind_tool_call(tool_call_id.clone(), session_id.clone());
+        // A tool call fans out several updates (pending → in-progress →
+        // completed); only a first sighting is a new step.
+        if guard.note_turn_tool_call(&session_id, &tool_call_id) {
+            // The signature is what the user sees repeated — the same tool with
+            // the same label — so the repeat guard catches a real loop and not
+            // two legitimately different calls.
+            if guard.record_step(&session_id, Some(&signature)) {
+                if let Some(reason) = guard.take_step_stop(&session_id) {
+                    log::warn!(
+                        "[acp] session {} step budget stop: {} ({})",
+                        crate::logging::redact_session_id(&session_id),
+                        reason.as_str(),
+                        reason.message()
+                    );
+                }
+                guard.signal_cancel(&session_id);
+            }
+        }
     }
     // AD-8: gate native `session_info_update` fan-out. When the host already
     // owns a higher-precedence title (`BackgroundGenerated` from a prior
@@ -575,6 +611,26 @@ pub(super) async fn drive_connection(
                 // on user input, not wedged. Nudge the idle deadline so a
                 // user-input wait doesn't false-fire the idle timeout.
                 perm_state.lock().signal_idle(&session_string);
+
+                // Deleting is never delegated: whatever mode the agent runs in,
+                // "allow always" is withheld from a destructive call so the
+                // user is asked every time. Only `allow_always` is dropped;
+                // allow-once, reject and cancel keep the agent usable.
+                let guard = DeletionGuard::evaluate(
+                    tool_call.fields.kind,
+                    tool_call.fields.title.as_deref(),
+                    tool_call.fields.raw_input.as_ref(),
+                );
+                let options = if guard.destructive {
+                    log::info!(
+                        "[acp] deletion guard fired for tool call {}: {} — allow-always withheld",
+                        tool_call.tool_call_id.0,
+                        guard.reason
+                    );
+                    filter_always_allow(options)
+                } else {
+                    options
+                };
                 let request_id = {
                     let mut state = perm_state.lock();
                     state.bind_tool_call(

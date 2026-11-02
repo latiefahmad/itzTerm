@@ -73,6 +73,34 @@ pub(super) fn emit_turn_outcome(
     emit_turn_terminator(sinks, agent_id, session_id, turn_id, stop_reason, error);
 }
 
+/// Fan out the user-facing reason a host step guard ended a turn.
+///
+/// Emitted before the terminator, so a budget stop is never mistaken for an
+/// Esc. The `provider_code` field carries the drained stop name
+/// (`step_budget_exhausted` / `repeating_tool_call`) — that is the existing
+/// slot for "key on this instead of parsing the message".
+pub(crate) fn emit_step_stop(
+    sinks: &[Arc<dyn EventSink>],
+    agent_id: &AgentId,
+    session_id: &SessionId,
+    stop: &crate::acp::step_budget::StepStop,
+) {
+    let event = events::AgentErrorEvent {
+        agent_id: agent_id.clone(),
+        session_id: Some(session_id.clone()),
+        message: stop.message(),
+        code: None,
+        data: None,
+        provider_code: Some(stop.as_str()),
+    };
+    events::fan_out(
+        sinks,
+        Some(session_id.0.as_str()),
+        events::EVENT_AGENT_ERROR,
+        &event,
+    );
+}
+
 /// The durable copy of a failed turn's error. The session log replays it on
 /// every reopen, so it keeps the RPC error's own message, never the `data`
 /// that `Display` appends (it can carry request headers), masked and capped.

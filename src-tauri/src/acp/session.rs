@@ -81,6 +81,22 @@ pub(crate) struct DriverState {
     /// Client turn id of each active turn (`None` for turnless callers).
     /// Same lifecycle as `active_turns`; read by the teardown terminator.
     active_turn_ids: HashMap<String, Option<String>>,
+    /// Approval requests raised during the current turn, per session. Reset
+    /// when a turn begins so the turn diagnostic reports only its own work.
+    turn_approvals: HashMap<String, u32>,
+    /// Distinct tool calls seen during the current turn, per session. A tool
+    /// call fans out several updates (pending → in-progress → completed), so
+    /// the ids are remembered to count each call once.
+    turn_tool_calls: HashMap<String, HashSet<String>>,
+    /// Step budget for the session's current turn, and the stop it reported
+    /// once. Kept after the stop so the turn task can name the reason.
+    step_budgets: HashMap<
+        String,
+        (
+            crate::acp::step_budget::StepBudget,
+            Option<crate::acp::step_budget::StepStop>,
+        ),
+    >,
     /// In-flight idle-reset signal senders per active turn. The
     /// `session/update`/`tool_call` notification callback fires these
     /// (non-blocking) so the turn task's idle deadline resets on agent
@@ -272,6 +288,8 @@ impl DriverState {
     ) -> String {
         self.last_active.touch();
         let request_id = format!("perm-{}", uuid::Uuid::new_v4());
+        let approval_count = self.turn_approvals.entry(session_id.clone()).or_insert(0);
+        *approval_count = approval_count.saturating_add(1);
         self.pending_permissions.insert(
             request_id.clone(),
             PendingPermission {
@@ -662,7 +680,68 @@ impl DriverState {
         self.active_turns
             .insert(session_id.to_string(), Some(cancel_tx));
         self.idle_resets.insert(session_id.to_string(), idle_tx);
+        // A fresh turn starts its own approval tally.
+        self.turn_approvals.insert(session_id.to_string(), 0);
+        self.turn_tool_calls.remove(session_id);
+        self.step_budgets.insert(
+            session_id.to_string(),
+            (
+                crate::acp::step_budget::StepBudget::new(crate::acp::manager::step_budget()),
+                None,
+            ),
+        );
         Some(TurnHandles { cancel_rx, idle_rx })
+    }
+
+    /// Approvals raised during the session's current (or last) turn.
+    pub(crate) fn take_turn_approvals(&mut self, session_id: &str) -> u32 {
+        self.turn_approvals.remove(session_id).unwrap_or(0)
+    }
+
+    /// Record a tool call seen in the session's current turn. Returns `true`
+    /// the first time this id is seen; the usual pending → in-progress →
+    /// completed fan-out returns `false` for every repeat.
+    pub(crate) fn note_turn_tool_call(&mut self, session_id: &str, tool_call_id: &str) -> bool {
+        self.turn_tool_calls
+            .entry(session_id.to_string())
+            .or_default()
+            .insert(tool_call_id.to_string())
+    }
+
+    /// Distinct tool calls seen in the session's current (or last) turn.
+    pub(crate) fn take_turn_tool_calls(&mut self, session_id: &str) -> u32 {
+        self.turn_tool_calls
+            .remove(session_id)
+            .map_or(0, |calls| u32::try_from(calls.len()).unwrap_or(u32::MAX))
+    }
+
+    /// Charge one step to the session's turn budget.
+    ///
+    /// Returns `true` the first time the budget stops the turn, so the caller
+    /// cancels the agent exactly once. Later calls return `false` even though
+    /// the stop is still recorded.
+    pub(crate) fn record_step(&mut self, session_id: &str, signature: Option<&str>) -> bool {
+        let Some((budget, stop)) = self.step_budgets.get_mut(session_id) else {
+            return false;
+        };
+        if stop.is_some() {
+            return false;
+        }
+        if let Some(reason) = budget.record(signature) {
+            *stop = Some(reason);
+            return true;
+        }
+        false
+    }
+
+    /// The stop that ended the session's turn budget, if one fired.
+    pub(crate) fn take_step_stop(
+        &mut self,
+        session_id: &str,
+    ) -> Option<crate::acp::step_budget::StepStop> {
+        self.step_budgets
+            .remove(session_id)
+            .and_then(|(_budget, stop)| stop)
     }
 
     /// Record the client turn id of the turn just admitted by

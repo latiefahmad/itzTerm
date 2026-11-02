@@ -35,6 +35,7 @@ pub mod provider_errors;
 pub mod session;
 pub mod session_payload;
 pub mod session_persistence;
+pub mod step_budget;
 pub mod terminal;
 
 // Re-exported for the renderer bridge and `lib.rs` wiring. `AcpManager`
@@ -71,6 +72,9 @@ pub use session_persistence::{
     PersistedEventRecord, PersistedSessionStatus, SessionIndexEntry, SessionPersistence,
     SessionPersistenceError, SessionRegistration,
 };
+
+#[cfg(test)]
+mod step_budget_tests;
 
 #[cfg(test)]
 mod tests;

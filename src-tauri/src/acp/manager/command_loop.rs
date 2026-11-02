@@ -676,6 +676,9 @@ pub(super) async fn run_command_loop(
                 host_plan_server.begin_turn(&agent_id.0, &session_id.0);
                 // Story 1.8 T3.2: capture the client turn-id to echo on prompt_complete.
                 let turn_turn_id = turn_id.clone();
+                let turn_started = std::time::Instant::now();
+                let diag_state = turn_state.clone();
+                let diag_session = session_id.clone();
                 let spawn_result = cx.spawn(async move {
                     // Race the turn against completion, a cancel signal, an
                     // optional idle deadline (reset by agent `session/update`
@@ -722,18 +725,29 @@ pub(super) async fn run_command_loop(
                     )
                     .await;
 
-                    match &outcome {
-                        Ok(stop_reason) => log::info!(
-                            "[acp] session {} turn complete: stop_reason={stop_reason:?}",
-                            crate::logging::redact_session_id(&log_session.0)
-                        ),
-                        Err(message) => {
-                            log::warn!(
-                                "[acp] session {} turn failed: {message}",
-                                crate::logging::redact_session_id(&log_session.0)
-                            )
+                    let mut diagnostics = TurnDiagnostics::default();
+                    let step_stop = {
+                        let mut guard = diag_state.lock();
+                        let approvals = guard.take_turn_approvals(&diag_session.0);
+                        let tool_calls = guard.take_turn_tool_calls(&diag_session.0);
+                        for _ in 0..approvals {
+                            diagnostics.record_approval();
                         }
-                    }
+                        for _ in 0..tool_calls {
+                            diagnostics.record_tool_call();
+                        }
+                        guard.take_step_stop(&diag_session.0)
+                    };
+                    let outcome_label = match (&step_stop, &outcome) {
+                        (Some(stop), _) => stop.as_str().to_string(),
+                        (None, Ok(stop_reason)) => format!("{stop_reason:?}"),
+                        (None, Err(detail)) => format!("{:?}", detail.turn_stop()).to_lowercase(),
+                    };
+                    log::info!(
+                        "[acp] session {} {}",
+                        crate::logging::redact_session_id(&log_session.0),
+                        diagnostics.line(turn_started.elapsed(), &outcome_label)
+                    );
 
                     // Turn is over: clear the host-plan routing marker and the
                     // driver active-turn marker, then resolve permissions that
@@ -776,6 +790,12 @@ pub(super) async fn run_command_loop(
                             crate::logging::redact_session_id(&log_session.0)
                         );
                     } else {
+                        // A host stop ends the turn with a reason the user can
+                        // read, not a bare "cancelled": the cancel the budget
+                        // sent looks identical to an Esc without this.
+                        if let Some(stop) = &step_stop {
+                            emit_step_stop(&turn_sinks, &turn_agent_id, &session_id, stop);
+                        }
                         emit_turn_outcome(
                             &turn_sinks,
                             &turn_agent_id,

@@ -90,6 +90,20 @@ pub fn turn_idle_timeout() -> Option<Duration> {
 pub(super) static TURN_TIMEOUT_OVERRIDE: LazyLock<parking_lot::Mutex<Option<u64>>> =
     LazyLock::new(|| parking_lot::Mutex::new(None));
 
+/// Tool-call budget for a single turn. Precedence:
+/// `ITZTERM_ACP_TURN_STEP_BUDGET` (env, operator/diagnostic; must be > 0) →
+/// [`TURN_STEP_BUDGET`]. The agent owns its own loop, so this is the only hard
+/// ceiling the host can enforce on a turn that never converges; the repeat
+/// guard in [`crate::acp::step_budget`] catches the common short cycle long
+/// before the budget runs out.
+pub(crate) fn step_budget() -> u32 {
+    std::env::var("ITZTERM_ACP_TURN_STEP_BUDGET")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .filter(|budget: &u32| *budget > 0)
+        .unwrap_or(TURN_STEP_BUDGET)
+}
+
 /// Set the in-process turn-timeout override (secs, or `None` to clear). Called
 /// by the `acp_set_turn_timeout` Tauri command (desktop renderer settings).
 pub fn set_turn_timeout_override(secs: Option<u64>) {

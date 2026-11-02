@@ -63,6 +63,7 @@ use crate::acp::session_persistence::{
 use crate::web::EventSink;
 
 mod command_loop;
+mod deletion_guard;
 mod driver;
 mod gates;
 
@@ -77,6 +78,7 @@ mod spawn_error;
 pub(crate) mod stderr_ring;
 mod timeouts;
 mod turn;
+mod turn_diagnostics;
 mod wire;
 mod worktree_branch;
 
@@ -96,11 +98,18 @@ mod test_driver;
 pub(crate) use test_driver::{FakeAuth, FakeDriver, FakeTurn};
 #[cfg(test)]
 mod real_loop_tests;
+#[cfg(test)]
+mod deletion_guard_tests;
+#[cfg(test)]
+mod turn_diagnostics_tests;
 
+pub(crate) use deletion_guard::{filter_always_allow, DeletionGuard};
 pub(crate) use history::*;
 pub use reopen::*;
 pub use spawn_error::*;
+pub(crate) use timeouts::step_budget;
 pub use timeouts::*;
+pub(crate) use turn_diagnostics::TurnDiagnostics;
 pub(crate) use worktree_branch::*;
 
 /// How long to wait for the agent to answer `initialize` before treating the
@@ -119,6 +128,12 @@ const SESSION_NEW_TIMEOUT: Duration = Duration::from_secs(60);
 /// matches the `session/new` budget: a load replays the full conversation and
 /// can legitimately take a while on large histories.
 const SESSION_REOPEN_TIMEOUT: Duration = Duration::from_secs(60);
+/// Tool calls allowed in a single turn before the host stops it. Generous by
+/// design — a real refactor can easily spend 100 calls — but finite, so a turn
+/// that never converges ends with a named reason instead of running until the
+/// user notices. Overridable via `ITZTERM_ACP_TURN_STEP_BUDGET`
+/// ([`step_budget`]).
+const TURN_STEP_BUDGET: u32 = 200;
 /// How long to wait, after `session/cancel`, for the agent to honor the cancel
 /// and reply to the in-flight prompt before we forcibly resolve the turn.
 const CANCEL_GRACE: Duration = Duration::from_secs(5);
