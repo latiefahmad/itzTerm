@@ -175,6 +175,7 @@ export default function WorkspaceLayout(): React.JSX.Element {
     handleNewBrowserTab,
     handleOpenThemePicker,
     handleOpenAppPreferences: overlayActions.handleOpenAppPreferences,
+    handleOpenSnippets: overlayActions.handleOpenSnippets,
     setIsCommandPaletteOpen,
     setIsCommandHistoryOpen,
     setIsNewProjectModalOpen

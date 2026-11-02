@@ -344,6 +344,12 @@ export const DEFAULT_KEYBOARD_SHORTCUTS: KeyboardShortcutsConfig = {
     description: 'Search command history',
     defaultKey: 'ctrl+r'
   },
+  snippets: {
+    id: 'snippets',
+    label: 'Snippets',
+    description: 'Open the snippets list to insert a saved command',
+    defaultKey: 'ctrl+shift+s'
+  },
   newProject: {
     id: 'newProject',
     label: 'New Project',

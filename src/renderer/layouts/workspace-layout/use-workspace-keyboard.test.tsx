@@ -49,11 +49,41 @@ function mountKeyboard(
       getActiveKey,
       handleNewBrowserTab: vi.fn(),
       handleOpenThemePicker: vi.fn(),
+      handleOpenAppPreferences: vi.fn(),
+      handleOpenSnippets: vi.fn(),
       setIsCommandPaletteOpen: vi.fn(),
       setIsCommandHistoryOpen: vi.fn(),
       setIsNewProjectModalOpen: vi.fn()
     })
   )
+}
+
+function mountKeyboardSpies(overrides: Record<string, string> = {}) {
+  const getActiveKey = (id: string): string =>
+    overrides[id] ??
+    DEFAULT_KEYBOARD_SHORTCUTS[id as keyof typeof DEFAULT_KEYBOARD_SHORTCUTS]?.defaultKey ??
+    ''
+  const handleOpenSnippets = vi.fn()
+  renderHook(() =>
+    useWorkspaceKeyboard({
+      activeTab: undefined,
+      activeProjectId: '',
+      projects: [],
+      selectProject: vi.fn(),
+      isWorkspaceRoute: true,
+      isAgentLauncherOpen: false,
+      closeActiveTab: vi.fn(),
+      getActiveKey,
+      handleNewBrowserTab: vi.fn(),
+      handleOpenThemePicker: vi.fn(),
+      handleOpenAppPreferences: vi.fn(),
+      handleOpenSnippets,
+      setIsCommandPaletteOpen: vi.fn(),
+      setIsCommandHistoryOpen: vi.fn(),
+      setIsNewProjectModalOpen: vi.fn()
+    })
+  )
+  return { handleOpenSnippets }
 }
 
 function press(key: string, init: KeyboardEventInit = {}, target: EventTarget = document.body) {
@@ -172,5 +202,34 @@ describe('useWorkspaceKeyboard save shortcut on a canvas tab', () => {
     press('s', { ctrlKey: true })
 
     expect(saveCanvas).toHaveBeenCalledWith('proj-1')
+  })
+})
+
+describe('useWorkspaceKeyboard snippets shortcut', () => {
+  it('Ctrl+Shift+S opens the snippets overlay', () => {
+    const { handleOpenSnippets } = mountKeyboardSpies()
+
+    press('s', { ctrlKey: true, shiftKey: true })
+
+    expect(handleOpenSnippets).toHaveBeenCalledTimes(1)
+  })
+
+  it('a custom snippets key wins and the default no longer opens it', () => {
+    const { handleOpenSnippets } = mountKeyboardSpies({ snippets: 'alt+y' })
+
+    press('s', { ctrlKey: true, shiftKey: true })
+    expect(handleOpenSnippets).not.toHaveBeenCalled()
+
+    press('y', { altKey: true })
+    expect(handleOpenSnippets).toHaveBeenCalledTimes(1)
+  })
+
+  it('Ctrl+Shift+S does not save the editor file', () => {
+    const { handleOpenSnippets } = mountKeyboardSpies()
+
+    press('s', { ctrlKey: true, shiftKey: true })
+
+    expect(handleOpenSnippets).toHaveBeenCalled()
+    expect(mockWrite).not.toHaveBeenCalled()
   })
 })

@@ -30,6 +30,7 @@ interface UseWorkspaceKeyboardOptions {
   handleNewBrowserTab: (paneId?: string) => void
   handleOpenThemePicker: () => void
   handleOpenAppPreferences: () => void
+  handleOpenSnippets: () => void
   setIsCommandPaletteOpen: (open: boolean) => void
   setIsCommandHistoryOpen: (open: boolean) => void
   setIsNewProjectModalOpen: (open: boolean) => void
@@ -48,6 +49,7 @@ export function useWorkspaceKeyboard({
   handleNewBrowserTab,
   handleOpenThemePicker,
   handleOpenAppPreferences,
+  handleOpenSnippets,
   setIsCommandPaletteOpen,
   setIsCommandHistoryOpen,
   setIsNewProjectModalOpen
@@ -233,6 +235,17 @@ export function useWorkspaceKeyboard({
         return
       }
 
+      // Snippets (Ctrl+Shift+S)
+      if (matchesShortcut(e, getActiveKey('snippets'))) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur()
+        }
+        handleOpenSnippets()
+        return
+      }
+
       // Color theme picker (Ctrl+Alt+T)
       if (matchesShortcut(e, getActiveKey('colorThemePicker'))) {
         e.preventDefault()
@@ -367,6 +380,7 @@ export function useWorkspaceKeyboard({
     isSidebarVisible,
     handleOpenThemePicker,
     handleOpenAppPreferences,
+    handleOpenSnippets,
     closeActiveTab,
     isAgentLauncherOpen
   ])
