@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-02
+
+### Changes
+
+- chore(release): v1.2.0 ([68a0ba7](https://github.com/latiefahmad/itzTerm/commit/68a0ba7ab1276fe72bcc42464bcaa8bbcea3034a))
+- feat(shortcuts): bind Ctrl+Shift+S to the snippets list ([c3e53fc](https://github.com/latiefahmad/itzTerm/commit/c3e53fc5b3156d1caf4b55d7e2d2813aef3f25b9))
+- feat(acp): guard deletions, cap turn steps and log per-turn diagnostics ([449e3e8](https://github.com/latiefahmad/itzTerm/commit/449e3e86c2e05e6f0ede0a2bdd0d94e76c41cb40))
+- docs(site): use the app icon for favicon and social previews ([afe2c17](https://github.com/latiefahmad/itzTerm/commit/afe2c176218a52724f0228613f711390821d5cec))
+- fix(acp): explain Windows spawn failures instead of surfacing os error 193 ([925867e](https://github.com/latiefahmad/itzTerm/commit/925867e73ecfb9e6494b84be08431ed30cc78300))
+- docs(site): add static landing page for GitHub Pages ([96e5c17](https://github.com/latiefahmad/itzTerm/commit/96e5c179c91288f7f303bfb5921f900e3268a42f))
+- docs(changelog): release v1.1.1 [skip ci] ([33da190](https://github.com/latiefahmad/itzTerm/commit/33da190488bb504b6522078efca94e35166e1033))
+
 ## [1.1.1] - 2026-10-28
 
 ### Changes
