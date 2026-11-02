@@ -1,8 +1,15 @@
-echo "🔍 Running TypeScript typecheck..."
-bun run typecheck
-echo "✅ TypeScript check passed!"
-echo ""
-echo "🔍 Running Biome on staged files..."
+#!/usr/bin/env sh
+# Keep commits cheap: format/lint only the files being committed and check
+# types for the renderer only. The full three-config typecheck and the test
+# suite run in .husky/pre-push; every push to main is also verified in CI.
+echo "🔍 Biome on staged files..."
 bun x biome check --staged --no-errors-on-unmatched --write
 git update-index --again
 echo "✅ Biome check passed!"
+
+echo "🔍 Typechecking the web renderer..."
+if ! bunx tsc --noEmit -p tsconfig.web.json; then
+  echo "❌ Typecheck failed — fix it, or run 'bun run typecheck' for the full picture."
+  exit 1
+fi
+echo "✅ Typecheck passed!"

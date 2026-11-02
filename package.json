@@ -61,6 +61,7 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "test": "vitest run",
+    "test:quick": "vitest run --maxWorkers=2",
     "test:e2e": "playwright test -c tests/e2e/playwright.config.ts",
     "test:shell": "bats scripts/tests",
     "test:watch": "vitest",

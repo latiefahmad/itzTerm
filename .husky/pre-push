@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+# The gate that matters: run before anything leaves this machine.
+# Caps vitest workers so a push does not pin every core.
+set -e
+
+echo "🔍 Running TypeScript typecheck (node, web, test)..."
+bun run typecheck
+echo "✅ TypeScript check passed!"
+
+echo "🔍 Running tests (capped at 2 workers)..."
+bun run test:quick
+echo "✅ Tests passed!"
