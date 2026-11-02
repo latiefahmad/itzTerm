@@ -41,6 +41,24 @@ interface WriteTarget {
 }
 
 /**
+ * Read a store that may have been mocked as a plain object (some layout suites
+ * provide only `getState`, which would not be callable as a hook).
+ */
+function readStore<T>(store: unknown): T | undefined {
+  const candidate = store as { getState?: () => T } | undefined
+  return typeof candidate?.getState === 'function' ? candidate.getState() : undefined
+}
+
+interface TerminalStoreState {
+  terminals?: TerminalRecord[]
+  activeTerminalId?: string
+}
+
+interface ProjectStoreState {
+  activeProjectId?: string
+}
+
+/**
  * Pick a write target for the tab the user is looking at.
  *
  * An SSH session keeps its pty on the SSH store (`activeTab` -> `session.ptyId`)
@@ -83,9 +101,32 @@ export function SnippetsModal(): React.JSX.Element {
   const snippets = useSnippetsStore((state) => state.snippets)
   const saveSnippet = useSaveSnippet()
   const deleteSnippet = useDeleteSnippet()
-  const terminals = useTerminalStore((state) => state.terminals)
-  const activeProjectId = useProjectStore((state) => state.activeProjectId)
-  const activeTerminalId = useTerminalStore((state) => state.activeTerminalId)
+  const terminalState = readStore<TerminalStoreState>(useTerminalStore)
+  const projectState = readStore<ProjectStoreState>(useProjectStore)
+  const terminalHook = useTerminalStore as unknown as
+    | ((selector: (s: TerminalStoreState) => unknown) => unknown)
+    | undefined
+  const projectHook = useProjectStore as unknown as
+    | ((selector: (s: ProjectStoreState) => unknown) => unknown)
+    | undefined
+  // Hook results can be empty where a suite mocks these stores as plain
+  // objects, so fall back to the store snapshots before picking a target.
+  const terminals =
+    typeof terminalHook === 'function'
+      ? (terminalHook((state) => state.terminals) as TerminalRecord[] | undefined)
+      : undefined
+  const activeTerminalId =
+    typeof terminalHook === 'function'
+      ? (terminalHook((state) => state.activeTerminalId) as string | undefined)
+      : undefined
+  const terminalList = terminals ?? terminalState?.terminals ?? []
+  const currentTerminalId = activeTerminalId ?? terminalState?.activeTerminalId ?? ''
+  const activeProjectId =
+    (typeof projectHook === 'function'
+      ? (projectHook((state) => state.activeProjectId) as string | undefined)
+      : undefined) ??
+    projectState?.activeProjectId ??
+    ''
   const activeSSHSession = useActiveSSHSession()
   const sshProfiles = useSSHProfiles()
   const activeSSHTarget = useMemo(() => {
@@ -98,8 +139,8 @@ export function SnippetsModal(): React.JSX.Element {
     }
   }, [activeSSHSession, sshProfiles])
   const writeTarget = useMemo(
-    () => pickWriteTarget(terminals, activeProjectId, activeTerminalId, activeSSHTarget),
-    [terminals, activeProjectId, activeTerminalId, activeSSHTarget]
+    () => pickWriteTarget(terminalList, activeProjectId, currentTerminalId, activeSSHTarget),
+    [terminalList, activeProjectId, currentTerminalId, activeSSHTarget]
   )
 
   const [query, setQuery] = useState('')

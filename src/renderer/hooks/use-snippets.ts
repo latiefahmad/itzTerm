@@ -35,12 +35,17 @@ export function useSnippetsLoader(): void {
 
   useEffect(() => {
     async function load(): Promise<void> {
+      // Suites that mock `lib/api` partially (layout tests) may not expose the
+      // persistence facade at all; there is nothing to hydrate then.
+      if (typeof persistenceApi?.read !== 'function') return
       const result = await persistenceApi.read<unknown>(PersistenceKeys.snippets)
       if (result.success && isSnippetLibrary(result.data)) {
         setSnippets(result.data.snippets)
       }
     }
-    load()
+    load().catch(() => {
+      // An unreadable library leaves the in-memory list untouched.
+    })
   }, [setSnippets])
 }
 
