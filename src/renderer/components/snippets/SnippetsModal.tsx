@@ -13,6 +13,7 @@ import { logFrontendError } from '@/lib/log-api'
 import { randomUUID } from '@/lib/uuid'
 import { useProjectStore } from '@/stores/project-store'
 import { useSnippetsStore } from '@/stores/snippets-store'
+import { useActiveSSHSession, useSSHProfiles } from '@/stores/ssh-store'
 import { useTerminalStore } from '@/stores/terminal-store'
 import type { Terminal as TerminalRecord } from '@/types/project'
 import { SnippetEditor } from './SnippetEditor'
@@ -33,24 +34,42 @@ function newId(): string {
   return `sn-${randomUUID()}`
 }
 
+/** A PTY that reference text can be typed into: a local terminal or an SSH shell. */
+interface WriteTarget {
+  ptyId: string
+  label: string
+}
+
 /**
- * Pick a write target: the project's connected terminal (active first), else
- * any connected terminal. Restored terminals only gain a ptyId after their
- * PTY re-spawns, so a "first terminal" without one is not a real target.
+ * Pick a write target for the tab the user is looking at.
+ *
+ * An SSH session keeps its pty on the SSH store (`activeTab` -> `session.ptyId`)
+ * and registers its terminal with `activate: false`, so `activeTerminalId` still
+ * points at a workspace pane while the SSH tab is on screen. The visible SSH
+ * shell therefore wins; only its own pty is a real target.
+ *
+ * Otherwise the project's connected terminal (active first), else any connected
+ * terminal. Restored terminals only gain a ptyId after their PTY re-spawns, so
+ * a "first terminal" without one is not a real target.
  */
 function pickWriteTarget(
   terminals: TerminalRecord[],
   projectId: string,
-  activeTerminalId: string
-): TerminalRecord | undefined {
+  activeTerminalId: string,
+  sshSession: { status: string; ptyId: string | null; label: string } | null
+): WriteTarget | undefined {
+  if (sshSession?.status === 'connected' && sshSession.ptyId) {
+    return { ptyId: sshSession.ptyId, label: sshSession.label }
+  }
+
   const inProject = terminals.filter((t) => t.projectId === projectId)
   const connected = inProject.filter((t) => t.ptyId !== undefined)
-  return (
+  const target =
     connected.find((t) => t.id === activeTerminalId) ??
     connected[0] ??
     inProject[0] ??
     terminals.find((t) => t.ptyId !== undefined)
-  )
+  return target?.ptyId ? { ptyId: target.ptyId, label: target.name } : undefined
 }
 
 /**
@@ -67,9 +86,20 @@ export function SnippetsModal(): React.JSX.Element {
   const terminals = useTerminalStore((state) => state.terminals)
   const activeProjectId = useProjectStore((state) => state.activeProjectId)
   const activeTerminalId = useTerminalStore((state) => state.activeTerminalId)
+  const activeSSHSession = useActiveSSHSession()
+  const sshProfiles = useSSHProfiles()
+  const activeSSHTarget = useMemo(() => {
+    if (!activeSSHSession) return null
+    const profile = sshProfiles.find((p) => p.id === activeSSHSession.profileId)
+    return {
+      status: activeSSHSession.status,
+      ptyId: activeSSHSession.ptyId,
+      label: `SSH: ${profile?.name ?? 'host'}`
+    }
+  }, [activeSSHSession, sshProfiles])
   const writeTarget = useMemo(
-    () => pickWriteTarget(terminals, activeProjectId, activeTerminalId),
-    [terminals, activeProjectId, activeTerminalId]
+    () => pickWriteTarget(terminals, activeProjectId, activeTerminalId, activeSSHTarget),
+    [terminals, activeProjectId, activeTerminalId, activeSSHTarget]
   )
 
   const [query, setQuery] = useState('')
@@ -306,15 +336,15 @@ export function SnippetsModal(): React.JSX.Element {
 async function sendToTerminal(
   text: string,
   snippet: SnippetDefinition,
-  target: TerminalRecord | undefined
+  target: WriteTarget | undefined
 ): Promise<void> {
-  if (!target?.ptyId) {
+  if (!target) {
     toast.error(
       `No connected terminal to insert "${snippet.name}" into — open a terminal tab first`
     )
     void logFrontendError({
       level: 'warn',
-      message: `snippets: insert target missing (name=${snippet.name}, p=${target?.projectId ?? '-'})`,
+      message: `snippets: insert target missing (name=${snippet.name})`,
       source: 'snippets:insert'
     })
     return
@@ -324,7 +354,7 @@ async function sendToTerminal(
     toast.error(`Failed to insert "${snippet.name}"`)
     void logFrontendError({
       level: 'warn',
-      message: `snippets: PTY write failed (name=${snippet.name}, pty=${target.ptyId})`,
+      message: `snippets: PTY write failed (name=${snippet.name}, pty=${target.ptyId}, target=${target.label})`,
       source: 'snippets:insert'
     })
   }
