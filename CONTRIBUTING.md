@@ -55,22 +55,29 @@ Feature requests are welcome! Please:
 
 1. Before making architectural or implementation changes, read `AGENTS.md` for the repository's current policies, boundaries, and known pitfalls.
 2. Make your changes
-3. Run tests:
-   ```bash
-   bun run test
-   ```
-4. Run type checking:
-   ```bash
-   bun run typecheck
-   ```
-5. Run linting:
-   ```bash
-   bun run lint
-   ```
-6. Test the app manually:
+3. Test the app manually:
    ```bash
    bun run dev
    ```
+
+Git hooks do most of the checking for you, because the full suite is heavy to run by hand:
+
+| Hook | What runs | Why |
+| --- | --- | --- |
+| `pre-commit` | Biome on staged files, then `tsc` for the web renderer | Fast enough for every commit |
+| `pre-push` | All three tsconfigs, then the test suite capped at two workers | Last gate before code leaves your machine |
+
+A push also triggers the full lint, typecheck and test job on GitHub (`.github/workflows/main.yml`), plus the Rust checks when `src-tauri/` changed, so CI is the authoritative result.
+
+If you want to run checks locally anyway, prefer the cheaper targets:
+
+```bash
+bun run test:quick       # Full suite, capped at 2 workers
+bun run test:quick path/to/file.test.ts   # One file
+bun run ci               # Biome only (seconds)
+```
+
+`bun run typecheck` (three `tsc` processes) and `cargo test` are memory- and CPU-heavy on large checkouts; leave them to CI unless you are changing Rust or chasing a type error.
 
 #### Commit Guidelines
 
