@@ -46,12 +46,6 @@ jobs:
 
   rust:
     name: Rust Checks
-    # Rust only moves when src-tauri, the canvas bundle, or the web client it
-    # embeds changes. A documentation or renderer-only push skips this job.
-    if: |
-      github.event.created == false || github.event.forced == true ||
-      contains(join(github.event.commits.*.modified, ' '), 'src-tauri/') ||
-      contains(join(github.event.commits.*.added, ' '), 'src-tauri/')
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     steps:
@@ -97,17 +91,11 @@ jobs:
       - name: Assert dist-web/index.html exists
         run: test -f dist-web/index.html && test -s dist-web/index.html
 
-      # Warning only: the pin points at a release of the external figcraft fork
-      # (`gnoviawan/figcraft`), and that asset is deleted when the fork retires
-      # the build. Neither cargo check nor cargo test reads canvas/bundle, so a
-      # gap there must not block a push to main; pr-validation.yml keeps the
-      # strict download-and-verify check for contributors.
-      - name: Check figcraft pin
-        run: bun scripts/canvas/check-figcraft-pin.mjs
-
-      - name: Fetch and verify figcraft bundle (canvas/bundle/)
-        continue-on-error: true
-        run: bun scripts/canvas/fetch-figcraft-bundle.mjs
+      # The ripgrep sidecars are committed without their executable bit, so a
+      # fresh Linux checkout cannot spawn them and the dir-search tests die with
+      # EACCES. pr-validation.yml applies the same guard.
+      - name: Mark sidecar binaries executable
+        run: chmod +x src-tauri/bin/*
 
       - name: Cargo check
         working-directory: src-tauri

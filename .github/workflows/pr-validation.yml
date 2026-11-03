@@ -206,6 +206,12 @@ jobs:
       - name: Assert dist-web/index.html exists
         run: test -f dist-web/index.html && test -s dist-web/index.html
 
+      # The ripgrep sidecars are committed without their executable bit, so a
+      # fresh Linux checkout cannot spawn them and the dir-search tests die with
+      # EACCES.
+      - name: Mark sidecar binaries executable
+        run: chmod +x src-tauri/bin/*
+
       # The pin must name the same tag as the figcraft-mcp dependency (skips
       # with a message until src-tauri depends on it), and its bundle must
       # download and match the pinned sha256.
