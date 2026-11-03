@@ -459,7 +459,7 @@ pub fn import(
         .to_create
         .iter()
         .chain(plan.to_update.iter())
-        .filter_map(|p| vault_key_warning(p))
+        .filter_map(vault_key_warning)
         .collect::<Vec<_>>();
 
     let mut credentials_restored = 0usize;

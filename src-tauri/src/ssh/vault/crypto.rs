@@ -98,7 +98,7 @@ pub(crate) fn associated_data(m_cost: u32, t_cost: u32, p_cost: u32) -> Vec<u8> 
 /// Reject parameters that would make opening the file unreasonably expensive
 /// or that this build cannot interpret.
 pub(crate) fn check_params(m_cost: u32, t_cost: u32, p_cost: u32) -> Result<(), String> {
-    if m_cost < Params::MIN_M_COST || m_cost > MAX_M_COST {
+    if !(Params::MIN_M_COST..=MAX_M_COST).contains(&m_cost) {
         return Err(format!(
             "Vault KDF memory cost {} KiB is outside the accepted range ({}..={} KiB)",
             m_cost,
@@ -106,13 +106,13 @@ pub(crate) fn check_params(m_cost: u32, t_cost: u32, p_cost: u32) -> Result<(), 
             MAX_M_COST
         ));
     }
-    if t_cost < 1 || t_cost > MAX_T_COST {
+    if !(1..=MAX_T_COST).contains(&t_cost) {
         return Err(format!(
             "Vault KDF pass count {} is outside the accepted range (1..={})",
             t_cost, MAX_T_COST
         ));
     }
-    if p_cost < 1 || p_cost > MAX_P_COST {
+    if !(1..=MAX_P_COST).contains(&p_cost) {
         return Err(format!(
             "Vault KDF parallelism {} is outside the accepted range (1..={})",
             p_cost, MAX_P_COST
