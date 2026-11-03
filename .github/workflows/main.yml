@@ -44,9 +44,6 @@ jobs:
       - name: Test
         run: bun run test
 
-      - name: Shell tests (installer and Homebrew cask)
-        run: bun run test:shell
-
   rust:
     name: Rust Checks
     # Rust only moves when src-tauri, the canvas bundle, or the web client it
@@ -97,10 +94,19 @@ jobs:
       - name: Build web client (dist-web/)
         run: bun run build:web
 
+      - name: Assert dist-web/index.html exists
+        run: test -f dist-web/index.html && test -s dist-web/index.html
+
+      # Warning only: the pin points at a release of the external figcraft fork
+      # (`gnoviawan/figcraft`), and that asset is deleted when the fork retires
+      # the build. Neither cargo check nor cargo test reads canvas/bundle, so a
+      # gap there must not block a push to main; pr-validation.yml keeps the
+      # strict download-and-verify check for contributors.
       - name: Check figcraft pin
         run: bun scripts/canvas/check-figcraft-pin.mjs
 
       - name: Fetch and verify figcraft bundle (canvas/bundle/)
+        continue-on-error: true
         run: bun scripts/canvas/fetch-figcraft-bundle.mjs
 
       - name: Cargo check

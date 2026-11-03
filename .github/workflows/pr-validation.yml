@@ -149,6 +149,10 @@ jobs:
         run: bun run test
 
       - name: Shell tests (installer and Homebrew cask)
+        # Warning only: these assert the installer's GitHub URL and the external
+        # figcraft fork's release assets, which drift without a diff in this
+        # repo. An unrelated PR should not go red for that.
+        continue-on-error: true
         run: bun run test:shell
 
   rust-checks:

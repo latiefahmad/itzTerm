@@ -2,7 +2,7 @@
 set -euo pipefail
 
 OWNER="latiefahmad"
-REPO="itzterm"
+REPO="itzTerm"
 BASE_URL="https://github.com/${OWNER}/${REPO}"
 
 die() {
