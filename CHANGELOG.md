@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-04
+
+### Changes
+
+- fix(ssh): stop claiming the vault omits private keys ([2e3d6ac](https://github.com/latiefahmad/itzTerm/commit/2e3d6ac3ff13116ac42cf56d6101dab4708a5d3c))
+- chore(ssh): satisfy clippy in the vault module ([a93fffe](https://github.com/latiefahmad/itzTerm/commit/a93fffe688532b0dc47a1306bdb7860e8c79b685))
+- ci: make the ripgrep sidecars runnable on a fresh Linux checkout ([45cbf68](https://github.com/latiefahmad/itzTerm/commit/45cbf68))
+- fix(install): point the installer at the repo's real name ([fe95803](https://github.com/latiefahmad/itzTerm/commit/fe95803))
+- fix(snippets): keep the modal mountable where stores are mocked ([134a54f](https://github.com/latiefahmad/itzTerm/commit/134a54f))
+- docs: rewrite the README and document the current feature set ([c6cec42](https://github.com/latiefahmad/itzTerm/commit/c6cec42))
+- ci: verify every push to main and lighten the git hooks ([16a343e](https://github.com/latiefahmad/itzTerm/commit/16a343e))
+- fix(snippets): insert into the SSH shell that is on screen ([10d8e9d](https://github.com/latiefahmad/itzTerm/commit/10d8e9d))
+
 ## [1.2.0] - 2026-11-02
 
 ### Changes
