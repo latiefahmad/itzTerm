@@ -52,8 +52,8 @@ function KeyWarningList({
         {warnings.length === 1 ? 'A private key is missing' : 'Private keys are missing'}
       </p>
       <p className="mt-1 text-xs text-muted-foreground text-pretty">
-        The backup records where each key lived, not the key itself. Copy these files to the new
-        computer, or point the host at a different key after importing.
+        These keys could not be read, so the backup only remembers where they lived. Copy the files
+        to the new computer, or point the host at a different key after importing.
       </p>
       <ul className="mt-2 space-y-1">
         {warnings.map((warning) => (
