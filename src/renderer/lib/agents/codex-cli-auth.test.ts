@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { codexAuthSyncDecision, isCodexAcpConfig } from './codex-cli-auth'
+import {
+  CODEX_AUTH_POLL_MS,
+  CODEX_AUTH_POLL_UNAVAILABLE_MS,
+  codexAuthPollDelay,
+  codexAuthSyncDecision,
+  codexAuthUnavailableStreak,
+  isCodexAcpConfig
+} from './codex-cli-auth'
 
 describe('isCodexAcpConfig', () => {
   it('matches the registry id and the package argument', () => {
@@ -70,5 +77,39 @@ describe('codexAuthSyncDecision', () => {
         hasAuthError: true
       }).action
     ).toBe('none')
+  })
+})
+
+describe('codexAuthPollDelay', () => {
+  it('polls at the normal rate while the CLI answers', () => {
+    expect(codexAuthPollDelay(0)).toBe(CODEX_AUTH_POLL_MS)
+  })
+
+  it('backs off hard once the CLI is unavailable', () => {
+    expect(codexAuthPollDelay(1)).toBe(CODEX_AUTH_POLL_UNAVAILABLE_MS)
+    expect(codexAuthPollDelay(500)).toBe(CODEX_AUTH_POLL_UNAVAILABLE_MS)
+  })
+
+  it('keeps the backed-off interval well above the old 4s tick', () => {
+    // 900 spawns/hour was the reported cost of the old fixed interval.
+    expect(CODEX_AUTH_POLL_MS).toBeGreaterThanOrEqual(30_000)
+    expect(CODEX_AUTH_POLL_UNAVAILABLE_MS).toBeGreaterThanOrEqual(300_000)
+  })
+})
+
+describe('codexAuthUnavailableStreak', () => {
+  it('counts consecutive unavailable answers', () => {
+    expect(codexAuthUnavailableStreak(0, 'unavailable')).toBe(1)
+    expect(codexAuthUnavailableStreak(4, 'unavailable')).toBe(5)
+  })
+
+  it('resets as soon as the CLI answers', () => {
+    expect(codexAuthUnavailableStreak(9, 'signed-in')).toBe(0)
+    expect(codexAuthUnavailableStreak(9, 'signed-out')).toBe(0)
+  })
+
+  it('drives the delay back to normal after a successful probe', () => {
+    const streak = codexAuthUnavailableStreak(3, 'signed-in')
+    expect(codexAuthPollDelay(streak)).toBe(CODEX_AUTH_POLL_MS)
   })
 })

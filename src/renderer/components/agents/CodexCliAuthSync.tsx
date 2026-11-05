@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react'
 import {
   CODEX_CLI_SIGNED_OUT_MESSAGE,
   type CodexCliAuthState,
+  codexAuthPollDelay,
   codexAuthSyncDecision,
+  codexAuthUnavailableStreak,
   codexHomeFromConfig,
   isCodexAcpConfig
 } from '@/lib/agents/codex-cli-auth'
@@ -14,20 +16,30 @@ import { isAnyAgentAuthInFlight } from '@/stores/acp-store/slices/agent'
 import { useProjectStore } from '@/stores/project-store'
 import { agentChatTabId, findPaneContainingTab, useWorkspaceStore } from '@/stores/workspace-store'
 
-const POLL_MS = 4000
-
 /**
- * Keep the itzTerm Codex agent on the same login as the Codex CLI.
+ * Keep itzTerm Codex agent on the same login as the Codex CLI.
  * `codex login` and `codex logout` update that store. This poll restarts the
  * agent when the CLI state changes, so the next chat uses the new login.
+ *
+ * With no Codex CLI installed every probe can only answer `unavailable`, so the
+ * interval backs off hard instead of spawning a runtime every few seconds.
  */
 export function CodexCliAuthSync(): null {
   const baselines = useRef(new Map<string, CodexCliAuthState | null>())
   const running = useRef(false)
+  const unavailableStreak = useRef(0)
 
   useEffect(() => {
     if (!isTauriContext()) return
     let stopped = false
+    let timer: number | undefined
+
+    const schedule = (): void => {
+      if (stopped) return
+      timer = window.setTimeout(() => {
+        void tick()
+      }, codexAuthPollDelay(unavailableStreak.current))
+    }
 
     const tick = async (): Promise<void> => {
       if (running.current) return
@@ -48,6 +60,7 @@ export function CodexCliAuthSync(): null {
         if (stopped || !status.success || !status.data) return
         const next = status.data.state
         if (next !== 'signed-in' && next !== 'signed-out' && next !== 'unavailable') return
+        unavailableStreak.current = codexAuthUnavailableStreak(unavailableStreak.current, next)
 
         const live = useAcpStore.getState()
         const stillSelected = live.agentConfigs.some(
@@ -150,16 +163,14 @@ export function CodexCliAuthSync(): null {
         }
       } finally {
         running.current = false
+        schedule()
       }
     }
 
     void tick()
-    const timer = setInterval(() => {
-      void tick()
-    }, POLL_MS)
     return () => {
       stopped = true
-      clearInterval(timer)
+      if (timer !== undefined) window.clearTimeout(timer)
     }
   }, [])
 

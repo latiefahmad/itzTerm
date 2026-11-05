@@ -63,10 +63,14 @@ enum CodexLoginProbe {
 }
 
 async fn codex_login_status(codex_home: Option<String>) -> CodexLoginProbe {
-    let resolved = crate::pty::manager::resolve_spawn_program("codex")
-        .unwrap_or_else(|_| crate::pty::manager::ResolvedProgram::new("codex".to_string()));
+    // Never spawn when the CLI is not installed: the renderer polls this on a
+    // timer, and a spawn that can only ever fail still pays for a full runtime
+    // start (Bun/Node) each time.
+    let Ok(resolved) = crate::pty::manager::resolve_spawn_program("codex") else {
+        return CodexLoginProbe::Unavailable;
+    };
     let mut command = tokio::process::Command::new(&resolved.program);
-    // Polled every 4s by the renderer: never flash a console window.
+    // Polled by the renderer: never flash a console window.
     crate::process_util::hide_console(&mut command);
     command
         .args(&resolved.prepend_args)

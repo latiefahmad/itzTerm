@@ -60,3 +60,32 @@ export function codexAuthSyncDecision(input: {
   }
   return { previous: input.next, action: 'none' }
 }
+
+/**
+ * How often the renderer should probe `codex login status`.
+ *
+ * `unavailable` means the Codex CLI could not be run at all — an installation
+ * state that does not change on its own. Polling it forever spawns a runtime
+ * (Bun/Node) every few seconds for an answer that is always the same, so the
+ * probe backs off hard while unavailable and resumes at full rate on any other
+ * answer.
+ */
+export const CODEX_AUTH_POLL_MS = 30_000
+/** Probe interval while the CLI is reported unavailable. */
+export const CODEX_AUTH_POLL_UNAVAILABLE_MS = 300_000
+
+/**
+ * Next probe interval, given how many consecutive `unavailable` answers the
+ * previous probes produced.
+ */
+export function codexAuthPollDelay(consecutiveUnavailable: number): number {
+  return consecutiveUnavailable > 0 ? CODEX_AUTH_POLL_UNAVAILABLE_MS : CODEX_AUTH_POLL_MS
+}
+
+/**
+ * Fold one probe result into the unavailable streak. Any other state resets it,
+ * so a fresh `codex login` is noticed at the normal rate.
+ */
+export function codexAuthUnavailableStreak(previous: number, next: CodexCliAuthState): number {
+  return next === 'unavailable' ? previous + 1 : 0
+}
