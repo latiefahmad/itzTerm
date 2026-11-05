@@ -50,8 +50,9 @@ use instance::ClaimRollbackGuard;
 use limits::PendingSpawns;
 #[cfg(all(test, target_os = "windows"))]
 use resolve::{
-    is_directly_executable_windows, merge_windows_environment_map, parse_npm_cmd_shim,
-    parse_powershell_cmd_shim, try_parse_windows_cmd_shim,
+    is_directly_executable_windows, is_missing_node_exe, merge_windows_environment_map,
+    parse_npm_cmd_shim, parse_powershell_cmd_shim, resolve_extensions_for,
+    try_parse_windows_cmd_shim,
 };
 use types::{
     EXITED_SWEEP_INTERVAL_MS, EXITED_TERMINAL_TTL_MS, GLOBAL_TERMINAL_LIMIT,

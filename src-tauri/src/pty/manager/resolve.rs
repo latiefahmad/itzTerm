@@ -1,5 +1,45 @@
 use super::*;
 
+/// True when a resolved interpreter names a `node.exe` that does not exist.
+///
+/// npm's global-wrapper shims pick `%~dp0\node.exe` when present and fall back
+/// to a bare `node` on PATH otherwise. The static parser cannot see the
+/// `IF EXIST`, so it lands on a `node.exe` that is only a hope — the shim
+/// directory holds `npx.cmd` + `node_modules` but no `node.exe`.
+#[cfg(target_os = "windows")]
+pub(super) fn is_missing_node_exe(resolved: &str) -> bool {
+    std::path::Path::new(resolved)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| name.eq_ignore_ascii_case("node.exe"))
+        && !std::path::Path::new(resolved).exists()
+}
+
+/// Extension suffixes to probe for `command`, in order.
+///
+/// A name that already carries an extension is probed verbatim. A bare name
+/// gets every PATHEXT entry first and the extensionless name **last**: npm
+/// installs an extensionless `#!/bin/sh` script beside each `.cmd` shim
+/// (`nodejs/npx`, `nodejs/npm`, …), and probing the bare name first returns
+/// that Unix script, which `CreateProcessW` then rejects with "os error 193
+/// (%1 is not a valid Win32 application)".
+#[cfg(target_os = "windows")]
+pub(super) fn resolve_extensions_for(command: &str, pathext: &str) -> Vec<std::ffi::OsString> {
+    use std::ffi::OsString;
+
+    if std::path::Path::new(command).extension().is_some() {
+        return vec![OsString::new()];
+    }
+
+    let mut extensions: Vec<OsString> = pathext
+        .split(';')
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| OsString::from(s.trim()))
+        .collect();
+    extensions.push(OsString::new());
+    extensions
+}
+
 #[cfg(target_os = "windows")]
 fn resolve_executable_from_path(command: &str) -> Option<String> {
     use std::ffi::OsString;
@@ -17,22 +57,7 @@ fn resolve_executable_from_path(command: &str) -> Option<String> {
     let pathext_var =
         env::var_os("PATHEXT").unwrap_or_else(|| OsString::from(".COM;.EXE;.BAT;.CMD"));
 
-    let command_path = Path::new(command);
-    let has_extension = command_path.extension().is_some();
-
-    let mut extensions: Vec<OsString> = Vec::new();
-    if has_extension {
-        extensions.push(OsString::new());
-    } else {
-        extensions.push(OsString::new());
-        for ext in pathext_var
-            .to_string_lossy()
-            .split(';')
-            .filter(|s| !s.trim().is_empty())
-        {
-            extensions.push(OsString::from(ext.trim()));
-        }
-    }
+    let extensions = resolve_extensions_for(command, &pathext_var.to_string_lossy());
 
     for dir in env::split_paths(&path_var) {
         for ext in &extensions {
@@ -216,6 +241,19 @@ pub(super) fn parse_npm_cmd_shim(shim_path: &str) -> Option<ResolvedProgram> {
         } else {
             exe_path_str
         };
+        // npm's global-wrapper shims (`%APPDATA%\npm\npx.cmd`, `npm.cmd`) set
+        // `_prog` to `%~dp0\node.exe` behind an `IF EXIST`, falling back to a
+        // bare `node` on PATH. A static parser cannot evaluate the `IF`, so it
+        // resolves to a `node.exe` that does not exist in that directory and
+        // the whole shim is rejected. Honor the same fallback the script does.
+        let exe_path_str = if is_missing_node_exe(&exe_path_str) {
+            match resolve_executable_from_path("node.exe") {
+                Some(path) => path,
+                None => continue,
+            }
+        } else {
+            exe_path_str
+        };
         let exe_path = std::path::Path::new(&exe_path_str);
         // The executable must exist and be a directly-executable image.
         if !exe_path.exists() || !is_directly_executable_windows(&exe_path_str) {
@@ -355,7 +393,14 @@ pub(crate) fn resolve_spawn_program(program: &str) -> Result<ResolvedProgram, St
         }
 
         // 1. Bare name: try directly-executable PE image extensions first.
-        const WIN_EXECUTABLE_EXTS: &[&str] = &["", ".exe", ".com", ".scr"];
+        //
+        // Order matters. npm installs an extensionless `#!/bin/sh` script
+        // beside every `.cmd` shim (`nodejs/npx`, `nodejs/npm`, …). Resolving
+        // that extensionless file first yields a non-PE path, and callers that
+        // fall back to a bare-name spawn then hand it to CreateProcessW and get
+        // "os error 193 (%1 is not a valid Win32 application)". Probe the real
+        // PE extensions first so the Unix script can never shadow them.
+        const WIN_EXECUTABLE_EXTS: &[&str] = &[".exe", ".com", ".scr", ""];
         for ext in WIN_EXECUTABLE_EXTS {
             let candidate = format!("{}{}", trimmed, ext);
             if let Some(abs_path) = resolve_executable_from_path(&candidate) {
@@ -374,6 +419,26 @@ pub(crate) fn resolve_spawn_program(program: &str) -> Result<ResolvedProgram, St
                 }
             }
         }
+
+        // Resolution failures are rare and expensive to diagnose from a bug
+        // report, so report what was searched: how many PATH segments the host
+        // actually sees, and whether a file of that name exists anywhere on it.
+        // One line, no command contents.
+        let path_var = crate::pty::env_refresh::path_for_resolution();
+        let segments = env::split_paths(&path_var).count();
+        let hits: Vec<String> = env::split_paths(&path_var)
+            .flat_map(|dir| [".exe", ".cmd", ".bat", ""].map(move |ext| (dir.clone(), ext)))
+            .map(|(dir, ext)| dir.join(format!("{}{}", trimmed, ext)))
+            .filter(|candidate| candidate.exists())
+            .map(|candidate| candidate.to_string_lossy().to_string())
+            .take(5)
+            .collect();
+        log::warn!(
+            "[resolve] could not resolve {:?}: path_segments={} nearby_files={:?}",
+            trimmed,
+            segments,
+            hits
+        );
 
         Err(format!("program not found on PATH: {}", trimmed))
     }

@@ -619,6 +619,118 @@ fn resolve_spawn_program_passes_through_on_unix() {
     assert!(resolved.prepend_args.is_empty());
 }
 
+/// Regression: npm installs an extensionless `#!/bin/sh` script beside every
+/// `.cmd` shim (`nodejs/npx`, `nodejs/npm`, …). Probing the bare name before
+/// the PE extensions resolved that Unix script, which `CreateProcessW` rejects
+/// with "os error 193 (%1 is not a valid Win32 application)".
+#[cfg(target_os = "windows")]
+#[test]
+fn extensionless_unix_script_does_not_shadow_the_cmd_shim() {
+    let dir = std::env::temp_dir().join("itzterm-test-resolve-shadow");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+
+    // Exactly what Node.js ships: `npx` (shell script) + `npx.cmd` (batch).
+    std::fs::write(dir.join("npx"), b"#!/bin/sh\nexec node npx-cli.js \"$@\"\n").unwrap();
+    std::fs::write(dir.join("node.exe"), b"MZ").unwrap();
+    std::fs::write(dir.join("npx-cli.js"), b"").unwrap();
+    std::fs::write(
+        dir.join("npx.cmd"),
+        "@ECHO OFF\r\nSET \"NODE_EXE=%~dp0\\node.exe\"\r\nSET \"NPX_CLI_JS=%~dp0\\npx-cli.js\"\r\n\
+         \"%NODE_EXE%\" \"%NPX_CLI_JS%\" %*\r\n",
+    )
+    .unwrap();
+
+    // Explicit path to the shim: must rewrite to node.exe, never the script.
+    let resolved = resolve_spawn_program(dir.join("npx.cmd").to_str().unwrap())
+        .expect("npx.cmd must resolve");
+    assert!(
+        resolved.program.ends_with("node.exe"),
+        "expected node.exe, got: {}",
+        resolved.program
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Regression for npm's *global wrapper* shim — the `%APPDATA%\npm\npx.cmd`
+/// that shadows `C:\Program Files\nodejs\npx.cmd` on PATH. It has no
+/// `node.exe` beside it and selects its interpreter through
+/// `IF EXIST "%dp0%\node.exe"` with a bare `node` fallback. The static parser
+/// cannot evaluate that `IF`, so it used to resolve to a nonexistent
+/// `node.exe` and reject the shim, dropping the caller to a bare-name spawn
+/// and its "os error 193".
+#[cfg(target_os = "windows")]
+#[test]
+fn global_wrapper_shim_without_local_node_falls_back_to_path_node() {
+    let dir = std::env::temp_dir().join("itzterm-test-resolve-global-wrapper");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("node_modules\\npm\\bin")).unwrap();
+    std::fs::write(dir.join("node_modules\\npm\\bin\\npx-cli.js"), b"").unwrap();
+
+    // Verbatim shape of %APPDATA%\npm\npx.cmd — note: no node.exe here.
+    let shim = "@ECHO off\r\nGOTO start\r\n:find_dp0\r\nSET dp0=%~dp0\r\nEXIT /b\r\n:start\r\n\
+        SETLOCAL\r\nCALL :find_dp0\r\n\r\n\
+        IF EXIST \"%dp0%\\node.exe\" (\r\n  SET \"_prog=%dp0%\\node.exe\"\r\n) ELSE (\r\n  \
+        SET \"_prog=node\"\r\n)\r\n\r\n\
+        endLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & \"%_prog%\"  \
+        \"%dp0%\\node_modules\\npm\\bin\\npx-cli.js\" %*\r\n";
+    std::fs::write(dir.join("npx.cmd"), shim).unwrap();
+    std::fs::write(dir.join("npx"), b"#!/bin/sh\nexec node npx-cli.js \"$@\"\n").unwrap();
+
+    assert!(is_missing_node_exe(&format!(
+        "{}\\node.exe",
+        dir.display()
+    )));
+
+    let resolved = resolve_spawn_program(dir.join("npx.cmd").to_str().unwrap());
+
+    let _ = std::fs::remove_dir_all(&dir);
+
+    let resolved = resolved.expect("global wrapper shim must resolve via PATH node");
+    assert!(
+        resolved.program.to_ascii_lowercase().ends_with("node.exe"),
+        "expected a node.exe from PATH, got: {}",
+        resolved.program
+    );
+    assert_eq!(resolved.prepend_args.len(), 1);
+    assert!(
+        resolved.prepend_args[0].ends_with("npx-cli.js"),
+        "expected npx-cli.js prepended, got: {:?}",
+        resolved.prepend_args
+    );
+}
+
+/// The extension probe order itself: `resolve_extensions_for` must return the
+/// PATHEXT entries before the extensionless name.
+#[cfg(target_os = "windows")]
+#[test]
+fn extension_probe_order_puts_pathext_before_bare_name() {
+    let extensions: Vec<String> = resolve_extensions_for("widget", ".EXE;.CMD")
+        .into_iter()
+        .map(|ext| ext.to_string_lossy().to_string())
+        .collect();
+
+    assert_eq!(
+        extensions,
+        vec![".EXE".to_string(), ".CMD".to_string(), String::new()],
+        "PATHEXT entries must precede the extensionless name"
+    );
+}
+
+/// A name that already carries an extension is probed verbatim — no PATHEXT
+/// expansion, so `npx.cmd` never also looks for `npx.cmd.EXE`.
+#[cfg(target_os = "windows")]
+#[test]
+fn explicit_extension_probes_only_the_exact_name() {
+    let extensions: Vec<String> = resolve_extensions_for("npx.cmd", ".EXE;.CMD")
+        .into_iter()
+        .map(|ext| ext.to_string_lossy().to_string())
+        .collect();
+
+    assert_eq!(extensions, vec![String::new()]);
+}
+
 #[test]
 fn test_spawn_options_default() {
     let options = SpawnOptions::default();
